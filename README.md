@@ -32,3 +32,4 @@ By saying "Alexa ask ChromeCast to change the volume to 50", Alexa will change t
     - the connection string with the same connection string from index.py.
     - YOUTUBE_API_KEY with your Youtube API Key
     - CHROMECAST_NAME with your default chromecast name.
+  - Upload raspberry.py to your Raspberry Pi
