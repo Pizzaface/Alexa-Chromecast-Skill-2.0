@@ -43,7 +43,7 @@ def sendVideo(url):
 		#Sets up the Chromecast's Media Controller
 		mc = cast.media_controller
 		#Uses Youtube-Dl to get the Stream URL for the Video to send to Chromecast
-		p = subprocess.check_output("youtube-dl -g " + url, shell=True)
+		p = subprocess.check_output("youtube-dl -g -- " + url, shell=True)
 		#Sends the Video
 		mc.play_media(p, 'video/mp4')
 		print ("Video sent to Chromecast!")
