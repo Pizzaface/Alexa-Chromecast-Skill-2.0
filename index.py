@@ -152,13 +152,22 @@ def sendVideo(intent, session):
     should_end_session = True
     reprompt_text = ""
     #sends the command to the Database
-    conn = pymysql.connect("RASP_PI_DNS", user="MYSQL_USER", passwd="MYSQL_PASS", db="DB_NAME")
-    cur = conn.cursor()
-    cur.execute("INSERT INTO  `commands` (`command` ,`slot`) VALUES ('play',  '"+vidId +"')")
-    conn.close()
+    try:
+    	conn = pymysql.connect("RASP_PI_DNS", user="MYSQL_USER", passwd="MYSQL_PASS", db="DB_NAME", connect_timeout=10)
+    except pymysql.err.OperationalError:
+    	speech_output = "The Command Could not be Sent,  Please ensure your database is Running."
+	    card_title = "ChromeCast - Command Failed"
+	    should_end_session = True
+	    reprompt_text = ""
+	    return build_response({}, build_speechlet_response(
+	        card_title, speech_output, reprompt_text, should_end_session))
+	else:
+	    cur = conn.cursor()
+	    cur.execute("INSERT INTO  `commands` (`command` ,`slot`) VALUES ('play',  '"+vidId +"')")
+	    conn.close()
 
-    return build_response({}, build_speechlet_response(
-        card_title, speech_output, reprompt_text, should_end_session))
+	    return build_response({}, build_speechlet_response(
+	        card_title, speech_output, reprompt_text, should_end_session))
 
 def setVolume(intent, session):
     if 'volume' in intent['slots']:
@@ -169,13 +178,22 @@ def setVolume(intent, session):
     should_end_session = True
     reprompt_text = ""
     #sends the command to the Database
-    conn = pymysql.connect("RASP_PI_DNS", user="MYSQL_USER", passwd="MYSQL_PASS", db="DB_NAME")
-    cur = conn.cursor()
-    cur.execute("INSERT INTO  `commands` (`command` ,`slot`) VALUES ('volume',  '"+volume +"')")
-    conn.close()
+    try:
+    	conn = pymysql.connect("RASP_PI_DNS", user="MYSQL_USER", passwd="MYSQL_PASS", db="DB_NAME", connect_timeout=10)
+    except 
+    	speech_output = title + " was added successfully"
+	    card_title = "ChromeCast - Command Failed"
+	    should_end_session = True
+	    reprompt_text = ""
+	    return build_response({}, build_speechlet_response(
+	        card_title, speech_output, reprompt_text, should_end_session))
+	else:
+	    cur = conn.cursor()
+	    cur.execute("INSERT INTO  `commands` (`command` ,`slot`) VALUES ('volume',  '"+volume +"')")
+	    conn.close()
 
-    return build_response({}, build_speechlet_response(
-        card_title, speech_output, reprompt_text, should_end_session))
+    	return build_response({}, build_speechlet_response(
+        	card_title, speech_output, reprompt_text, should_end_session))
 
 def pauseVideo(intent, session):
     speech_output =  "I've sent the pause command to your Chromecast"
@@ -183,13 +201,22 @@ def pauseVideo(intent, session):
     should_end_session = True
     reprompt_text = ""
     #sends the command to the Database
-    conn = pymysql.connect("RASP_PI_DNS", user="MYSQL_USER", passwd="MYSQL_PASS", db="DB_NAME")
-    cur = conn.cursor()
-    cur.execute("INSERT INTO  `commands` (`command` ,`slot`) VALUES ('pause',  'none')")
-    conn.close()
+    try:
+    	conn = pymysql.connect("RASP_PI_DNS", user="MYSQL_USER", passwd="MYSQL_PASS", db="DB_NAME", connect_timeout=10)
+    except pymysql.err.OperationalError:
+    	speech_output = "The Command Could not be Sent,  Please ensure your database is Running."
+	    card_title = "ChromeCast - Command Failed"
+	    should_end_session = True
+	    reprompt_text = ""
+	    return build_response({}, build_speechlet_response(
+	        card_title, speech_output, reprompt_text, should_end_session))
+	else:
+	    cur = conn.cursor()
+	    cur.execute("INSERT INTO  `commands` (`command` ,`slot`) VALUES ('pause',  'none')")
+	    conn.close()
 
-    return build_response({}, build_speechlet_response(
-        card_title, speech_output, reprompt_text, should_end_session))
+	    return build_response({}, build_speechlet_response(
+	        card_title, speech_output, reprompt_text, should_end_session))
 
 def resumeVideo(intent, session):
     speech_output =  "I've sent the play command to your Chromecast"
@@ -197,13 +224,22 @@ def resumeVideo(intent, session):
     should_end_session = True
     reprompt_text = ""
     #sends the command to the Database
-    conn = pymysql.connect("RASP_PI_DNS", user="MYSQL_USER", passwd="MYSQL_PASS", db="DB_NAME")
-    cur = conn.cursor()
-    cur.execute("INSERT INTO  `commands` (`command` ,`slot`) VALUES ('resume',  'none')")
-    conn.close()
+    try:
+    	conn = pymysql.connect("RASP_PI_DNS", user="MYSQL_USER", passwd="MYSQL_PASS", db="DB_NAME", connect_timeout=10)
+    except pymysql.err.OperationalError:
+    	speech_output = "The Command Could not be Sent,  Please ensure your database is Running."
+	    card_title = "ChromeCast - Command Failed"
+	    should_end_session = True
+	    reprompt_text = ""
+	    return build_response({}, build_speechlet_response(
+	        card_title, speech_output, reprompt_text, should_end_session))
+	else:
+	    cur = conn.cursor()
+	    cur.execute("INSERT INTO  `commands` (`command` ,`slot`) VALUES ('resume',  'none')")
+	    conn.close()
 
-    return build_response({}, build_speechlet_response(
-        card_title, speech_output, reprompt_text, should_end_session))
+	    return build_response({}, build_speechlet_response(
+	        card_title, speech_output, reprompt_text, should_end_session))
 
 # --------------- Helpers that build all of the responses ----------------------
 
