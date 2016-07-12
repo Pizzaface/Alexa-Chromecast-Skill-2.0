@@ -1,11 +1,3 @@
-"""
-This sample demonstrates a simple skill built with the Amazon Alexa Skills Kit.
-The Intent Schema, Custom Slots, and Sample Utterances for this skill, as well
-as testing instructions are located at http://amzn.to/1LzFrj6
-
-For additional samples, visit the Alexa Skills Kit Getting Started guide at
-http://amzn.to/1LGWsLG
-"""
 
 from __future__ import print_function
 import pymysql
@@ -21,15 +13,6 @@ def lambda_handler(event, context):
     """
     print("event.session.application.applicationId=" +
           event['session']['application']['applicationId'])
-
-    """
-    Uncomment this if statement and populate with your skill's application ID to
-    prevent someone else from configuring a skill that sends requests to this
-    function.
-    """
-    # if (event['session']['application']['applicationId'] !=
-    #         "amzn1.echo-sdk-ams.app.[unique-value-here]"):
-    #     raise ValueError("Invalid Application ID")
 
     if event['session']['new']:
         on_session_started({'requestId': event['request']['requestId']},
@@ -57,7 +40,7 @@ def on_launch(launch_request, session):
 
     print("on_launch requestId=" + launch_request['requestId'] +
           ", sessionId=" + session['sessionId'])
-    # Dispatch to your skill's launch
+    # Get's the help section
     return get_welcome_response()
 
 
@@ -70,7 +53,7 @@ def on_intent(intent_request, session):
     intent = intent_request['intent']
     intent_name = intent_request['intent']['name']
 
-    # Dispatch to your skill's intent handlers
+    # Sends the request to one of our intents
     if intent_name == "sendVideoIntent":
         return sendVideo(intent, session)
     elif intent_name == "setVolumeIntent":
@@ -88,10 +71,7 @@ def on_intent(intent_request, session):
 
 
 def on_session_ended(session_ended_request, session):
-    """ Called when the user ends the session.
-
-    Is not called when the skill returns should_end_session=true
-    """
+	#When the User decides to end the session, this is the function that is called.
     print("on_session_ended requestId=" + session_ended_request['requestId'] +
           ", sessionId=" + session['sessionId'])
     # add cleanup logic here
@@ -100,6 +80,8 @@ def on_session_ended(session_ended_request, session):
 
 
 def get_welcome_response():
+	""" Helps the User Find out what they can say, and how to use
+		the program, Sends a Card with that data as well"""
     session_attributes = {}
     card_title = "Chromecast"
     speech_output = "I can control your Chromecast, " \
@@ -116,6 +98,7 @@ def handle_session_end_request():
         None, None, None, should_end_session))
 
 def sendVideo(intent, session):
+	""" Check if the User Specified a Video, if not, return an 'I didn't understand' message"""
     if 'query' in intent['slots']:
         lookupString = intent['slots']['query']['value']
     else:
@@ -126,7 +109,7 @@ def sendVideo(intent, session):
         return build_response({}, build_speechlet_response(
         card_title, speech_output, reprompt_text, should_end_session))
 
-    #Gets the First Result of a Youtube Search for the string provided
+    """Looks up the first video in a Youtube Search"""
     query = urllib.quote(lookupString)
     url = "https://www.youtube.com/results?search_query=" + query
     response = urllib2.urlopen(url)
@@ -139,7 +122,7 @@ def sendVideo(intent, session):
         else:
             vidId = vidId.replace("/watch?v=", "")
             break
-
+    """ OPTIONAL: Uses the Youtube API to get the Video Name """
     youtubeAPIURL = "https://www.googleapis.com/youtube/v3/videos?id="+vidId+"&key=YOUTUBE_API_KEY&fields=items(id,snippet(title),statistics)&part=snippet,statistics"
     response = urllib.urlopen(youtubeAPIURL)
     data = json.loads(response.read())
@@ -151,7 +134,9 @@ def sendVideo(intent, session):
     card_title = "ChromeCast - Video Added"
     should_end_session = True
     reprompt_text = ""
-    #sends the command to the Database
+
+    """ Attempts to send the command to the database, if it can't, returns
+    	a 'Please Ensure your Database is Running' Message """
     try:
     	conn = pymysql.connect("RASP_PI_DNS", user="MYSQL_USER", passwd="MYSQL_PASS", db="DB_NAME", connect_timeout=10)
     except pymysql.err.OperationalError:
@@ -170,6 +155,7 @@ def sendVideo(intent, session):
 	        card_title, speech_output, reprompt_text, should_end_session))
 
 def setVolume(intent, session):
+	""" Gets the volume from the Query """
     if 'volume' in intent['slots']:
         volume = intent['slots']['volume']['value']
 
