@@ -9,7 +9,7 @@ from decimal import *
 from difflib import SequenceMatcher
 from threading import Thread
 
-conn = pymysql.connect("jprasp.duckdns.org", user="alexa", passwd="jordan97", db="chromecasts")
+conn = pymysql.connect("RASP_PI_DNS", user="MYSQL_USER", passwd="MYSQL_PASS", db="DB_NAME")
 
 def setup(chromecast_name):
 	chromecastList = list(pychromecast.get_chromecasts_as_dict().keys())
