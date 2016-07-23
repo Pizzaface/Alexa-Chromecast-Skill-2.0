@@ -10,7 +10,7 @@ from difflib import SequenceMatcher
 from threading import Thread
 
 conn = pymysql.connect("RASP_PI_DNS", user="MYSQL_USER", passwd="MYSQL_PASS", db="DB_NAME")
-
+chromecast_name = "YOUR_CHROMECAST_NAME"
 def setup(chromecast_name):
 	chromecastList = list(pychromecast.get_chromecasts_as_dict().keys())
 	if chromecastList == []:
@@ -22,7 +22,7 @@ def setup(chromecast_name):
 	
 	cast = pychromecast.get_chromecast(friendly_name=chromecast_name)
 
-setup("Jordan's Chromecast")
+setup("YOUR_CHROMECAST_NAME")
 
 def sendVideo(url):
 	try:
