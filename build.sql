@@ -26,8 +26,8 @@ SET time_zone = "+00:00";
 -- Table structure for table `commands`
 --
 
-CREATE TABLE IF NOT EXISTS `commands` (
-`ID` int(11) NOT NULL,
+CREATE TABLE IF NOT EXISTS commands (
+  `ID` int(11) NOT NULL PRIMARY KEY,
   `command` varchar(99) COLLATE latin1_general_ci NOT NULL,
   `slot` varchar(99) COLLATE latin1_general_ci NOT NULL,
   `type_of_media` varchar(99) COLLATE latin1_general_ci DEFAULT NULL,
@@ -37,8 +37,8 @@ CREATE TABLE IF NOT EXISTS `commands` (
 --
 -- AUTO_INCREMENT for table `commands`
 --
-ALTER TABLE `commands`
-MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=149;
+ALTER TABLE commands
+MODIFY ID int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,AUTO_INCREMENT=149;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
