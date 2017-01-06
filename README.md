@@ -18,7 +18,6 @@ By saying "Alexa ask ChromeCast to change the volume to 50", Alexa will change t
 
 #Requirements
   - youtube-dl
-  - pymysql (`pip install pymysql`)
   - pychromecast (`pip install pychromecast`)
   - Youtube API Key
   - Port Forwarded LAMP server (or WAMP on Windows)
