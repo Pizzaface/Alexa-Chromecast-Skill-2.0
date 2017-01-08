@@ -10,6 +10,9 @@
       ]
     },
     {
+      "intent": "sendStopIntent"
+    },
+    {
       "intent": "AMAZON.CancelIntent"
     },
     {

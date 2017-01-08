@@ -4,6 +4,8 @@ setVolumeIntent set the volume to {volume}
 setVolumeIntent to set volume to {volume}
 setVolumeIntent volume {volume}
 sendVideoIntent send {Welcome to Hell|query} to my chromecast
+sendStopIntent stop
+sendStopIntent to stop
 AMAZON.HelpIntent Help
 sendVideoIntent {pool|query}
 sendVideoIntent play {cat videos|query} on Youtube
