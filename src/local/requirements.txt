@@ -1,0 +1,3 @@
+boto3==1.4.3
+miniupnpc==1.9
+PyChromecast==0.7.7
