@@ -30,6 +30,7 @@ The skill subscriber (local) uses these environment variables:
 
 - AWS_SNS_TOPIC_ARN - AWS SNS Topic ARN (can be found in the `.env` file after running `aws-setup.sh`)
 - CHROMECAST_NAME - Friendly name of the Chromecast to send commands to. (Defaults to 'Living Room')
+- PORT - (Optional) Externally accessible port to expose the SNS handler on.
 
 - AWS_ACCESS_KEY_ID - AWS User Access Key
 - AWS_SECRET_ACCESS_KEY - AWS Secret Access Key

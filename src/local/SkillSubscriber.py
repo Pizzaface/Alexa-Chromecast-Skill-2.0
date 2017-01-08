@@ -15,12 +15,18 @@ Lambda Fucntion via SNS notifications.
 
 class Subscriber():
 
-    def __init__(self, skills, topic_arn=os.getenv('AWS_SNS_TOPIC_ARN')):
+    def __init__(self, skills, port_overide, topic_arn=os.getenv('AWS_SNS_TOPIC_ARN')):
 
-        self.upnp = miniupnpc.UPnP()
-        self.upnp.discoverdelay = 10
-        self.upnp.discover()
-        self.upnp.selectigd()
+        if port_overide:
+            self.manual_port_forward = True
+        else:
+            self.manual_port_forward = False
+            try:
+                self.initialize_upnp()
+            except Exception as err:
+                print('Failed to configure UPnP. Please map port manually and pass PORT environment variable.')
+                print(err)
+                sys.exit(1)
 
         self.sns_client = boto3.client('sns')
         self.skills = skills
@@ -44,39 +50,49 @@ class Subscriber():
             def log_message(self, format, *args):
                 pass
 
-        self.server = HTTPServer(('', 0), SNSRequestHandler)
+        self.server = HTTPServer(('', int(port_overide) if port_overide else 0), SNSRequestHandler)
 
-        external_ip = self.upnp.externalipaddress()
         port = self.server.server_port
-        endpoint_url = 'http://{}:{}'.format(external_ip, port)
+        endpoint_url = 'http://{}:{}'.format(self.get_external_ip(), port)
 
         self.subscribe(topic_arn, endpoint_url)
-        print('Server accessible on {}'.format(endpoint_url))
+        print('Listening on {}'.format(endpoint_url))
         signal.signal(signal.SIGINT,
                       lambda signal, frame: self.unsubscribe())
         self.server.serve_forever()
 
+    def initialize_upnp(self):
+        upnp = miniupnpc.UPnP()
+        upnp.discoverdelay = 10
+        upnp.discover()
+        upnp.selectigd()
+        self.upnp = upnp
+
+    def get_external_ip(self):
+        return get('https://api.ipify.org').text
+
     def subscribe(self, topic_arn, endpoint_url):
-        try:
-            port_mapping_status = self.upnp.addportmapping(
-                self.server.server_port,
-                'TCP',
-                self.upnp.lanaddr,
-                self.server.server_port,
-                '',
-                ''
-            )
-        except:
-            print(
-                '''
-                Failed to automatically forward port.
-                Please set port as an environment variable and forward manually.
-                '''
-            )
-            sys.exit(1)
+        if not self.manual_port_forward:
+            try:
+                self.upnp.addportmapping(
+                    self.server.server_port,
+                    'TCP',
+                    self.upnp.lanaddr,
+                    self.server.server_port,
+                    '',
+                    ''
+                )
+            except:
+                print(
+                    '''
+                    Failed to automatically forward port.
+                    Please set port as an environment variable and forward manually.
+                    '''
+                )
+                sys.exit(1)
 
         try:
-            subscription_status = self.sns_client.subscribe(
+            self.sns_client.subscribe(
                 TopicArn=topic_arn,
                 Protocol='http',
                 Endpoint=endpoint_url
@@ -85,8 +101,6 @@ class Subscriber():
             print('SNS Topic ({}) is invalid. Please check in AWS.'.format(topic_arn))
             print(err)
             sys.exit(1)
-
-        print('Status: {}, {}'.format(port_mapping_status, subscription_status))
 
     def confirm_subscription(self, data):
         subscribe_url = data['SubscribeURL']
@@ -104,19 +118,21 @@ class Subscriber():
             return None
 
     def unsubscribe(self):
-        result = self.upnp.deleteportmapping(self.server.server_port, 'TCP')
 
-        if result:
-            print('Removed forward for port {}.'.format(self.server.server_port))
-        else:
-            raise RuntimeError(
-                'Failed to remove port forward for {}.'.format(self.server.server_port))
+        if not self.manual_port_forward:
+            result = self.upnp.deleteportmapping(self.server.server_port, 'TCP')
 
-        if self.subscription_arn:
+            if result:
+                print('Removed forward for port {}.'.format(self.server.server_port))
+            else:
+                raise RuntimeError(
+                    'Failed to remove port forward for {}.'.format(self.server.server_port))
+
+        if hasattr(self, 'subscription_arn'):
             self.sns_client.unsubscribe(SubscriptionArn=self.subscription_arn)
             print('Removed SNS subscription. ({})'.format(self.subscription_arn))
         else:
-            print('Failed to remove SNS subscription.')
+            print('Failed to remove SNS subscription. (Possibly not subscribed initially.)')
 
         sys.exit(0)
 

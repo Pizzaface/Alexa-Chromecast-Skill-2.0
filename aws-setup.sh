@@ -10,6 +10,8 @@ if [ -z "$(type aws)" ]; then
     exit 1
   else
     echo "Done."
+    echo "Running 'aws configure'"
+    aws configure
   fi
 fi
 
