@@ -1,19 +1,18 @@
 #!/usr/bin/env python2.7
 
-import urllib
-import urllib2
-from bs4 import BeautifulSoup
+from urllib import quote
 import json
 import boto3
 import os
+from requests import get
 
 AWS_SNS_ARN = os.getenv('AWS_SNS_ARN')
 # AWS_DEFAULT_REGION = os.getenv('AWS_DEFAULT_REGION')
 # AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
 # AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
 
-def lambda_handler(event, context):
 
+def lambda_handler(event, context):
     """ Route the incoming request based on type (LaunchRequest, IntentRequest,
     etc.) The JSON body of the request is provided in the event parameter.
     """
@@ -30,6 +29,7 @@ def lambda_handler(event, context):
         return on_intent(event['request'], event['session'])
     elif event['request']['type'] == "SessionEndedRequest":
         return on_session_ended(event['request'], event['session'])
+
 
 def on_session_started(session_started_request, session):
     """ Called when the session starts """
@@ -67,9 +67,11 @@ def on_intent(intent_request, session):
         return pause_video(intent, session)
     elif intent_name == "AMAZON.ResumeIntent":
         return resume_video(intent, session)
+    elif intent_name == "AMAZON.StopIntent":
+        return stop()
     elif intent_name == "AMAZON.HelpIntent":
         return get_welcome_response()
-    elif intent_name == "AMAZON.CancelIntent" or intent_name == "AMAZON.StopIntent":
+    elif intent_name == "AMAZON.CancelIntent":
         return handle_session_end_request()
     else:
         raise ValueError("Invalid intent")
@@ -91,7 +93,7 @@ def get_welcome_response():
     session_attributes = {}
     card_title = "Chromecast"
     speech_output = "I can control your Chromecast, " \
-        "Tell me a video name, or to pause, resume, or turn the volume to numbers 1 through 100"
+        "Tell me a video name, or to pause, resume, or turn the volume to numbers 1 through 10"
     reprompt_text = "Please tell me a video name to look up, or say a command."
     should_end_session = False
     return build_response(session_attributes, build_speechlet_response(
@@ -117,29 +119,20 @@ def send_video(intent, session):
             card_title, speech_output, reprompt_text, should_end_session))
 
     """Looks up the first video in a Youtube Search"""
-    query = urllib.quote(lookupString)
-    url = "https://www.youtube.com/results?search_query=" + query
-    response = urllib2.urlopen(url)
-    html = response.read()
-    soup = BeautifulSoup(html, "html.parser")
-    for vid in soup.findAll(attrs={'class': 'yt-uix-tile-link'}):
-        vidId = vid['href']
-        if "/watch?v=" not in vidId:
-            next
-        else:
-            vidId = vidId.replace("/watch?v=", "")
-            break
-    """ OPTIONAL: Uses the Youtube API to get the Video Name """
-    youtubeAPIURL = "https://www.googleapis.com/youtube/v3/videos?id=" + vidId + \
-        "&key=YOUTUBE_API_KEY&fields=items(id,snippet(title),statistics)&part=snippet,statistics"
-    response = urllib.urlopen(youtubeAPIURL)
-    data = json.loads(response.read())
+    query = quote(lookupString.encode('utf8'))
+    youtubeAPISearchURL = """https://www.googleapis.com/youtube/v3/search?q={}&key=AIzaSyB4DdmAkhKtJ6NMgSJIgMCFkVJ8KD1uBk0&part=snippet&type=video""".format(query)
+ 
+    response = get(youtubeAPISearchURL)
+    data = response.json()
+ 
+    vidId = data['items'][0]['id']['videoId']
     title = data['items'][0]['snippet']['title']
+
     if title == "":
         title = "Video"
 
     try:
-        publish_command_to_sns('play', {'videoId': vidId})
+        publish_command_to_sns('play_video', {'videoId': vidId})
     except SNSPublishError as error:
         speech = build_speechlet_response(
             title="ChromeCast - Command Failed",
@@ -153,53 +146,77 @@ def send_video(intent, session):
         )
         return build_response({}, speech)
 
+
 def set_volume(intent, session):
     """ Gets the volume from the Query """
     if 'volume' in intent['slots']:
-        volume = intent['slots']['volume']['value']
+        volume = int(intent['slots']['volume']['value'])
+
+    if volume > 10 or volume < 0:
+        message = 'Sorry, you can only set the volume between 0 and 10.'
+        return build_response({}, build_speechlet_response(title=message, output=message))
 
     try:
-        publish_command_to_sns('volume', {'level': volume})
+        publish_command_to_sns('set_volume', {'level': volume})
     except SNSPublishError as error:
         speech = build_speechlet_response(
-            title="ChromeCast - Command Failed",
+            title='ChromeCast - Command Failed',
             output=str(error)
         )
         return build_response({}, speech)
     else:
-        message = "ChromeCast - Volume Set to " + volume
+        message = 'Ok'
         speech = build_speechlet_response(title=message, output=message)
         return build_response({}, speech)
+
 
 def pause_video(intent, session):
     try:
         publish_command_to_sns('pause', {})
     except SNSPublishError as error:
         speech = build_speechlet_response(
-            title="ChromeCast - Command Failed",
+            title='ChromeCast - Command Failed',
             output=str(error)
         )
         return build_response({}, speech)
     else:
         speech = build_speechlet_response(
-            title="ChromeCast - Video Paused",
-            output="I've sent the pause command to your Chromecast"
+            title='ChromeCast - Video Paused',
+            output='Ok'
         )
         return build_response({}, speech)
+
 
 def resume_video(intent, session):
     try:
         publish_command_to_sns('resume', {})
     except SNSPublishError as error:
         speech = build_speechlet_response(
-            title="ChromeCast - Command Failed",
+            title=None,
             output=str(error)
         )
         return build_response({}, speech)
     else:
         speech = build_speechlet_response(
-            title="ChromeCast - Video Resumed",
-            output="I've sent the play command to your Chromecast"
+            title=None,
+            output='Ok'
+        )
+        return build_response({}, speech)
+
+
+def stop(intent, session):
+    try:
+        publish_command_to_sns('stop', {})
+    except SNSPublishError as error:
+        speech = build_speechlet_response(
+            title=None,
+            output=str(error)
+        )
+        return build_response({}, speech)
+    else:
+        speech = build_speechlet_response(
+            title=None,
+            output='Ok'
         )
         return build_response({}, speech)
 
@@ -255,6 +272,7 @@ def build_response(session_attributes, speechlet_response):
 
 def publish_command_to_sns(command, data):
     message = {
+        'handler_name': 'chromecast',
         'command': command,
         'data': data
     }

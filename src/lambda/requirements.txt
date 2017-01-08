@@ -1,2 +1,2 @@
-boto==2.43.0
-beautifulsoup4==4.5.3
+boto3==1.4.3
+requests==2.7.0
