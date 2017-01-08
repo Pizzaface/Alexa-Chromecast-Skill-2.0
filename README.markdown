@@ -3,7 +3,9 @@
 Allows Amazon Alexa to control Google Chromecast
 
 > Alexa, tell chromecast to pause
+
 > Alexa, tell chromecast to play
+
 > Alexa, tell chromecast to set the volume to 5
 
 ## Setup and installation
