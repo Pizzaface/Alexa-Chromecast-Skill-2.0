@@ -13,6 +13,8 @@ if [ -z "$(type aws)" ]; then
   fi
 fi
 
+rm .env
+
 # Create Role
 echo "Creating $ROLE_NAME role."
 role_response=$(aws iam create-role --role-name $ROLE_NAME --assume-role-policy-document file://$(pwd)/config/aws-lambda-role-policy.json)
