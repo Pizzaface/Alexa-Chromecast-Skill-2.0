@@ -28,7 +28,7 @@ Installation requires a UNIX environment with:
 
 The skill subscriber can be run with docker:
 
-  docker run --network="host" -it -e 'AWS_ACCESS_KEY_ID=...' -e 'AWS_SECRET_ACCESS_KEY=...' -e 'AWS_DEFAULT_REGION=...' -e 'AWS_SNS_TOPIC_ARN=...' lukechannings/alexa-skill-chromecast
+`docker run --network="host" -it -e 'AWS_ACCESS_KEY_ID=...' -e 'AWS_SECRET_ACCESS_KEY=...' -e 'AWS_DEFAULT_REGION=...' -e 'AWS_SNS_TOPIC_ARN=...' lukechannings/alexa-skill-chromecast`
 
 ### Environment variables
 
