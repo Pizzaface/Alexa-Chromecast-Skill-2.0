@@ -24,6 +24,12 @@ Installation requires a UNIX environment with:
 4. Run src/local/main.py with the AWS_SNS_TOPIC_ARN and CHROMECAST_NAME environment variables.
 5. Ask Alexa to tell Chromecast to do something.
 
+### Docker
+
+The skill subscriber can be run with docker:
+
+  docker run --network="host" -it -e 'AWS_ACCESS_KEY_ID=...' -e 'AWS_SECRET_ACCESS_KEY=...' -e 'AWS_DEFAULT_REGION=...' -e 'AWS_SNS_TOPIC_ARN=...' lukechannings/alexa-skill-chromecast
+
 ### Environment variables
 
 The skill subscriber (local) uses these environment variables:
