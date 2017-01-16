@@ -1,6 +1,0 @@
-setVolumeIntent to set the volume to {volume}
-setVolumeIntent set volume to {volume}
-setVolumeIntent set the volume to {volume}
-setVolumeIntent to set volume to {volume}
-setVolumeIntent volume {volume}
-AMAZON.HelpIntent Help

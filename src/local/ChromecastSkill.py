@@ -1,4 +1,5 @@
 import pychromecast
+import subprocess
 
 class Skill():
 
@@ -12,7 +13,7 @@ class Skill():
             mc = self.cast.media_controller
             getattr(self, command)(data, self.cast, mc)
         except Exception as err:
-            print('No handler for {}. Data: {}.'.format(command, data))
+            print('No handler for {}. Data: {}. Error {}'.format(command, data, err))
 
     def resume(self, data, cast, mc):
         mc.play()
@@ -23,7 +24,7 @@ class Skill():
         print('Pause command sent to Chromecast.')
 
     def stop(self, data, cast, mc):
-        mc.stop()
+        self.cast.quit_app()
         print('Stop command sent to Chromecast.')
 
     def set_volume(self, data, cast, mc):
@@ -36,6 +37,6 @@ class Skill():
         print('Volume command sent to Chromecast. Set to {}.'.format(volume_normalized))
 
     def play_video(self, data, cast, mc):
-        url = subprocess.check_output("youtube-dl -g -- " + url, shell=True)
+        url = subprocess.check_output("youtube-dl -g -- " + data['videoId'], shell=True)
         mc.play_media(url, 'video/mp4')
         print('video sent to chromecast: {}'.format(url))

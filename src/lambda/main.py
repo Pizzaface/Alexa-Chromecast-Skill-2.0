@@ -7,6 +7,7 @@ import os
 from requests import get
 
 AWS_SNS_ARN = os.getenv('AWS_SNS_ARN')
+YOUTUBE_API_KEY = os.getenv('YOUTUBE_API_KEY', 'AIzaSyB4DdmAkhKtJ6NMgSJIgMCFkVJ8KD1uBk0')
 # AWS_DEFAULT_REGION = os.getenv('AWS_DEFAULT_REGION')
 # AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
 # AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
@@ -59,7 +60,7 @@ def on_intent(intent_request, session):
     intent_name = intent_request['intent']['name']
 
     # Sends the request to one of our intents
-    if intent_name == "sendVideoIntent":
+    if intent_name == "PlayVideo":
         return send_video(intent, session)
     elif intent_name == "setVolumeIntent":
         return set_volume(intent, session)
@@ -68,13 +69,14 @@ def on_intent(intent_request, session):
     elif intent_name == "AMAZON.ResumeIntent":
         return resume_video(intent, session)
     elif intent_name == "AMAZON.StopIntent":
-        return stop()
+        return stop(intent, session)
     elif intent_name == "AMAZON.HelpIntent":
         return get_welcome_response()
     elif intent_name == "AMAZON.CancelIntent":
         return handle_session_end_request()
     else:
-        raise ValueError("Invalid intent")
+        print(intent_name)
+        return build_response({},  build_speechlet_response(None, 'not ok'))
 
 
 def on_session_ended(session_ended_request, session):
@@ -101,17 +103,21 @@ def get_welcome_response():
 
 
 def handle_session_end_request():
+    print('handle_session_end_request')
     should_end_session = True
     return build_response({}, build_speechlet_response(
         None, None, None, should_end_session))
 
 
 def send_video(intent, session):
+
+    print(intent['slots']['video'])
+
     """ Check if the User Specified a Video, if not, return an 'I didn't understand' message"""
-    if 'query' in intent['slots']:
-        lookupString = intent['slots']['query']['value']
+    if 'video' in intent['slots']:
+        lookupString = intent['slots']['video']['value']
     else:
-        speech_output = "I'm sorry, I didn't understand, you can say something like 'I want to watch the Game Grumps on Youtube'"
+        speech_output = "I'm sorry, I didn't understand, you can say something like 'Play PewDiePie on YouTube'"
         card_title = None
         should_end_session = True
         reprompt_text = ""
@@ -120,11 +126,11 @@ def send_video(intent, session):
 
     """Looks up the first video in a Youtube Search"""
     query = quote(lookupString.encode('utf8'))
-    youtubeAPISearchURL = """https://www.googleapis.com/youtube/v3/search?q={}&key=AIzaSyB4DdmAkhKtJ6NMgSJIgMCFkVJ8KD1uBk0&part=snippet&type=video""".format(query)
- 
+    youtubeAPISearchURL = """https://www.googleapis.com/youtube/v3/search?q={}&key={}&part=snippet&type=video""".format(query, YOUTUBE_API_KEY)
+
     response = get(youtubeAPISearchURL)
     data = response.json()
- 
+
     vidId = data['items'][0]['id']['videoId']
     title = data['items'][0]['snippet']['title']
 
@@ -223,7 +229,7 @@ def stop(intent, session):
 # --------------- Helpers that build all of the responses ----------------
 
 
-def build_speechlet_response(title, output, reprompt_text="", should_end_session = True):
+def build_speechlet_response(title, output, reprompt_text="", should_end_session=True):
     if output == None:
         return {
             'shouldEndSession': should_end_session
@@ -270,6 +276,7 @@ def build_response(session_attributes, speechlet_response):
         'response': speechlet_response
     }
 
+
 def publish_command_to_sns(command, data):
     message = {
         'handler_name': 'chromecast',
@@ -288,8 +295,10 @@ def publish_command_to_sns(command, data):
     print(response['ResponseMetadata'])
 
     if response['ResponseMetadata']['HTTPStatusCode'] != 200:
-        message = 'SNS Publish returned {} response instead of 200.'.format(response['ResponseMetadata']['HTTPStatusCode'])
+        message = 'SNS Publish returned {} response instead of 200.'.format(
+            response['ResponseMetadata']['HTTPStatusCode'])
         raise SNSPublishError(message)
+
 
 class SNSPublishError(Exception):
     """ If something goes wrong with publishing to SNS """

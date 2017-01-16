@@ -1,11 +1,11 @@
 {
   "intents": [
     {
-      "intent": "sendVideoIntent",
+      "intent": "PlayVideo",
       "slots": [
         {
-          "name": "query",
-          "type": "AMAZON.LITERAL"
+          "name": "video",
+          "type": "YOUTUBE_VIDEOS"
         }
       ]
     },
@@ -17,9 +17,6 @@
           "type": "AMAZON.NUMBER"
         }
       ]
-    },
-    {
-      "intent": "sendStopIntent"
     },
     {
       "intent": "AMAZON.CancelIntent"
