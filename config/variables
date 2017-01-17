@@ -1,0 +1,3 @@
+ROLE_NAME="AmazonAlexaSkill"
+SNS_TOPIC_NAME="AlexaChromecastSkillCommands"
+LAMBDA_FUNCTION_NAME="AlexaChromecastSkill"

@@ -1,0 +1,37 @@
+{
+  "intents": [
+    {
+      "intent": "PlayVideo",
+      "slots": [
+        {
+          "name": "video",
+          "type": "YOUTUBE_VIDEOS"
+        }
+      ]
+    },
+    {
+      "intent": "setVolumeIntent",
+      "slots": [
+        {
+          "name": "volume",
+          "type": "AMAZON.NUMBER"
+        }
+      ]
+    },
+    {
+      "intent": "AMAZON.CancelIntent"
+    },
+    {
+      "intent": "AMAZON.PauseIntent"
+    },
+    {
+      "intent": "AMAZON.ResumeIntent"
+    },
+    {
+      "intent": "AMAZON.StopIntent"
+    },
+    {
+      "intent": "AMAZON.HelpIntent"
+    }
+  ]
+}
