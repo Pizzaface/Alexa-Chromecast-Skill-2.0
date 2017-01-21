@@ -42,5 +42,5 @@ echo "Lambda function ARN: $lambda_arn"
 echo "Then run the local handler."
 echo "SNS Topic ARN: $sns_topic_arn"
 
-echo "LAMBDA_FUNCTION_ARN=$lambda_arn" >> .env
-echo "SNS_TOPIC_ARN=$sns_topic_arn" >> .env
+echo "AWS_LAMBDA_ARN=$lambda_arn" >> .env
+echo "AWS_SNS_TOPIC_ARN=$sns_topic_arn" >> .env
