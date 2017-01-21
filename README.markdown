@@ -8,12 +8,16 @@ Allows Amazon Alexa to control Google Chromecast
 
 > Alexa, tell chromecast to set the volume to 5
 
+> Alexa, tell chromecast to stop
+
+> Alexa, tell chromecast to play MKBHD
+
 ## Dependencies
 
 Installation requires a UNIX environment with:
 
 - BASH
-- Python 27
+- Python 2.7
 - PIP
 
 ## Setup and installation
@@ -56,3 +60,22 @@ This skill implements a hybrid approach: the command is handled by Alexa on AWS,
 Alexa -> AWS Lambda -> AWS SNS (Simple Notification Service) -> Local server
 
 The Lambda component is in `src/lambda`, and the local component is in `src/local`.
+
+
+## Scripts
+
+### aws-setup.sh
+
+Sets up an AWS environment for the Alexa Skil:
+
+1. Creates an IAM role for Alexa (with permissions for SNS)
+2. Creates an SNS topic to communicate over
+3. Creates a Lambda function
+
+### build-lambda-bundle.sh
+
+Creates a lambda-bundle.zip, which can be uploaded to an AWS Lambda function.
+
+### aws-update-lambda.sh
+
+Runs build-lambda-bundle and automatically uploads the bundle to AWS Lambda.
