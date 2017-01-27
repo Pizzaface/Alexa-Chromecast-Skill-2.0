@@ -37,6 +37,6 @@ class Skill():
         print('Volume command sent to Chromecast. Set to {}.'.format(volume_normalized))
 
     def play_video(self, data, cast, mc):
-        url = subprocess.check_output("youtube-dl -g -- " + data['videoId'], shell=True)
+        url = subprocess.check_output("youtube-dl -g --no-check-certificate -- " + data['videoId'], shell=True)
         mc.play_media(url, 'video/mp4')
         print('video sent to chromecast: {}'.format(url))

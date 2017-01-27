@@ -1,6 +1,6 @@
 FROM gliderlabs/alpine:3.4
 
-RUN apk add --update --no-cache python python-dev py-pip build-base linux-headers bsd-compat-headers libffi-dev
+RUN apk add --update --no-cache python python-dev py-pip build-base linux-headers bsd-compat-headers libffi-dev youtube-dl
 
 RUN mkdir /app
 WORKDIR /app
