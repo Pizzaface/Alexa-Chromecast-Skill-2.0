@@ -10,6 +10,9 @@
       ]
     },
     {
+      "intent": "PowerOff"
+    },
+    {
       "intent": "setVolumeIntent",
       "slots": [
         {

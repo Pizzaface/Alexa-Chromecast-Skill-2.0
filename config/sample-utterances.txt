@@ -6,4 +6,9 @@ setVolumeIntent volume {volume}
 AMAZON.HelpIntent Help
 PlayVideo play {video}
 PlayVideo play {video} on youtube
-PlayVideo play the {video}
+PowerOff turn off
+PowerOff to turn off
+PowerOff power off
+PowerOff to power off
+PowerOff switch off
+PowerOff to switch off

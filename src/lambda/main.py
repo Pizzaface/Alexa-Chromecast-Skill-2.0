@@ -62,6 +62,8 @@ def on_intent(intent_request, session):
     # Sends the request to one of our intents
     if intent_name == "PlayVideo":
         return send_video(intent, session)
+    elif intent_name == "PowerOff":
+        return power_off(intent, session)
     elif intent_name == "setVolumeIntent":
         return set_volume(intent, session)
     elif intent_name == "AMAZON.PauseIntent":
@@ -152,6 +154,21 @@ def send_video(intent, session):
         )
         return build_response({}, speech)
 
+def power_off(intent, session):
+    try:
+        publish_command_to_sns('power_off', {})
+    except SNSPublishError as error:
+        speech = build_speechlet_response(
+            title="Communication error",
+            output="Communication error"
+        )
+        return build_response({}, speech)
+    else:
+        speech = build_speechlet_response(
+            title="Ok",
+            output="Ok"
+        )
+        return build_response({}, speech)
 
 def set_volume(intent, session):
     """ Gets the volume from the Query """
