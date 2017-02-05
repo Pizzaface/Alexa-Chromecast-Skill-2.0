@@ -6,11 +6,14 @@ Allows Amazon Alexa to control Google Chromecast
 
 > Alexa, tell chromecast to play
 
+> Alexa, tell chromecast to play MKBHD
+
+> Alexa, tell chromecast to play The Big Lebwoski trailer
+>
 > Alexa, tell chromecast to set the volume to 5
 
 > Alexa, tell chromecast to stop
 
-> Alexa, tell chromecast to play MKBHD
 
 ## Dependencies
 
