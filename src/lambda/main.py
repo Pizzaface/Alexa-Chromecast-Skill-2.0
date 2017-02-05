@@ -1,94 +1,54 @@
 #!/usr/bin/env python2.7
 
-from urllib import quote
 import json
 import boto3
 import os
-from requests import get
+from moviedb import get_movie_trailer_youtube_id
+import youtube
 
-AWS_SNS_ARN = os.getenv('AWS_SNS_ARN')
-YOUTUBE_API_KEY = os.getenv('YOUTUBE_API_KEY', 'AIzaSyB4DdmAkhKtJ6NMgSJIgMCFkVJ8KD1uBk0')
-# AWS_DEFAULT_REGION = os.getenv('AWS_DEFAULT_REGION')
-# AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
-# AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
-
+AWS_SNS_ARN = os.getenv("AWS_SNS_ARN")
 
 def lambda_handler(event, context):
     """ Route the incoming request based on type (LaunchRequest, IntentRequest,
     etc.) The JSON body of the request is provided in the event parameter.
     """
-    print("event.session.application.applicationId=" +
-          event['session']['application']['applicationId'])
 
-    if event['session']['new']:
-        on_session_started({'requestId': event['request']['requestId']},
-                           event['session'])
+    type = event["request"]["type"]
 
-    if event['request']['type'] == "LaunchRequest":
-        return on_launch(event['request'], event['session'])
-    elif event['request']['type'] == "IntentRequest":
-        return on_intent(event['request'], event['session'])
-    elif event['request']['type'] == "SessionEndedRequest":
-        return on_session_ended(event['request'], event['session'])
-
-
-def on_session_started(session_started_request, session):
-    """ Called when the session starts """
-
-    print("on_session_started requestId=" + session_started_request['requestId']
-          + ", sessionId=" + session['sessionId'])
-
+    return {
+        "LaunchRequest": on_launch,
+        "IntentRequest": on_intent
+    }[type](event["request"], event["session"])
 
 def on_launch(launch_request, session):
     """ Called when the user launches the skill without specifying what they
     want
     """
 
-    print("on_launch requestId=" + launch_request['requestId'] +
-          ", sessionId=" + session['sessionId'])
-    # Get's the help section
+    # Get"s the help section
     return get_welcome_response()
 
 
 def on_intent(intent_request, session):
     """ Called when the user specifies an intent for this skill """
 
-    print("on_intent requestId=" + intent_request['requestId'] +
-          ", sessionId=" + session['sessionId'])
+    intent = intent_request["intent"]
+    intent_name = intent_request["intent"]["name"]
 
-    intent = intent_request['intent']
-    intent_name = intent_request['intent']['name']
-
-    # Sends the request to one of our intents
-    if intent_name == "PlayVideo":
-        return send_video(intent, session)
-    elif intent_name == "PowerOff":
-        return power_off(intent, session)
-    elif intent_name == "setVolumeIntent":
-        return set_volume(intent, session)
-    elif intent_name == "AMAZON.PauseIntent":
-        return pause_video(intent, session)
-    elif intent_name == "AMAZON.ResumeIntent":
-        return resume_video(intent, session)
-    elif intent_name == "AMAZON.StopIntent":
-        return stop(intent, session)
-    elif intent_name == "AMAZON.HelpIntent":
-        return get_welcome_response()
-    elif intent_name == "AMAZON.CancelIntent":
-        return handle_session_end_request()
-    else:
-        print(intent_name)
-        return build_response({},  build_speechlet_response(None, 'not ok'))
+    return {
+        "PlayYoutubeVideo": send_video,
+        "PlayTrailer": send_trailer,
+        "PowerOff": power_off,
+        "SetVolume": set_volume,
+        "AMAZON.PauseIntent": pause_video,
+        "AMAZON.ResumeIntent": resume_video,
+        "AMAZON.StopIntent": stop,
+        "AMAZON.HelpIntent": lambda intent, session: get_welcome_response(),
+        "fallback": lambda intent, session: build_response({}, build_speechlet_response(None, "No handler for {}".format(intent_name)))
+    }.get(intent_name, "fallback")(intent, session)
 
 
-def on_session_ended(session_ended_request, session):
-    # When the User decides to end the session, this is the function that is
-    # called.
-    print("on_session_ended requestId=" + session_ended_request['requestId'] +
-          ", sessionId=" + session['sessionId'])
-    # add cleanup logic here
-
-# --------------- Functions that control the skill's behavior ------------
+# --------------- Functions that control the skill"s behavior ------------
 
 
 def get_welcome_response():
@@ -105,7 +65,7 @@ def get_welcome_response():
 
 
 def handle_session_end_request():
-    print('handle_session_end_request')
+    print("handle_session_end_request")
     should_end_session = True
     return build_response({}, build_speechlet_response(
         None, None, None, should_end_session))
@@ -113,34 +73,10 @@ def handle_session_end_request():
 
 def send_video(intent, session):
 
-    print(intent['slots']['video'])
-
-    """ Check if the User Specified a Video, if not, return an 'I didn't understand' message"""
-    if 'video' in intent['slots']:
-        lookupString = intent['slots']['video']['value']
-    else:
-        speech_output = "I'm sorry, I didn't understand, you can say something like 'Play PewDiePie on YouTube'"
-        card_title = None
-        should_end_session = True
-        reprompt_text = ""
-        return build_response({}, build_speechlet_response(
-            card_title, speech_output, reprompt_text, should_end_session))
-
-    """Looks up the first video in a Youtube Search"""
-    query = quote(lookupString.encode('utf8'))
-    youtubeAPISearchURL = """https://www.googleapis.com/youtube/v3/search?q={}&key={}&part=snippet&type=video""".format(query, YOUTUBE_API_KEY)
-
-    response = get(youtubeAPISearchURL)
-    data = response.json()
-
-    vidId = data['items'][0]['id']['videoId']
-    title = data['items'][0]['snippet']['title']
-
-    if title == "":
-        title = "Video"
-
+    youtube_result = youtube.search(intent["slots"]["video"]["value"])
+    
     try:
-        publish_command_to_sns('play_video', {'videoId': vidId})
+        publish_command_to_sns("play_video", {"videoId": youtube_result["id"]})
     except SNSPublishError as error:
         speech = build_speechlet_response(
             title="ChromeCast - Command Failed",
@@ -150,13 +86,32 @@ def send_video(intent, session):
     else:
         speech = build_speechlet_response(
             title="ChromeCast - Video Added",
-            output=(title + " was added successfully")
+            output="Adding {} from YouTube".format(youtube_result["title"])
+        )
+        return build_response({}, speech)
+
+def send_trailer(intent, session):
+    movie = intent["slots"]["movie"]["value"]
+
+    try:
+        moviedb_result = get_movie_trailer_youtube_id(movie)
+        publish_command_to_sns("play_video", {"videoId": moviedb_result["youtube_id"]})
+    except SNSPublishError as error:
+        speech = build_speechlet_response(
+            title="ChromeCast - Command Failed",
+            output=str(error)
+        )
+        return build_response({}, speech)
+    else:
+        speech = build_speechlet_response(
+            title="ChromeCast - Video Added",
+            output=(moviedb_result["title"] + " was added successfully")
         )
         return build_response({}, speech)
 
 def power_off(intent, session):
     try:
-        publish_command_to_sns('power_off', {})
+        publish_command_to_sns("power_off", {})
     except SNSPublishError as error:
         speech = build_speechlet_response(
             title="Communication error",
@@ -172,47 +127,47 @@ def power_off(intent, session):
 
 def set_volume(intent, session):
     """ Gets the volume from the Query """
-    if 'volume' in intent['slots']:
-        volume = int(intent['slots']['volume']['value'])
+    if "volume" in intent["slots"]:
+        volume = int(intent["slots"]["volume"]["value"])
 
     if volume > 10 or volume < 0:
-        message = 'Sorry, you can only set the volume between 0 and 10.'
+        message = "Sorry, you can only set the volume between 0 and 10."
         return build_response({}, build_speechlet_response(title=message, output=message))
 
     try:
-        publish_command_to_sns('set_volume', {'level': volume})
+        publish_command_to_sns("set_volume", {"level": volume})
     except SNSPublishError as error:
         speech = build_speechlet_response(
-            title='ChromeCast - Command Failed',
+            title="ChromeCast - Command Failed",
             output=str(error)
         )
         return build_response({}, speech)
     else:
-        message = 'Ok'
+        message = "Ok"
         speech = build_speechlet_response(title=message, output=message)
         return build_response({}, speech)
 
 
 def pause_video(intent, session):
     try:
-        publish_command_to_sns('pause', {})
+        publish_command_to_sns("pause", {})
     except SNSPublishError as error:
         speech = build_speechlet_response(
-            title='ChromeCast - Command Failed',
+            title="ChromeCast - Command Failed",
             output=str(error)
         )
         return build_response({}, speech)
     else:
         speech = build_speechlet_response(
-            title='ChromeCast - Video Paused',
-            output='Ok'
+            title="ChromeCast - Video Paused",
+            output="Ok"
         )
         return build_response({}, speech)
 
 
 def resume_video(intent, session):
     try:
-        publish_command_to_sns('resume', {})
+        publish_command_to_sns("resume", {})
     except SNSPublishError as error:
         speech = build_speechlet_response(
             title=None,
@@ -222,14 +177,14 @@ def resume_video(intent, session):
     else:
         speech = build_speechlet_response(
             title=None,
-            output='Ok'
+            output="Ok"
         )
         return build_response({}, speech)
 
 
 def stop(intent, session):
     try:
-        publish_command_to_sns('stop', {})
+        publish_command_to_sns("stop", {})
     except SNSPublishError as error:
         speech = build_speechlet_response(
             title=None,
@@ -239,7 +194,7 @@ def stop(intent, session):
     else:
         speech = build_speechlet_response(
             title=None,
-            output='Ok'
+            output="Ok"
         )
         return build_response({}, speech)
 
@@ -249,71 +204,71 @@ def stop(intent, session):
 def build_speechlet_response(title, output, reprompt_text="", should_end_session=True):
     if output == None:
         return {
-            'shouldEndSession': should_end_session
+            "shouldEndSession": should_end_session
         }
     elif title == None:
         return {
-            'outputSpeech': {
-                'type': 'PlainText',
-                'text': output
+            "outputSpeech": {
+                "type": "PlainText",
+                "text": output
             },
-            'reprompt': {
-                'outputSpeech': {
-                    'type': 'PlainText',
-                    'text': reprompt_text
+            "reprompt": {
+                "outputSpeech": {
+                    "type": "PlainText",
+                    "text": reprompt_text
                 }
             },
-            'shouldEndSession': should_end_session
+            "shouldEndSession": should_end_session
         }
     else:
         return {
-            'outputSpeech': {
-                'type': 'PlainText',
-                'text': output
+            "outputSpeech": {
+                "type": "PlainText",
+                "text": output
             },
-            'card': {
-                'type': 'Simple',
-                'title':  title,
-                        'content': output
+            "card": {
+                "type": "Simple",
+                "title":  title,
+                        "content": output
             },
-            'reprompt': {
-                'outputSpeech': {
-                    'type': 'PlainText',
-                    'text': reprompt_text
+            "reprompt": {
+                "outputSpeech": {
+                    "type": "PlainText",
+                    "text": reprompt_text
                 }
             },
-            'shouldEndSession': should_end_session
+            "shouldEndSession": should_end_session
         }
 
 
 def build_response(session_attributes, speechlet_response):
     return {
-        'version': '1.0',
-        'sessionAttributes': session_attributes,
-        'response': speechlet_response
+        "version": "1.0",
+        "sessionAttributes": session_attributes,
+        "response": speechlet_response
     }
 
 
 def publish_command_to_sns(command, data):
     message = {
-        'handler_name': 'chromecast',
-        'command': command,
-        'data': data
+        "handler_name": "chromecast",
+        "command": command,
+        "data": data
     }
 
-    client = boto3.client('sns')
+    client = boto3.client("sns")
 
     response = client.publish(
         TargetArn=AWS_SNS_ARN,
-        Message=json.dumps({'default': json.dumps(message)}),
-        MessageStructure='json'
+        Message=json.dumps({"default": json.dumps(message)}),
+        MessageStructure="json"
     )
 
-    print(response['ResponseMetadata'])
+    print(response["ResponseMetadata"])
 
-    if response['ResponseMetadata']['HTTPStatusCode'] != 200:
-        message = 'SNS Publish returned {} response instead of 200.'.format(
-            response['ResponseMetadata']['HTTPStatusCode'])
+    if response["ResponseMetadata"]["HTTPStatusCode"] != 200:
+        message = "SNS Publish returned {} response instead of 200.".format(
+            response["ResponseMetadata"]["HTTPStatusCode"])
         raise SNSPublishError(message)
 
 

@@ -1,11 +1,17 @@
-setVolumeIntent to set the volume to {volume}
-setVolumeIntent set volume to {volume}
-setVolumeIntent set the volume to {volume}
-setVolumeIntent to set volume to {volume}
-setVolumeIntent volume {volume}
+SetVolume to set the volume to {volume}
+SetVolume set volume to {volume}
+SetVolume set the volume to {volume}
+SetVolume to set volume to {volume}
+SetVolume volume {volume}
 AMAZON.HelpIntent Help
-PlayVideo play {video}
-PlayVideo play {video} on youtube
+PlayYoutubeVideo play {video}
+PlayYoutubeVideo play {video} on youtube
+PlayYoutubeVideo play {video} from youtube
+PlayYoutubeVideo play the {video}
+PlayTrailer play {movie} trailer
+PlayTrailer play {movie} advert
+PlayTrailer play the trailer for {movie}
+PlayTrailer play the advert for {movie}
 PowerOff turn off
 PowerOff to turn off
 PowerOff power off
