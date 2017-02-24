@@ -1,7 +1,7 @@
 {
   "intents": [
     {
-      "intent": "PlayVideo",
+      "intent": "PlayYoutubeVideo",
       "slots": [
         {
           "name": "video",
@@ -10,7 +10,19 @@
       ]
     },
     {
-      "intent": "setVolumeIntent",
+      "intent": "PlayTrailer",
+      "slots": [
+        {
+          "name": "movie",
+          "type": "MOVIE"
+        }
+      ]
+    },
+    {
+      "intent": "PowerOff"
+    },
+    {
+      "intent": "SetVolume",
       "slots": [
         {
           "name": "volume",

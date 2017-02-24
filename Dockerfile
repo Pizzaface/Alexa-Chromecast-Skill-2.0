@@ -1,6 +1,12 @@
 FROM gliderlabs/alpine:3.4
 
-RUN apk add --update --no-cache python python-dev py-pip build-base linux-headers bsd-compat-headers libffi-dev
+RUN apk update
+RUN apk add python python-dev
+RUN apk add py-pip
+RUN apk add build-base
+RUN apk add linux-headers
+RUN apk add bsd-compat-headers
+RUN apk add libffi-dev
 
 RUN mkdir /app
 WORKDIR /app
