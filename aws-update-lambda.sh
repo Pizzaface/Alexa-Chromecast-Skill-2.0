@@ -1,5 +1,9 @@
 #!/usr/bin/env bash -e
 
+set -e -o pipefail
+
+cd $(dirname $0)
+
 source config/variables
 
 ./build-lambda-bundle.sh

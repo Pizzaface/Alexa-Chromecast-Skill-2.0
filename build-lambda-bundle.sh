@@ -1,5 +1,9 @@
 #!/usr/bin/env bash -e
 
+set -e -o pipefail
+
+cd $(dirname $0)
+
 # Generate Lambda zip file
 
 echo "Building Lambda bundle."
