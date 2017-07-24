@@ -1,5 +1,14 @@
 #!/usr/bin/env bash -e
 
+set -e -o pipefaile
+
+cd $(dirname $0)
+
+if [ -z "$(type pip)" ]; then
+  echo "Pip is not installed. Ensure Python (2.7) is installed, and Pip - https://pip.pypa.io/en/stable/installing."
+  exit 1
+fi
+
 source ./config/variables
 
 if [ -z "$(type aws)" ]; then
