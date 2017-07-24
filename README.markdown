@@ -21,19 +21,20 @@ Installation requires a UNIX environment with:
 
 - BASH
 - Python 2.7
-- PIP
+- [Pip](https://pip.pypa.io/en/stable/installing/)
 
 ## Setup and installation
 
 1. Create an [Amazon Web Services](http://aws.amazon.com/) account
 2. Run aws-setup.sh to create a Role, Lambda Function, and SNS Topic. (*It will run `aws configure`, so have an key id and access key ready*)
 3. Go to developer.amazon.com and create a Skill mapped to the Lambda function ARN, intentSchemas and sample utterances are in `config/`.
-4. Run src/local/main.py with the AWS_SNS_TOPIC_ARN and CHROMECAST_NAME environment variables.
-5. Ask Alexa to tell Chromecast to do something.
+4. Install local dependencies with `sudo pip install -r ./src/local/requirements.txt`
+5. Run `./start.sh` to start the listener.
+6. Ask Alexa to tell Chromecast to do something.
 
 ### Shell example
 
-  AWS_SNS_TOPIC_ARN=something CHROMECAST_NAME=Living\ Room ./src/local/main.py
+  `./start.sh`
 
 ### Docker
 
