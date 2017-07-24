@@ -7,7 +7,12 @@ class Skill():
 
     def __init__(self, chromecast_name='Living Room'):
         chromecasts = pychromecast.get_chromecasts()
-        self.cast = next(cc for cc in chromecasts if cc.device.friendly_name == chromecast_name)
+        if len(chromecasts) > 0:
+            self.cast = next(cc for cc in chromecasts if cc.device.friendly_name == chromecast_name)
+        else:
+            print("No Chromecasts found")
+            exit(1)
+
 
     def handle_command(self, command, data):
         try:
