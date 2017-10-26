@@ -14,6 +14,16 @@ Allows Amazon Alexa to control Google Chromecast
 
 > Alexa, tell chromecast to stop
 
+## How it works
+
+Alexa skills run in the cloud, but this skill needs to be on your local network to control the Chromecast.
+This skill implements a hybrid approach: the command is handled by Alexa on AWS, which sends a notification to your local server.
+
+The Lambda component is in `src/lambda`, and the local component is in `src/local`.
+
+![Architecture Overview](docs/diagram.jpg "Architecture Overview")
+
+Both the ChromeCast and the Raspberry Pi (or whatever the local notification handler will run on) **MUST** be on the same network in order for the ChromeCast to be discoverable.
 
 ## Dependencies
 
@@ -46,24 +56,15 @@ The skill subscriber can be run with docker:
 
 The skill subscriber (local) uses these environment variables:
 
-- AWS_SNS_TOPIC_ARN - AWS SNS Topic ARN (can be found in the `.env` file after running `aws-setup.sh`)
-- CHROMECAST_NAME - Friendly name of the Chromecast to send commands to. (Defaults to 'Living Room')
-- PORT - (Optional) Externally accessible port to expose the SNS handler on.
+- **AWS_SNS_TOPIC_ARN** - AWS SNS Topic ARN (can be found in the `.env` file after running `aws-setup.sh`)
+- **CHROMECAST_NAME** - Friendly name of the Chromecast to send commands to. (Defaults to 'Living Room')
+- **PORT** - (Optional) Externally accessible port to expose the SNS handler on.
 
-- AWS_ACCESS_KEY_ID - AWS User Access Key
-- AWS_SECRET_ACCESS_KEY - AWS Secret Access Key
-- AWS_DEFAULT_REGION - AWS Lambda and SNS Region (e.g. eu-west-1)
+- **AWS_ACCESS_KEY_ID** - AWS User Access Key
+- **AWS_SECRET_ACCESS_KEY** - AWS Secret Access Key
+- **AWS_DEFAULT_REGION** - AWS Lambda and SNS Region (e.g. eu-west-1)
 
 If you have run `aws configure`, you will not need to set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, or AWS_DEFAULT_REGION.
-
-## Implementation
-
-Alexa skills run in the cloud, but this skill needs to be on your local network to control the Chromecast.
-This skill implements a hybrid approach: the command is handled by Alexa on AWS, which sends a notification to your local server.
-
-Alexa -> AWS Lambda -> AWS SNS (Simple Notification Service) -> Local server
-
-The Lambda component is in `src/lambda`, and the local component is in `src/local`.
 
 
 ## Scripts
@@ -83,3 +84,14 @@ Creates a lambda-bundle.zip, which can be uploaded to an AWS Lambda function.
 ### aws-update-lambda.sh
 
 Runs build-lambda-bundle and automatically uploads the bundle to AWS Lambda.
+
+
+## FAQ
+
+### "No Chromecasts found"
+
+When the local service starts it searches for ChromeCasts on the network. If there are no ChromeCasts found, it will exit.
+
+To fix this, you must confirm that the ChromeCast is on and working, make sure you can access it from your phone, and make sure that everything is on the same network.
+
+To debug, a tool to search and list found ChomeCasts is provided at `./search-chromecasts` (make sure to make it executable with `chmod +x ./search-chromecasts`).

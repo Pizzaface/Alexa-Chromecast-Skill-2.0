@@ -1,0 +1,11 @@
+#!/usr/bin/env python
+
+import pychromecast
+
+chromecasts = pychromecast.get_chromecasts()
+
+if len(chromecasts) > 0:
+  for cc in chromecasts:
+    print("Found '{}' ChromeCast".format(cc.device.friendly_name))
+else:
+  print("No ChromeCasts found on this network!")
