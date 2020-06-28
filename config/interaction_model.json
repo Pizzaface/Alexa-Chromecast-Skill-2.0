@@ -1,0 +1,194 @@
+{
+    "interactionModel": {
+        "languageModel": {
+            "invocationName": "chromecast",
+            "intents": [
+                {
+                    "name": "AMAZON.CancelIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.HelpIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.StopIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.NavigateHomeIntent",
+                    "samples": [
+                        "open"
+                    ]
+                },
+                {
+                    "name": "PlayIntent",
+                    "slots": [
+                        {
+                            "name": "room",
+                            "type": "AMAZON.Room"
+                        }
+                    ],
+                    "samples": [
+                        "in {room} to resume",
+                        "in {room} to play",
+                        "to resume in {room}",
+                        "to play in {room}",
+                        "to resume",
+                        "to play",
+                        "resume",
+                        "play",
+                        "resume in {room}",
+                        "play in {room}"
+                    ]
+                },
+                {
+                    "name": "PauseIntent",
+                    "slots": [
+                        {
+                            "name": "room",
+                            "type": "AMAZON.Room"
+                        }
+                    ],
+                    "samples": [
+                        "in {room} to pause",
+                        "to pause in {room}",
+                        "to pause",
+                        "pause in {room}",
+                        "pause"
+                    ]
+                },
+                {
+                    "name": "SetRoomIntent",
+                    "slots": [
+                        {
+                            "name": "room",
+                            "type": "AMAZON.Room",
+                            "samples": [
+                                "the master bedroom",
+                                "the media room"
+                            ]
+                        }
+                    ],
+                    "samples": [
+                        "set default room to the {room}",
+                        "set devices room to {room}",
+                        "set the room to {room}",
+                        "set room to {room}"
+                    ]
+                },
+                {
+                    "name": "StopIntent",
+                    "slots": [
+                        {
+                            "name": "room",
+                            "type": "AMAZON.Room"
+                        }
+                    ],
+                    "samples": [
+                        "in {room} to stop",
+                        "to stop {room}",
+                        "to stop in {room}"
+                    ]
+                },
+                {
+                    "name": "PlayYoutubeIntent",
+                    "slots": [
+                        {
+                            "name": "video",
+                            "type": "AMAZON.Movie"
+                        },
+                        {
+                            "name": "room",
+                            "type": "AMAZON.Room"
+                        }
+                    ],
+                    "samples": [
+                        "in {room} play {video}",
+                        "play {video} in {room}",
+                        "play {video}"
+                    ]
+                },
+                {
+                    "name": "PlayTrailerIntent",
+                    "slots": [
+                        {
+                            "name": "movie",
+                            "type": "AMAZON.Movie"
+                        },
+                        {
+                            "name": "room",
+                            "type": "AMAZON.Room"
+                        }
+                    ],
+                    "samples": [
+                        "in {room} play {movie} trailer",
+                        "play {movie} trailer in {room}",
+                        "play {movie} trailer",
+                        "in {room} play trailer for {movie}",
+                        "play trailer for {movie} in {room}",
+                        "play trailer for {movie} "
+                    ]
+                },
+                {
+                    "name": "RestartIntent",
+                    "slots": [],
+                    "samples": [
+                        "restart",
+                        "to restart"
+                    ]
+                }
+            ],
+            "types": []
+        },
+        "dialog": {
+            "intents": [
+                {
+                    "name": "SetRoomIntent",
+                    "confirmationRequired": false,
+                    "prompts": {},
+                    "slots": [
+                        {
+                            "name": "room",
+                            "type": "AMAZON.Room",
+                            "confirmationRequired": false,
+                            "elicitationRequired": true,
+                            "prompts": {
+                                "elicitation": "Elicit.Slot.1252426455707.629937893162"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "RestartIntent",
+                    "confirmationRequired": true,
+                    "prompts": {
+                        "confirmation": "Confirm.Intent.694744913486"
+                    },
+                    "slots": []
+                }
+            ],
+            "delegationStrategy": "ALWAYS"
+        },
+        "prompts": [
+            {
+                "id": "Elicit.Slot.1252426455707.629937893162",
+                "variations": [
+                    {
+                        "type": "PlainText",
+                        "value": "For what room?"
+                    }
+                ]
+            },
+            {
+                "id": "Confirm.Intent.694744913486",
+                "variations": [
+                    {
+                        "type": "PlainText",
+                        "value": "Are you sure you want to restart the Chromecast?"
+                    }
+                ]
+            }
+        ]
+    }
+}

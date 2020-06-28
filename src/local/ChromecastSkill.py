@@ -1,73 +1,237 @@
 import os
+import sys
+import threading
+import time
+import logging
+from datetime import datetime, timedelta
 import pychromecast
+from pychromecast import Chromecast
+from pychromecast.controllers.youtube import YouTubeController
+from pychromecast.controllers.plex import PlexController
 import subprocess
 import requests
+from enum import Enum
+import local.youtube as youtube_search
+import local.moviedb_search as moviedb_search
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+handler = logging.StreamHandler(sys.stdout)
+logger.addHandler(handler)
+
+class MyYouTubeController(YouTubeController):
+    
+    def __init__(self):
+        self.play_list = {}
+        super().__init__()
+
+    def receive_message(self, msg, data):
+        print('Received: %s %s' % (msg, data))
+        return YouTubeController.receive_message(self, msg, data)
+
+    def init_playlist(self):
+        self.playlist = {}
+
+    def play_previous(self, current_id):
+        #This is not pretty.... it rebuilds the playlist on a previous command to make it work
+        select_from_here = False
+        select_next = False
+        if len(self.playlist) == 0:
+            self.playlist = self._session.get_queue_videos()
+
+        self.clear_playlist()
+        for video in self.playlist:
+
+            if video['data-video-id'] == current_id:
+                select_next = True
+
+            elif select_next:
+                self.play_video(video['data-video-id'])
+                select_next = False
+                select_from_here = True
+
+            elif select_from_here:
+                self.add_to_queue(video['data-video-id'])
+
+class MediaState(Enum):
+    Idle=0
+    Playing=1
+    Paused=2
+    Finished=3
+
+class ChromecastWrapper:
+    @property
+    def cast(self) -> Chromecast:
+        return self.__cc
+
+    @property
+    def media_controller(self):
+        return self.cast.media_controller
+
+    @property
+    def name(self):
+        return self.__cc.device.friendly_name
+
+    def __init__(self, cc):
+        self.__cc = cc
+        cc.media_controller.register_status_listener(self)
+        cc.register_status_listener(self)
+        self.youtube_controller = MyYouTubeController()
+        cc.register_handler(self.youtube_controller)
+        self.content_id = ''
+        self.state = MediaState.Idle
+
+    def new_media_status(self, status:pychromecast.controllers.media.MediaStatus):
+        with open('media_status.log', 'a') as status_file:
+            status_file.write('%s\n' % status)
+            status_file.write('IsActive: %s, IsPaused: %s, IsPlaying: %s, IsIdle: %s\n' % (
+                self.media_controller.is_active,
+                self.media_controller.is_paused,
+                self.media_controller.is_playing,
+                self.media_controller.is_idle,
+                ))
+
+    def new_cast_status(self, status):
+        return
+        with open('media_status.log', 'a') as status_file:
+            status_file.write('%s\n' % status)
+
+class ChromecastState:
+
+    @property
+    def count(self):
+        return len(self.__chromecasts)
+
+    def stop(self):
+        self.running = False
+        self.thread.join(10)
+
+    def __set_chromecasts(self):
+        with self.lock:
+            self.__chromecasts = {}
+            for cc in pychromecast.get_chromecasts():
+                self.__chromecasts[cc.device.friendly_name] = ChromecastWrapper(cc)
+            self.expiry = datetime.now()
+
+    def expire_chromecasts(self):
+        while self.running:
+            time.sleep(1)
+            refresh_period = timedelta(minutes=120)
+            if (self.expiry + refresh_period) < datetime.now():
+                self.__set_chromecasts()
+
+    def __init__(self):
+        self.running = True
+        self.expiry = datetime.now()
+        self.lock = threading.Lock()
+        self.__set_chromecasts()
+        self.thread = threading.Thread(target=self.expire_chromecasts)
+        self.thread.start()
+
+    def match_chromecast(self, room):
+        with self.lock:
+            result = next((x for x in self.__chromecasts.values() if str.lower(room.strip()) in str.lower(x.name).replace(' the ', '')), False)
+            if result: result.cast.wait()
+            return result
+
+    def get_chromecast(self, name):
+        return self.__chromecasts[name]
 
 class Skill():
 
-    def __init__(self, chromecast_name='Living Room'):
-        chromecasts = pychromecast.get_chromecasts()
-        if len(chromecasts) > 0:
-            self.cast = next(cc for cc in chromecasts if cc.device.friendly_name == chromecast_name)
-        else:
+    def __init__(self):
+        self.chromecast_controller = ChromecastState()
+        if self.chromecast_controller.count == 0:
             print("No Chromecasts found")
             exit(1)
 
+    def get_chromecast(self, name) -> ChromecastWrapper:
+        return self.chromecast_controller.get_chromecast(name)
 
-    def handle_command(self, command, data):
+    def handle_command(self, room, command, data):
         try:
-            self.cast.wait()
-            mc = self.cast.media_controller
-            getattr(self, command)(data, self.cast, mc)
-        except Exception as err:
-            print('No handler for {}. Data: {}. Error {}'.format(command, data, err))
+            chromecast = self.chromecast_controller.match_chromecast(room)
+            if not chromecast:
+                print('No Chromecast found matching: %s' % room)
+                return
+            func = command.replace('-','_')
+            getattr(self, func)(data, chromecast.name)
+            print('Calling command %s' % command)
+        except Exception:
+            logger.exception('Unexpected error')
 
-    def resume(self, data, cast, mc):
-        mc.play()
+    def resume(self, data, name):
+        self.play(data, name)
+
+    def play(self, data, name):
+        self.get_chromecast(name).media_controller.play()
         print('Play command sent to Chromecast.')
-
-    def pause(self, data, cast, mc):
-        mc.pause()
+    
+    def pause(self, data, name):
+        cc = self.get_chromecast(name)
+        cc.media_controller.pause()
         print('Pause command sent to Chromecast.')
 
-    def stop(self, data, cast, mc):
-        self.cast.quit_app()
+    def stop(self, data, name):
+        self.get_chromecast(name).cast.quit_app()
         print('Stop command sent to Chromecast.')
 
-    def set_volume(self, data, cast, mc):
+    def set_volume(self, data, name):
         volume = data['level'] # volume as 0-10
         volume_normalized = float(volume) / 10.0 # volume as 0-1
-        cast.set_volume(volume_normalized)
+        self.get_chromecast(name).cast.set_volume(volume_normalized)
         print('Volume command sent to Chromecast. Set to {}.'.format(volume_normalized))
 
-    def play_video(self, data, cast, mc):
-        url = subprocess.check_output("youtube-dl -g --no-check-certificate -f best -- " + data['videoId'], shell=True)
-        mc.play_media(url, 'video/mp4')
-        print('video sent to chromecast: {}'.format(url))
+    def play_next(self, data, name):
+        #mc.queue_next() didn't work
+        self.get_chromecast(name).media_controller.skip()
+        print('Play next command sent to Chromecast.')
 
-    def power_off(self, data, cast, mc):
-        self.stop(data, cast, mc)
+    def play_previous(self, data, name):
+        cc = self.get_chromecast(name)
+        current_id = cc.media_controller.status.content_id
+        cc.youtube_controller.play_previous(current_id)
+        print('Trying to play previous item in the queue.')
 
-        panasonic_viera_ip = os.getenv('PANASONIC_VIERA_IP', False)
-        if panasonic_viera_ip:
-            self.power_off_panasonic_viera(panasonic_viera_ip)
+    def play_video(self, data, name):
+        cc = self.get_chromecast(name)
+        yt = cc.youtube_controller
+        video_title = data['title']
+        streaming_app = data['app']
+        if streaming_app == 'youtube':
+            video_playlist = youtube_search.search(video_title)
+            if len(video_playlist) == 0:
+                print('Unable to find youtube video for: %s' % video_title)
+                return
+            playing = False
+            yt.init_playlist()
+            for video in video_playlist:
+                if not playing:
+                    if not video['playlist_id']:
+                        #Youtube controller will clear for a playlist
+                        yt.clear_playlist()
+                    yt.play_video(video['id'], video['playlist_id'])
+                    print('Currently playing: %s' % video['id'])
+                    playing = True
+                else:
+                    yt.add_to_queue(video['id'])
+            print('Asked chromecast to play %i titles matching: %s on YouTube' % (len(video_playlist), video_title))
 
-    def power_off_panasonic_viera(self, ip_address):
+        elif streaming_app == 'plex':
+            #TODO: Future support other apps - Not Implemented
+            print('Asked chromecast to play title: %s on Plex' % video_title)
+        else:
+            print('The streaming application %s is not supported' % streaming_app)
 
-        URN = 'urn:panasonic-com:service:p00NetworkControl:1'
-        key = 'NRC_POWER-ONOFF'
-        soap_payload = "<?xml version='1.0' encoding='utf-8'?><s:Envelope xmlns:s='http://schemas.xmlsoap.org/soap/envelope/' s:encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'><s:Body><u:X_SendKey xmlns:u='{}'><X_KeyEvent>{}</X_KeyEvent></u:X_SendKey></s:Body></s:Envelope>".format(URN, key)
-        path = 'nrc/control_0'
-        port = 55000
+    def play_trailer(self, data, name):
+        cc = self.get_chromecast(name)
+        yt = cc.youtube_controller
+        moviedb_result = moviedb_search.get_movie_trailer_youtube_id(data['title'])
+        video_id = moviedb_result["youtube_id"]
+        yt.play_video(video_id)
+        print('video sent to chromecast, id: %s' % video_id)
 
-        headers = {
-            'Connection': 'Close',
-            'Content-Type': 'text/xml; charset="utf-8"',
-            'SOAPACTION':  '"' + URN + '#X_SendKey"'
-        }
+    def restart(self, data, name):
+        self.get_chromecast(name).cast.reboot()
+        print('Rebooting Chromecast...')
 
-        result = requests.post(
-            'http://{}:{}/{}'.format(ip_address, port, path),
-            data=soap_payload,
-            headers=headers
-        )

@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 
 """
 Required Environment Variables:
@@ -13,11 +13,12 @@ CHROMECAST_NAME - name of the Chromecast to send commands to
 """
 
 import os
-from SkillSubscriber import Subscriber
-from ChromecastSkill import Skill
+from local.SkillSubscriber import Subscriber
+from local.ChromecastSkill import Skill
 
 PORT = os.getenv('PORT', False)
+PORT = 30000
 
 if __name__ == "__main__":
-    chromecast_skill = Skill(chromecast_name=os.getenv('CHROMECAST_NAME', 'Living Room'))
+    chromecast_skill = Skill()
     Subscriber({'chromecast': chromecast_skill}, PORT)

@@ -1,19 +1,12 @@
-FROM gliderlabs/alpine:3.4
-
-RUN apk update
-RUN apk add python python-dev
-RUN apk add py-pip
-RUN apk add build-base
-RUN apk add linux-headers
-RUN apk add bsd-compat-headers
-RUN apk add libffi-dev
+FROM python:3.7.3
+ENV LANG=C.UTF-8 LC_ALL=C.UTF-8 PYTHONUNBUFFERED=1
 
 RUN mkdir /app
 WORKDIR /app
 
 ADD ./src/local/requirements.txt /app/
-RUN pip install -r requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt
 
-ADD ./src/local/*.py /app/
+ADD ./src/local /app/
 
-ENTRYPOINT ["python", "main.py"]
+ENTRYPOINT ["python3", "-m", "local.main"]

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import urllib
 import json
@@ -10,6 +10,10 @@ MOVIEDB_API_URI = "https://api.themoviedb.org/3"
 
 
 def moviedb_search_movies(movie):
+    if not MOVIEDB_API_KEY:
+        print('You need to set a moviedb API key. e.g. export MOVIEDB_API_KEY=xxxxxx')
+        print('You can request this at: %s' % MOVIEDB_API_URI)
+
     query = {
         "api_key": MOVIEDB_API_KEY,
         "language": 'en-GB',
@@ -18,7 +22,7 @@ def moviedb_search_movies(movie):
         "include_adult": False
     }
 
-    uri = "{}/search/movie?{}".format(MOVIEDB_API_URI, urllib.urlencode(query))
+    uri = "{}/search/movie?{}".format(MOVIEDB_API_URI, urllib.parse.urlencode(query))
 
     r = requests.get(uri)
     response = r.json()
@@ -34,7 +38,7 @@ def moviedb_search_movie_videos(moviedb_id):
         "api_key": MOVIEDB_API_KEY,
         "language": 'en-GB'
     }
-    url = "{}/movie/{}/videos?{}".format(MOVIEDB_API_URI, moviedb_id, urllib.urlencode(query))
+    url = "{}/movie/{}/videos?{}".format(MOVIEDB_API_URI, moviedb_id, urllib.parse.urlencode(query))
     r = requests.get(url)
     response = r.json()
 
