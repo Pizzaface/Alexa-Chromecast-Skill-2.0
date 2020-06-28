@@ -6,6 +6,9 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from requests import get
 import miniupnpc
 import boto3
+import logging
+
+logger = logging.getLogger('AlexaChromecastSkill')
 
 """
 Generic Skill Subscription class to handle commands from an
@@ -21,9 +24,8 @@ class Subscriber(BaseHTTPRequestHandler):
             self.manual_port_forward = False
             try:
                 self.initialize_upnp()
-            except Exception as err:
-                print('Failed to configure UPnP. Please map port manually and pass PORT environment variable.')
-                print(err)
+            except Exception:
+                logger.exception('Failed to configure UPnP. Please map port manually and pass PORT environment variable.')
                 sys.exit(1)
 
         self.sns_client = boto3.client('sns')
@@ -33,7 +35,6 @@ class Subscriber(BaseHTTPRequestHandler):
 
         class SNSRequestHandler(BaseHTTPRequestHandler):
             def do_POST(self):
-                print('Received POST request...')
                 self.send_response(200)
                 self.send_header('content-type', 'text/html')
                 self.end_headers()
@@ -44,9 +45,11 @@ class Subscriber(BaseHTTPRequestHandler):
                 type = data['Type']
  
                 if type == 'SubscriptionConfirmation':
+                    logger.info('Subscribing to receive commands...')
                     token = data['Token']
                     instance.confirm_subscription(topic_arn, token)
                 elif type == 'Notification':
+                    logger.info('Received message...')
                     if data['Message']:
                         instance.dispatch_notification(json.loads(data['Message']))
 
@@ -58,7 +61,7 @@ class Subscriber(BaseHTTPRequestHandler):
         port = self.server.server_port
         self.endpoint_url = 'http://{}:{}'.format(self.get_external_ip(), port)
         self.subscribe()
-        print('Listening on {}'.format(self.endpoint_url))
+        logger.info('Listening on {}'.format(self.endpoint_url))
         signal.signal(signal.SIGINT,
                       lambda signal, frame: self.unsubscribe())
         self.server.serve_forever()
@@ -85,12 +88,8 @@ class Subscriber(BaseHTTPRequestHandler):
                     ''
                 )
             except:
-                print(
-                    '''
-                    Failed to automatically forward port.
-                    Please set port as an environment variable and forward manually.
-                    '''
-                )
+                logger.error('Failed to automatically forward port.')
+                logger.error('Please set port as an environment variable and forward manually.')
                 sys.exit(1)
 
         try:
@@ -100,9 +99,8 @@ class Subscriber(BaseHTTPRequestHandler):
                 Endpoint=self.endpoint_url
             )
 
-        except Exception as err:
-            print('SNS Topic ({}) is invalid. Please check in AWS.'.format(self.topic_arn))
-            print(err)
+        except Exception:
+            logger.exception('SNS Topic ({}) is invalid. Please check in AWS.'.format(self.topic_arn))
             sys.exit(1)
 
     def confirm_subscription(self, topic_arn, token):
@@ -112,10 +110,10 @@ class Subscriber(BaseHTTPRequestHandler):
                 TopicArn=topic_arn,
                 Token=token,
                 AuthenticateOnUnsubscribe="false")
-            
-        except Exception as err:
-            print('Failed to confirm subscription. Please check in AWS.')
-            print(err)
+            logger.info('Subscribed.')
+        
+        except Exception:
+            logger.exception('Failed to confirm subscription. Please check in AWS.')
             sys.exit(1)
 
     def unsubscribe(self):
@@ -124,7 +122,7 @@ class Subscriber(BaseHTTPRequestHandler):
             result = self.upnp.deleteportmapping(self.server.server_port, 'TCP')
 
             if result:
-                print('Removed forward for port {}.'.format(self.server.server_port))
+                logger.debug('Removed forward for port {}.'.format(self.server.server_port))
             else:
                 raise RuntimeError(
                     'Failed to remove port forward for {}.'.format(self.server.server_port))
@@ -148,6 +146,7 @@ class Subscriber(BaseHTTPRequestHandler):
         try:
             skill = self.skills.get(notification['handler_name'])
             skill.handle_command(notification['room'], notification['command'], notification['data'])
-        except Exception as err:
-            print(err)
+        except Exception:
+            logger.exception('Unexpected error handling message')
+
 

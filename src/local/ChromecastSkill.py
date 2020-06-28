@@ -3,6 +3,7 @@ import sys
 import threading
 import time
 import logging
+import logging.handlers
 from datetime import datetime, timedelta
 import pychromecast
 from pychromecast import Chromecast
@@ -14,9 +15,19 @@ from enum import Enum
 import local.youtube as youtube_search
 import local.moviedb_search as moviedb_search
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+cwd = os.getcwd()
+logger = logging.getLogger('AlexaChromecastSkill')
+logger.setLevel(logging.DEBUG)
+logger.propagate = False
+
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
 handler = logging.StreamHandler(sys.stdout)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+
+handler = logging.handlers.TimedRotatingFileHandler(cwd+os.path.sep+'alexa-chromecast.log', when='D', interval=1, backupCount=5)
+handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 class MyYouTubeController(YouTubeController):
@@ -26,7 +37,7 @@ class MyYouTubeController(YouTubeController):
         super().__init__()
 
     def receive_message(self, msg, data):
-        print('Received: %s %s' % (msg, data))
+        logger.debug('Received: %s %s' % (msg, data))
         return YouTubeController.receive_message(self, msg, data)
 
     def init_playlist(self):
@@ -34,30 +45,26 @@ class MyYouTubeController(YouTubeController):
 
     def play_previous(self, current_id):
         #This is not pretty.... it rebuilds the playlist on a previous command to make it work
+        #There should be a way to play from a position in the queue, but I couldn't find it
         select_from_here = False
-        select_next = False
         if len(self.playlist) == 0:
             self.playlist = self._session.get_queue_videos()
 
+        previous_id = False
         self.clear_playlist()
         for video in self.playlist:
 
             if video['data-video-id'] == current_id:
-                select_next = True
+                if previous_id:
+                    self.play_video(previous_id)
+                    select_from_here = True
+                else:
+                    return
 
-            elif select_next:
-                self.play_video(video['data-video-id'])
-                select_next = False
-                select_from_here = True
-
-            elif select_from_here:
+            if select_from_here:
                 self.add_to_queue(video['data-video-id'])
 
-class MediaState(Enum):
-    Idle=0
-    Playing=1
-    Paused=2
-    Finished=3
+            previous_id = video['data-video-id']
 
 class ChromecastWrapper:
     @property
@@ -78,23 +85,12 @@ class ChromecastWrapper:
         cc.register_status_listener(self)
         self.youtube_controller = MyYouTubeController()
         cc.register_handler(self.youtube_controller)
-        self.content_id = ''
-        self.state = MediaState.Idle
 
     def new_media_status(self, status:pychromecast.controllers.media.MediaStatus):
-        with open('media_status.log', 'a') as status_file:
-            status_file.write('%s\n' % status)
-            status_file.write('IsActive: %s, IsPaused: %s, IsPlaying: %s, IsIdle: %s\n' % (
-                self.media_controller.is_active,
-                self.media_controller.is_paused,
-                self.media_controller.is_playing,
-                self.media_controller.is_idle,
-                ))
+        pass
 
     def new_cast_status(self, status):
-        return
-        with open('media_status.log', 'a') as status_file:
-            status_file.write('%s\n' % status)
+        pass
 
 class ChromecastState:
 
@@ -142,7 +138,7 @@ class Skill():
     def __init__(self):
         self.chromecast_controller = ChromecastState()
         if self.chromecast_controller.count == 0:
-            print("No Chromecasts found")
+            logger.info("No Chromecasts found")
             exit(1)
 
     def get_chromecast(self, name) -> ChromecastWrapper:
@@ -152,11 +148,11 @@ class Skill():
         try:
             chromecast = self.chromecast_controller.match_chromecast(room)
             if not chromecast:
-                print('No Chromecast found matching: %s' % room)
+                logger.warn('No Chromecast found matching: %s' % room)
                 return
             func = command.replace('-','_')
             getattr(self, func)(data, chromecast.name)
-            print('Calling command %s' % command)
+            logger.debug('Calling command %s' % command)
         except Exception:
             logger.exception('Unexpected error')
 
@@ -165,33 +161,33 @@ class Skill():
 
     def play(self, data, name):
         self.get_chromecast(name).media_controller.play()
-        print('Play command sent to Chromecast.')
+        logger.info('Play command sent to Chromecast.')
     
     def pause(self, data, name):
         cc = self.get_chromecast(name)
         cc.media_controller.pause()
-        print('Pause command sent to Chromecast.')
+        logger.info('Pause command sent to Chromecast.')
 
     def stop(self, data, name):
         self.get_chromecast(name).cast.quit_app()
-        print('Stop command sent to Chromecast.')
+        logger.info('Stop command sent to Chromecast.')
 
     def set_volume(self, data, name):
-        volume = data['level'] # volume as 0-10
+        volume = data['volume'] # volume as 0-10
         volume_normalized = float(volume) / 10.0 # volume as 0-1
         self.get_chromecast(name).cast.set_volume(volume_normalized)
-        print('Volume command sent to Chromecast. Set to {}.'.format(volume_normalized))
+        logger.info('Volume command sent to Chromecast. Set to {}.'.format(volume_normalized))
 
     def play_next(self, data, name):
         #mc.queue_next() didn't work
         self.get_chromecast(name).media_controller.skip()
-        print('Play next command sent to Chromecast.')
+        logger.info('Play next command sent to Chromecast.')
 
     def play_previous(self, data, name):
         cc = self.get_chromecast(name)
         current_id = cc.media_controller.status.content_id
         cc.youtube_controller.play_previous(current_id)
-        print('Trying to play previous item in the queue.')
+        logger.info('Trying to play previous item in the queue.')
 
     def play_video(self, data, name):
         cc = self.get_chromecast(name)
@@ -201,7 +197,7 @@ class Skill():
         if streaming_app == 'youtube':
             video_playlist = youtube_search.search(video_title)
             if len(video_playlist) == 0:
-                print('Unable to find youtube video for: %s' % video_title)
+                logger.info('Unable to find youtube video for: %s' % video_title)
                 return
             playing = False
             yt.init_playlist()
@@ -211,17 +207,17 @@ class Skill():
                         #Youtube controller will clear for a playlist
                         yt.clear_playlist()
                     yt.play_video(video['id'], video['playlist_id'])
-                    print('Currently playing: %s' % video['id'])
+                    logger.debug('Currently playing: %s' % video['id'])
                     playing = True
                 else:
                     yt.add_to_queue(video['id'])
-            print('Asked chromecast to play %i titles matching: %s on YouTube' % (len(video_playlist), video_title))
+            logger.info('Asked chromecast to play %i titles matching: %s on YouTube' % (len(video_playlist), video_title))
 
         elif streaming_app == 'plex':
             #TODO: Future support other apps - Not Implemented
-            print('Asked chromecast to play title: %s on Plex' % video_title)
+            logger.info('Asked chromecast to play title: %s on Plex' % video_title)
         else:
-            print('The streaming application %s is not supported' % streaming_app)
+            logger.info('The streaming application %s is not supported' % streaming_app)
 
     def play_trailer(self, data, name):
         cc = self.get_chromecast(name)
@@ -229,9 +225,10 @@ class Skill():
         moviedb_result = moviedb_search.get_movie_trailer_youtube_id(data['title'])
         video_id = moviedb_result["youtube_id"]
         yt.play_video(video_id)
-        print('video sent to chromecast, id: %s' % video_id)
+        logger.info('video sent to chromecast, id: %s' % video_id)
 
     def restart(self, data, name):
         self.get_chromecast(name).cast.reboot()
-        print('Rebooting Chromecast...')
+        logger.info('Rebooting Chromecast...')
+
 

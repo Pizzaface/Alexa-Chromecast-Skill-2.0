@@ -1,18 +1,19 @@
-#!/usr/bin/env python3
-
 import urllib
 import json
 import requests
 import os
+import logging
 
 MOVIEDB_API_KEY = os.getenv("MOVIEDB_API_KEY", False)
 MOVIEDB_API_URI = "https://api.themoviedb.org/3"
 
+logger = logging.getLogger('AlexaChromecastSkill')
 
 def moviedb_search_movies(movie):
     if not MOVIEDB_API_KEY:
-        print('You need to set a moviedb API key. e.g. export MOVIEDB_API_KEY=xxxxxx')
-        print('You can request this at: %s' % MOVIEDB_API_URI)
+        logger.error('You need to set a moviedb API key. e.g. export MOVIEDB_API_KEY=xxxxxx')
+        logger.error('You can request this at: %s' % MOVIEDB_API_URI)
+        raise Exception("No MovieDb API Key")
 
     query = {
         "api_key": MOVIEDB_API_KEY,
@@ -46,9 +47,9 @@ def moviedb_search_movie_videos(moviedb_id):
 
     try:
         return response["results"][0]["key"]
-    except:
-        print(response, MOVIEDB_API_KEY)
-        raise Exception()
+    except Exception as err:
+        logger.exception('Unexpected error parsing MovieDb response')
+        raise err
 
 
 def get_movie_trailer_youtube_id(movie_name):
@@ -59,11 +60,3 @@ def get_movie_trailer_youtube_id(movie_name):
         "title": moviedb_movie["title"]
     }
 
-def main():
-    try:
-        trailer = get_movie_trailer_youtube_id("The Big Lebowski")
-        print(trailer)
-    except Exception as e:
-        print(e)
-
-if __name__ == "__main__": main()

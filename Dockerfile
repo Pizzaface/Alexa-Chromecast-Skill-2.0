@@ -7,6 +7,6 @@ WORKDIR /app
 ADD ./src/local/requirements.txt /app/
 RUN pip3 install --no-cache-dir -r requirements.txt
 
-ADD ./src/local /app/
+ADD ./src/local /app/local
 
 ENTRYPOINT ["python3", "-m", "local.main"]
