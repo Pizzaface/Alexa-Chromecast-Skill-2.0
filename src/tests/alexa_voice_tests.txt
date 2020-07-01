@@ -1,0 +1,18 @@
+Alexa ask Chromecast to pause
+Alexa ask Chromecast to play
+Alexa ask Chromecast to pause in the media room
+Alexa ask Chromecast to play in the media room
+Alexa ask the Chromecast in the media room to pause
+Alexa ask the Chromecast in the media room to play
+
+Alexa ask Chromecast to set volume to 5
+
+Alexa ask Chromecast to stop
+Alexa ask Chromecast to restart
+Alexa ask Chromecast to reboot
+
+Alexa ask Chromecast to play songs by macklemore
+Alexa ask Chromecast next
+Alexa ask Chromecast previous
+
+Alexa ask Chromecast to play the trailer for the matrix

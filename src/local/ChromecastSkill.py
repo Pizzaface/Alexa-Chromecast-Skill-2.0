@@ -15,20 +15,9 @@ from enum import Enum
 import local.youtube as youtube_search
 import local.moviedb_search as moviedb_search
 
-cwd = os.getcwd()
-logger = logging.getLogger('AlexaChromecastSkill')
+logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 logger.propagate = False
-
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-
-handler = logging.StreamHandler(sys.stdout)
-handler.setFormatter(formatter)
-logger.addHandler(handler)
-
-handler = logging.handlers.TimedRotatingFileHandler(cwd+os.path.sep+'alexa-chromecast.log', when='D', interval=1, backupCount=5)
-handler.setFormatter(formatter)
-logger.addHandler(handler)
 
 class MyYouTubeController(YouTubeController):
     

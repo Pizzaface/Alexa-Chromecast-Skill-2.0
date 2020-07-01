@@ -8,7 +8,9 @@ import miniupnpc
 import boto3
 import logging
 
-logger = logging.getLogger('AlexaChromecastSkill')
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+logger.propagate = False
 
 """
 Generic Skill Subscription class to handle commands from an

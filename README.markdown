@@ -28,7 +28,9 @@ Here are some example voice commands:
 > Alexa, tell chromecast to stop
 
 Or:
+
 > Alexa, ask the chromecast in the Media Room to stop
+
 > Alexa, ask the chromecast to play in the Media Room
 
 ## How it works
@@ -67,9 +69,16 @@ Installation requires a UNIX environment with:
 9. Click on the "Test" tab. Enter 
 ### Install the local application which control the Chromecasts
 10. Install local dependencies with `sudo pip install -r ./src/local/requirements.txt`
-11. Run `./start.sh` to start the listener, or `./docker-start.sh` to run in docker.
+11. Run `./start.sh` to start the listener, or `./docker-start.sh` to run in an interactive docker session. Or `./docker-start.sh service` to run as a service.
+You should see something like the following:
+```
+2020-07-01 07:59:58,206 - AlexaChromecastSkill - INFO - Listening on http://123.124.125.126:30000
+2020-07-01 07:59:58,256 - AlexaChromecastSkill - INFO - Subscribing to receive commands...
+2020-07-01 07:59:58,297 - AlexaChromecastSkill - INFO - Subscribed.
+```
 ### Finally
-12. Ask Alexa to tell Chromecast to play
+12. Say "Alexa ask chromecast to play"
+The skill will take you through any required room setup.
 
 ### Shell example
 
@@ -79,14 +88,15 @@ Installation requires a UNIX environment with:
 
 The skill subscriber can be run with docker:
 
-`./docker-start.sh`
+`./docker-start.sh` - for an interactive session
+`./docker-start.sh service` - to run as a service
 
 ### Environment variables
 
 The skill subscriber (local) uses these environment variables:
 
 - **AWS_SNS_TOPIC_ARN** - AWS SNS Topic ARN (can be found in the `.env` file after running `aws-setup.sh`)
-- **PORT** - (Optional) Externally accessible port to expose the SNS handler on, defaults to 30000.
+- **ALEXA_CHROMECAST_SKILL_PORT** - (Optional) Externally accessible port to expose the SNS handler on, defaults to 30000. If UPNP is not enabled you will need to allow external access through your firewall to this port.
 
 - **AWS_ACCESS_KEY_ID** - AWS User Access Key
 - **AWS_SECRET_ACCESS_KEY** - AWS Secret Access Key
@@ -102,7 +112,8 @@ Sets up an AWS environment for the Alexa Skil:
 
 1. Creates an IAM role for Alexa (with permissions for SNS)
 2. Creates an SNS topic to communicate over
-3. Creates a Lambda function
+3. Creates an S3 persistent store for persisting room to alexa device mapping 
+4. Creates a Lambda function
 
 ### build-lambda-bundle.sh
 
@@ -116,9 +127,19 @@ Runs build-lambda-bundle and automatically uploads the bundle to AWS Lambda.
 ## FAQ
 
 ### "No Chromecasts found"
-
 When the local service starts it searches for ChromeCasts on the network. If there are no ChromeCasts found, it will exit.
-
 To fix this, you must confirm that the ChromeCast is on and working, make sure you can access it from your phone, and make sure that everything is on the same network.
-
 To debug, a tool to search and list found ChomeCasts is provided at `./search-chromecasts` (make sure to make it executable with `chmod +x ./search-chromecasts`).
+
+### Local listener fails to subscribe
+If the local listener fails to subscribe (no subscribe messages or an error) then the Chromecasts won;t receive commands from Alexa
+1. Check that there is external access through your firewall to the listener port. 30000 by default.
+2. Log into the AWS console and check the SNS topic is setup, and check the Cloud Watch logs for your the lambda function for any errors.
+
+### Alexa had an error launching the skill or processing a command
+1. Try redeploying the lambda skill. `./aws-update-lambda.sh`
+2. If that didn't work go to the AWS Console and check the CloudWatch logs associated with the lambda function
+
+### Alexa accepted the command but it didn't seem to work
+1. Check the local listener output, it should show the received command and any error that was encountered
+2. To check the docker service logs run something like `docker logs alexa_chromecast --since=30m`, which shows the logs for the last 30 minutes

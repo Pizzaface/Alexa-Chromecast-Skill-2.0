@@ -92,7 +92,7 @@
                     ]
                 },
                 {
-                    "name": "PlayYoutubeIntent",
+                    "name": "PlayOnAppIntent",
                     "slots": [
                         {
                             "name": "video",
@@ -104,9 +104,9 @@
                         }
                     ],
                     "samples": [
-                        "in {room} play {video}",
                         "play {video} in {room}",
-                        "play {video}"
+                        "play {video}",
+                        "in {room} play {video}"
                     ]
                 },
                 {
@@ -122,6 +122,8 @@
                         }
                     ],
                     "samples": [
+                        "play the {movie} trailer",
+                        "play the trailer for {movie}",
                         "in {room} play {movie} trailer",
                         "play {movie} trailer in {room}",
                         "play {movie} trailer",
@@ -134,12 +136,64 @@
                     "name": "RestartIntent",
                     "slots": [],
                     "samples": [
+                        "reboot",
                         "restart",
                         "to restart"
                     ]
+                },
+                {
+                    "name": "SetVolumeIntent",
+                    "slots": [
+                        {
+                            "name": "volume",
+                            "type": "AMAZON.NUMBER",
+                            "samples": [
+                                "one",
+                                "ten",
+                                "two"
+                            ]
+                        }
+                    ],
+                    "samples": [
+                        "set volume to {volume}"
+                    ]
+                },
+                {
+                    "name": "NextIntent",
+                    "slots": [],
+                    "samples": [
+                        "next",
+                        "to play next",
+                        "play next"
+                    ]
+                },
+                {
+                    "name": "PreviousIntent",
+                    "slots": [],
+                    "samples": [
+                        "to play previous",
+                        "previous",
+                        "play previous"
+                    ]
                 }
             ],
-            "types": []
+            "types": [
+                {
+                    "name": "AppName",
+                    "values": [
+                        {
+                            "name": {
+                                "value": "plex"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "youtube"
+                            }
+                        }
+                    ]
+                }
+            ]
         },
         "dialog": {
             "intents": [
@@ -166,6 +220,43 @@
                         "confirmation": "Confirm.Intent.694744913486"
                     },
                     "slots": []
+                },
+                {
+                    "name": "PlayOnAppIntent",
+                    "confirmationRequired": false,
+                    "prompts": {},
+                    "slots": [
+                        {
+                            "name": "video",
+                            "type": "AMAZON.Movie",
+                            "confirmationRequired": false,
+                            "elicitationRequired": false,
+                            "prompts": {}
+                        },
+                        {
+                            "name": "room",
+                            "type": "AMAZON.Room",
+                            "confirmationRequired": false,
+                            "elicitationRequired": false,
+                            "prompts": {}
+                        }
+                    ]
+                },
+                {
+                    "name": "SetVolumeIntent",
+                    "confirmationRequired": false,
+                    "prompts": {},
+                    "slots": [
+                        {
+                            "name": "volume",
+                            "type": "AMAZON.NUMBER",
+                            "confirmationRequired": false,
+                            "elicitationRequired": true,
+                            "prompts": {
+                                "elicitation": "Elicit.Slot.954979396244.1430530224578"
+                            }
+                        }
+                    ]
                 }
             ],
             "delegationStrategy": "ALWAYS"
@@ -186,6 +277,15 @@
                     {
                         "type": "PlainText",
                         "value": "Are you sure you want to restart the Chromecast?"
+                    }
+                ]
+            },
+            {
+                "id": "Elicit.Slot.954979396244.1430530224578",
+                "variations": [
+                    {
+                        "type": "PlainText",
+                        "value": "Please say a number between one and ten to set the volume to"
                     }
                 ]
             }
