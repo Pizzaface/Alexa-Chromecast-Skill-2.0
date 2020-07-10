@@ -32,8 +32,10 @@ handler = logging.handlers.TimedRotatingFileHandler(cwd+os.path.sep+'alexa-chrom
 handler.setFormatter(formatter)
 root_logger.addHandler(handler)
 
-PORT = os.getenv('ALEXA_CHROMECAST_SKILL_PORT', 30000)
+PORT = os.getenv('EXTERNAL_PORT', 30000)
+IP = os.getenv('EXTERNAL_IP', '')
 
 if __name__ == "__main__":
+    root_logger.info("Starting Alexa Chromecast listener...")
     chromecast_skill = Skill()
-    Subscriber({'chromecast': chromecast_skill}, PORT)
+    Subscriber({'chromecast': chromecast_skill}, IP, PORT)

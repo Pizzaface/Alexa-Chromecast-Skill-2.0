@@ -17,7 +17,6 @@ import local.moviedb_search as moviedb_search
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
-logger.propagate = False
 
 class MyYouTubeController(YouTubeController):
     
@@ -95,6 +94,7 @@ class ChromecastState:
         with self.lock:
             self.__chromecasts = {}
             for cc in pychromecast.get_chromecasts():
+                logger.info("Found %s" % cc.device.friendly_name)
                 self.__chromecasts[cc.device.friendly_name] = ChromecastWrapper(cc)
             self.expiry = datetime.now()
 
@@ -125,10 +125,12 @@ class ChromecastState:
 class Skill():
 
     def __init__(self):
+        logger.info("Finding Chromecasts...")
         self.chromecast_controller = ChromecastState()
         if self.chromecast_controller.count == 0:
             logger.info("No Chromecasts found")
             exit(1)
+        logger.info("%i Chromecasts found" % self.chromecast_controller.count)
 
     def get_chromecast(self, name) -> ChromecastWrapper:
         return self.chromecast_controller.get_chromecast(name)

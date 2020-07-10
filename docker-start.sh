@@ -1,5 +1,42 @@
 #!/bin/bash
 
+HELP=0
+SERVICE=0
+EXTERNAL_IP=""
+EXTERNAL_PORT=30000
+
+while getopts "hdi:p:" opt; do
+  case $opt in
+    h) HELP=1
+    ;;
+    d) SERVICE=1
+    ;;
+    i) EXTERNAL_IP="$OPTARG"
+    ;;
+    p) EXTERNAL_PORT="$OPTARG"
+    ;;
+    \?) echo "Invalid option -$OPTARG" >&2; exit 1
+    ;;
+  esac
+done
+
+if [ $HELP -eq 1 ]; then
+  echo
+  echo "Usage:"
+  echo "docker_start.sh -- Run with defaults in interactive mode"
+  echo "docker_start.sh [params]"
+  echo "-h      -- Show help"
+  echo "-d      -- Run as a service"
+  echo "-i IP   -- Specify an external IP address to use"
+  echo "-p port -- Specify an external port to use"
+  echo
+  exit 0
+fi
+
+if [ ! -f .env ] || [ ! -d ~/.aws ]; then
+  echo "Expected AWS settings not found. Please run the aws-setup script."
+  exit 1
+fi
 source .env
 
 AWS_ACCESS_KEY_ID="$( /usr/bin/awk -F' = ' '$1 == "aws_access_key_id" {print $2}' ~/.aws/credentials )"
@@ -15,7 +52,7 @@ docker rm $CONTAINER_NAME 2>/dev/null
 
 docker build -t alexa-skill-chromecast .
 
-if [ "$1" == "service" ]; then
+if [ $SERVICE -eq 1 ]; then
   docker run -d --network="host" \
    --name alexa_chromecast \
    --restart always \
@@ -23,6 +60,8 @@ if [ "$1" == "service" ]; then
    -e "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY"\
    -e "AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION"\
    -e "AWS_SNS_TOPIC_ARN=$AWS_SNS_TOPIC_ARN"\
+   -e "EXTERNAL_IP=$EXTERNAL_IP"\
+   -e "EXTERNAL_PORT=$EXTERNAL_PORT"\
    alexa-skill-chromecast
 else
   docker run --network="host" -it\
@@ -31,5 +70,8 @@ else
    -e "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY"\
    -e "AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION"\
    -e "AWS_SNS_TOPIC_ARN=$AWS_SNS_TOPIC_ARN"\
+   -e "EXTERNAL_IP=$EXTERNAL_IP"\
+   -e "EXTERNAL_PORT=$EXTERNAL_PORT"\
    alexa-skill-chromecast
 fi
+

@@ -10,7 +10,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
-logger.propagate = False
 
 """
 Generic Skill Subscription class to handle commands from an
@@ -18,9 +17,9 @@ Lambda Fucntion via SNS notifications.
 """
 class Subscriber(BaseHTTPRequestHandler):
 
-    def __init__(self, skills, port_overide, topic_arn=os.getenv('AWS_SNS_TOPIC_ARN')):
+    def __init__(self, skills, ip, port, topic_arn=os.getenv('AWS_SNS_TOPIC_ARN')):
         self.token = ""
-        if port_overide:
+        if port:
             self.manual_port_forward = True
         else:
             self.manual_port_forward = False
@@ -58,14 +57,16 @@ class Subscriber(BaseHTTPRequestHandler):
             def log_message(self, format, *args):
                 pass
 
-        self.server = HTTPServer(('', int(port_overide) if port_overide else 0), SNSRequestHandler)
+        self.server = HTTPServer(('', int(port) if port else 0), SNSRequestHandler)
 
         port = self.server.server_port
-        self.endpoint_url = 'http://{}:{}'.format(self.get_external_ip(), port)
-        self.subscribe()
+        if not ip:
+          ip = self.get_external_ip() 
+        self.endpoint_url = 'http://{}:{}'.format(ip, port)
         logger.info('Listening on {}'.format(self.endpoint_url))
         signal.signal(signal.SIGINT,
                       lambda signal, frame: self.unsubscribe())
+        self.subscribe()
         self.server.serve_forever()
 
     def initialize_upnp(self):
@@ -95,6 +96,7 @@ class Subscriber(BaseHTTPRequestHandler):
                 sys.exit(1)
 
         try:
+            logger.info("Subscribing for Alexa commands...")
             self.sns_client.subscribe(
                 TopicArn=self.topic_arn,
                 Protocol='http',

@@ -9,7 +9,7 @@ if [ -z "$(type pip3)" ]; then
   curl "https://bootstrap.pypa.io/get-pip.py" -o "get-pip.py"
   sudo python3 get-pip.py
   rm get-pip.py
-  if -z "$(type pip3)"; then
+  if [ -z "$(type pip3)" ]; then
     echo "pip3 failed to install.. please check and re-run."
     exit 1
   fi
