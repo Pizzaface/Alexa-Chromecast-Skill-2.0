@@ -1,8 +1,43 @@
 #!/bin/bash
 
-set -e -o pipefail
+HELP=0
+EXTERNAL_IP=""
+EXTERNAL_PORT=30000
 
+while getopts "hi:p:" opt; do
+  case $opt in
+    h) HELP=1
+    ;;
+    i) EXTERNAL_IP="$OPTARG"
+    ;;
+    p) EXTERNAL_PORT="$OPTARG"
+    ;;
+    \?) echo "Invalid option -$OPTARG" >&2; exit 1
+    ;;
+  esac
+done
+
+if [ $HELP -eq 1 ]; then
+  echo
+  echo "Usage:"
+  echo "docker_start.sh -- Run with defaults in interactive mode"
+  echo "docker_start.sh [params]"
+  echo "-h      -- Show help"
+  echo "-d      -- Run as a service"
+  echo "-i IP   -- Specify an external IP address to use"
+  echo "-p port -- Specify an external port to use"
+  echo
+  exit 0
+fi
+
+
+set -e -o pipefail
 cd $(dirname $0)
+
+if [ ! -f .env ] || [ ! -d ~/.aws ]; then
+  echo "Expected AWS settings not found. Please run the aws-setup script."
+  exit 1
+fi
 
 . .env
 cd src

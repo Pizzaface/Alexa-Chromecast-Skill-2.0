@@ -46,9 +46,10 @@ class Subscriber(BaseHTTPRequestHandler):
                 type = data['Type']
  
                 if type == 'SubscriptionConfirmation':
-                    logger.info('Subscribing to receive commands...')
+                    logger.info('Received subscription confirmation...')
                     token = data['Token']
                     instance.confirm_subscription(topic_arn, token)
+                    
                 elif type == 'Notification':
                     logger.info('Received message...')
                     if data['Message']:

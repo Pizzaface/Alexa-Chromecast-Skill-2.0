@@ -8,3 +8,4 @@ lambda/node_modules
 hooks/
 __pycache__
 *.log
+*.log.*
