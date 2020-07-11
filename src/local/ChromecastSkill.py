@@ -142,8 +142,8 @@ class Skill():
                 logger.warn('No Chromecast found matching: %s' % room)
                 return
             func = command.replace('-','_')
+            logger.info('Sending %s command to Chromecast: %s' % (func, chromecast.name))
             getattr(self, func)(data, chromecast.name)
-            logger.debug('Calling command %s' % command)
         except Exception:
             logger.exception('Unexpected error')
 
@@ -152,33 +152,28 @@ class Skill():
 
     def play(self, data, name):
         self.get_chromecast(name).media_controller.play()
-        logger.info('Play command sent to Chromecast.')
+        
     
     def pause(self, data, name):
         cc = self.get_chromecast(name)
         cc.media_controller.pause()
-        logger.info('Pause command sent to Chromecast.')
 
     def stop(self, data, name):
         self.get_chromecast(name).cast.quit_app()
-        logger.info('Stop command sent to Chromecast.')
 
     def set_volume(self, data, name):
         volume = data['volume'] # volume as 0-10
         volume_normalized = float(volume) / 10.0 # volume as 0-1
         self.get_chromecast(name).cast.set_volume(volume_normalized)
-        logger.info('Volume command sent to Chromecast. Set to {}.'.format(volume_normalized))
 
     def play_next(self, data, name):
         #mc.queue_next() didn't work
         self.get_chromecast(name).media_controller.skip()
-        logger.info('Play next command sent to Chromecast.')
 
     def play_previous(self, data, name):
         cc = self.get_chromecast(name)
         current_id = cc.media_controller.status.content_id
         cc.youtube_controller.play_previous(current_id)
-        logger.info('Trying to play previous item in the queue.')
 
     def play_video(self, data, name):
         cc = self.get_chromecast(name)
@@ -220,6 +215,4 @@ class Skill():
 
     def restart(self, data, name):
         self.get_chromecast(name).cast.reboot()
-        logger.info('Rebooting Chromecast...')
-
 
