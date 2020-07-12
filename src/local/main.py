@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 
 """
 Required Environment Variables:
@@ -13,11 +13,29 @@ CHROMECAST_NAME - name of the Chromecast to send commands to
 """
 
 import os
-from SkillSubscriber import Subscriber
-from ChromecastSkill import Skill
+import sys
+import logging
+from local.SkillSubscriber import Subscriber
+from local.ChromecastSkill import Skill
 
-PORT = os.getenv('PORT', False)
+cwd = os.getcwd()
+
+#Setup root logger to log to stdout and a file
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler = logging.StreamHandler(sys.stdout)
+handler.setFormatter(formatter)
+root_logger = logging.getLogger()
+root_logger.setLevel(logging.INFO)
+root_logger.addHandler(handler)
+
+handler = logging.handlers.TimedRotatingFileHandler(cwd+os.path.sep+'alexa-chromecast.log', when='D', interval=1, backupCount=5)
+handler.setFormatter(formatter)
+root_logger.addHandler(handler)
+
+PORT = os.getenv('EXTERNAL_PORT')
+IP = os.getenv('EXTERNAL_IP')
 
 if __name__ == "__main__":
-    chromecast_skill = Skill(chromecast_name=os.getenv('CHROMECAST_NAME', 'Living Room'))
-    Subscriber({'chromecast': chromecast_skill}, PORT)
+    root_logger.info("Starting Alexa Chromecast listener...")
+    chromecast_skill = Skill()
+    Subscriber({'chromecast': chromecast_skill}, IP, PORT)

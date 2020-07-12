@@ -1,6 +1,6 @@
-boto3==1.4.7
-miniupnpc==2.0.2
-PyChromecast==0.8.2
-requests==2.18.4
-zeroconf==0.19.1
-youtube-dl==2017.8.27.1
+boto3==1.14.8
+miniupnpc>=2.0.1
+PyChromecast==6.0.0
+requests>=2.18.4
+zeroconf>=0.19.1
+youtube-search>=0.1.4

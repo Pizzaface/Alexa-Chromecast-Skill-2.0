@@ -1,4 +1,11 @@
 lambda-build.zip
 *.pyc
 .env
+.testenv
 .DS_Store
+lambda/node_modules
+.ask/
+hooks/
+__pycache__
+*.log
+*.log.*

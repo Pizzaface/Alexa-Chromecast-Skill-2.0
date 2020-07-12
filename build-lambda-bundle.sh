@@ -1,4 +1,4 @@
-#!/usr/bin/env bash -e
+#!/bin/bash
 
 set -e -o pipefail
 
@@ -9,11 +9,12 @@ cd $(dirname $0)
 echo "Building Lambda bundle."
 
 echo "Copying files to lambda-build ..."
-cp -R ./src/lambda lambda-build
+mkdir lambda-build
+cp -R ./src/lambda_function lambda-build/.
 cd lambda-build
 
 echo "Running pip install ..."
-pip install -I -r ./requirements.txt --install-option="--install-purelib=$PWD"
+pip3 install -I -r ./lambda_function/requirements.txt --install-option="--install-purelib=$PWD"
 
 echo "Zipping files ..."
 zip -q -r ../lambda-build.zip .
