@@ -68,13 +68,25 @@ Installation requires a UNIX environment with:
 8. CLick on "Invocation" in the left menu. Click on "Build Model"
 9. Click on the "Test" tab. Enter 
 ### Install the local application which control the Chromecasts
-10. Install local dependencies with `sudo pip install -r ./src/local/requirements.txt`
-11. Run `./start.sh` to start the listener, or `./docker-start.sh` to run in an interactive docker session. Or `./docker-start.sh service` to run as a service.
-You should see something like the following:
+10. Install local dependencies with `sudo pip3 install -r ./src/local/requirements.txt`
+11. Run `./start.sh` to start the listener, or `./docker-start.sh` to run in an interactive docker session. Or `./docker-start.sh -d` to run as a service.
+The service attemps to AWS SNS using UPNP. If UPNP is disabled in your network you can specify a port. `./start.sh -p 30000`
+To see other options run `./start.sh -h` or `./docker-start.sh -h`.
+
+When run you should see something like the following:
 ```
-2020-07-01 07:59:58,206 - AlexaChromecastSkill - INFO - Listening on http://123.124.125.126:30000
-2020-07-01 07:59:58,256 - AlexaChromecastSkill - INFO - Subscribing to receive commands...
-2020-07-01 07:59:58,297 - AlexaChromecastSkill - INFO - Subscribed.
+2020-07-12 11:10:40,688 - root - INFO - Starting Alexa Chromecast listener...
+2020-07-12 11:10:40,688 - local.ChromecastSkill - INFO - Finding Chromecasts...
+2020-07-12 11:10:45,696 - pychromecast - INFO - Querying device status
+2020-07-12 11:10:45,727 - pychromecast - INFO - Querying device status
+2020-07-12 11:10:45,767 - local.ChromecastSkill - INFO - Found Media Room TV
+2020-07-12 11:10:45,768 - local.ChromecastSkill - INFO - Found Living Room TV
+2020-07-12 11:10:45,769 - local.ChromecastSkill - INFO - 2 Chromecasts found
+2020-07-12 11:10:45,809 - botocore.credentials - INFO - Found credentials in environment variables.
+2020-07-12 11:10:46,967 - local.SkillSubscriber - INFO - Listening on http://123.123.123.123:30000
+2020-07-12 11:10:46,968 - local.SkillSubscriber - INFO - Subscribing for Alexa commands...
+2020-07-12 11:10:47,344 - local.SkillSubscriber - INFO - Received subscription confirmation...
+2020-07-12 11:10:47,431 - local.SkillSubscriber - INFO - Subscribed.
 ```
 ### Finally
 12. Say "Alexa ask chromecast to play"
@@ -89,15 +101,13 @@ The skill will take you through any required room setup.
 The skill subscriber can be run with docker:
 
 `./docker-start.sh` - for an interactive session
-`./docker-start.sh service` - to run as a service
+`./docker-start.sh -d` - to run as a service
 
 ### Environment variables
 
 The skill subscriber (local) uses these environment variables:
 
 - **AWS_SNS_TOPIC_ARN** - AWS SNS Topic ARN (can be found in the `.env` file after running `aws-setup.sh`)
-- **ALEXA_CHROMECAST_SKILL_PORT** - (Optional) Externally accessible port to expose the SNS handler on, defaults to 30000. If UPNP is not enabled you will need to allow external access through your firewall to this port.
-
 - **AWS_ACCESS_KEY_ID** - AWS User Access Key
 - **AWS_SECRET_ACCESS_KEY** - AWS Secret Access Key
 - **AWS_DEFAULT_REGION** - AWS Lambda and SNS Region (e.g. eu-west-1)
