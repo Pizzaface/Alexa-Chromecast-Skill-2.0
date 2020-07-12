@@ -32,8 +32,8 @@ handler = logging.handlers.TimedRotatingFileHandler(cwd+os.path.sep+'alexa-chrom
 handler.setFormatter(formatter)
 root_logger.addHandler(handler)
 
-PORT = os.getenv('EXTERNAL_PORT', 30000)
-IP = os.getenv('EXTERNAL_IP', '')
+PORT = os.getenv('EXTERNAL_PORT')
+IP = os.getenv('EXTERNAL_IP')
 
 if __name__ == "__main__":
     root_logger.info("Starting Alexa Chromecast listener...")

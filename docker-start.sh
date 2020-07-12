@@ -2,8 +2,8 @@
 
 HELP=0
 SERVICE=0
-EXTERNAL_IP=""
-EXTERNAL_PORT=30000
+EXTERNAL_IP=
+EXTERNAL_PORT=
 
 while getopts "hdi:p:" opt; do
   case $opt in
