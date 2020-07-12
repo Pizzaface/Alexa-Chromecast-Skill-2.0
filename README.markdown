@@ -19,10 +19,12 @@ Here are some example voice commands:
 
 > Alexa, tell chromecast to play
 
-> Alexa, tell chromecast to play MKBHD
+> Alexa, tell chromecast to play songs by macklemore
 
-> Alexa, tell chromecast to play The Big Lebowski trailer
->
+> Alexa, tell chromecast to play maroon 5 playlist
+
+> Alexa, tell chromecast to play The Matrix trailer
+
 > Alexa, tell chromecast to set the volume to 5
 
 > Alexa, tell chromecast to stop
