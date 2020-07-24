@@ -95,6 +95,7 @@ class ChromecastState:
             self.__chromecasts = {}
             for cc in pychromecast.get_chromecasts():
                 logger.info("Found %s" % cc.device.friendly_name)
+                cc.wait()
                 self.__chromecasts[cc.device.friendly_name] = ChromecastWrapper(cc)
             self.expiry = datetime.now()
 
@@ -113,14 +114,17 @@ class ChromecastState:
         self.thread = threading.Thread(target=self.expire_chromecasts)
         self.thread.start()
 
-    def match_chromecast(self, room):
+    def match_chromecast(self, room) -> ChromecastWrapper:
         with self.lock:
             result = next((x for x in self.__chromecasts.values() if str.lower(room.strip()) in str.lower(x.name).replace(' the ', '')), False)
-            if result: result.cast.wait()
+            if result:
+                result.cast.wait()
             return result
 
     def get_chromecast(self, name):
-        return self.__chromecasts[name]
+        result = self.__chromecasts[name]
+        result.cast.wait()
+        return result
 
 class Skill():
 
@@ -143,6 +147,7 @@ class Skill():
                 return
             func = command.replace('-','_')
             logger.info('Sending %s command to Chromecast: %s' % (func, chromecast.name))
+
             getattr(self, func)(data, chromecast.name)
         except Exception:
             logger.exception('Unexpected error')
@@ -152,7 +157,6 @@ class Skill():
 
     def play(self, data, name):
         self.get_chromecast(name).media_controller.play()
-        
     
     def pause(self, data, name):
         cc = self.get_chromecast(name)
