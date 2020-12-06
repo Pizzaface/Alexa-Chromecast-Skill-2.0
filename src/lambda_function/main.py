@@ -33,7 +33,9 @@ HELP_TEXT = ''.join([
 
 class SNSPublishError(Exception):
     """ If something goes wrong with publishing to SNS """
-    pass
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)
 
 class LaunchRequestHandler(AbstractRequestHandler):
     def can_handle(self, handler_input):
@@ -105,7 +107,7 @@ class BaseIntentHandler(AbstractRequestHandler):
             )
         except SNSPublishError as error:
             logger.error('Sending command to the Chromecast failed', exc_info=error)
-            speak_output = 'There was an error sending the command to the Chromecast'
+            speak_output = 'There was an error sending the command to the Chromecast. ' + error.message
             return (
                 handler_input.response_builder
                     .speak(speak_output)
@@ -121,6 +123,10 @@ class BaseIntentHandler(AbstractRequestHandler):
             "data": data
         }
         sns_client = boto3.client("sns")
+        response = sns_client.list_subscriptions()
+        subscriptions = response['Subscriptions']
+        if len(subscriptions) == 0:
+            raise SNSPublishError('No clients are subscribed.')
         response = sns_client.publish(
             TargetArn=AWS_SNS_ARN,
             Message=json.dumps({"default": json.dumps(message)}),

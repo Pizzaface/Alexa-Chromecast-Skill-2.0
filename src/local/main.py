@@ -14,6 +14,7 @@ CHROMECAST_NAME - name of the Chromecast to send commands to
 
 import os
 import sys
+import signal
 import logging
 from local.SkillSubscriber import Subscriber
 from local.ChromecastSkill import Skill
@@ -35,7 +36,23 @@ root_logger.addHandler(handler)
 PORT = os.getenv('EXTERNAL_PORT')
 IP = os.getenv('EXTERNAL_IP')
 
+class Main(object):
+    
+    def __init__(self):
+        #Exit gracefully on docker/command-line stop
+        signal.signal(signal.SIGINT, self.shutdown)
+        signal.signal(signal.SIGTERM, self.shutdown)
+        self.chromecast_skill = Skill()
+        self.subscriber = Subscriber({'chromecast': self.chromecast_skill}, IP, PORT)
+        self.subscriber.serve_forever()
+
+    def shutdown(self, signum, frame):
+        root_logger.info('Shutdown in progress...')
+        self.chromecast_skill.shutdown(signum, frame)
+        self.subscriber.shutdown(signum, frame)
+
 if __name__ == "__main__":
     root_logger.info("Starting Alexa Chromecast listener...")
-    chromecast_skill = Skill()
-    Subscriber({'chromecast': chromecast_skill}, IP, PORT)
+    main = Main()
+
+

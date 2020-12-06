@@ -1,12 +1,14 @@
 import os
 import sys
-import signal
+import time
 import json
+import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from requests import get
 import miniupnpc
 import boto3
 import logging
+from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -18,7 +20,13 @@ Lambda Fucntion via SNS notifications.
 class Subscriber(BaseHTTPRequestHandler):
 
     def __init__(self, skills, ip, port, topic_arn=os.getenv('AWS_SNS_TOPIC_ARN')):
+        self.PING_SECS = 300
+        self.last_ping_sent = datetime.now()
+        self.last_ping_received = False
+        self.ping_thread = threading.Thread(target=self.ping)
+
         self.token = ""
+        self.stopped = False
         if port:
             self.manual_port_forward = True
         else:
@@ -51,8 +59,8 @@ class Subscriber(BaseHTTPRequestHandler):
                     instance.confirm_subscription(topic_arn, token)
                     
                 elif type == 'Notification':
-                    logger.info('Received message...')
                     if data['Message']:
+                        logger.info('Received message...\n%s' % json.dumps(data['Message']))
                         instance.dispatch_notification(json.loads(data['Message']))
 
             def log_message(self, format, *args):
@@ -65,10 +73,31 @@ class Subscriber(BaseHTTPRequestHandler):
           ip = self.get_external_ip() 
         self.endpoint_url = 'http://{}:{}'.format(ip, port)
         logger.info('Listening on {}'.format(self.endpoint_url))
-        signal.signal(signal.SIGINT,
-                      lambda signal, frame: self.unsubscribe())
         self.subscribe()
-        self.server.serve_forever()
+    
+    def serve_forever(self):
+        try:
+            while not self.stopped:
+                self.server.handle_request()
+        except Exception:
+            logger.exception('Unexpected error')
+
+    def ping(self):
+        while not self.stopped:
+            if (datetime.now() - self.last_ping_sent).total_seconds() > self.PING_SECS:
+                logger.info('Sending ping...')
+                self.sns_client.publish(TopicArn=self.topic_arn, Message=json.dumps({'command': 'ping'}))
+                self.last_ping_sent = datetime.now()
+            else:
+                time.sleep(1)
+
+    def shutdown(self, signum, frame):
+        if self.stopped: return
+        self.stopped = True
+        logger.info('Shutting down HTTP listener')
+        self.unsubscribe()
+        self.server.shutdown()
+        self.ping_thread.join(5)
 
     def initialize_upnp(self):
         upnp = miniupnpc.UPnP()
@@ -116,6 +145,9 @@ class Subscriber(BaseHTTPRequestHandler):
                 Token=token,
                 AuthenticateOnUnsubscribe="false")
             logger.info('Subscribed.')
+
+            #start ping
+            self.ping_thread.start()
         
         except Exception:
             logger.exception('Failed to confirm subscription. Please check in AWS.')
@@ -149,9 +181,11 @@ class Subscriber(BaseHTTPRequestHandler):
 
     def dispatch_notification(self, notification):
         try:
+            if notification['command'] == 'ping':
+                logger.info('Received ping.')
+                self.last_ping_received = datetime.now()
+                return
             skill = self.skills.get(notification['handler_name'])
             skill.handle_command(notification['room'], notification['command'], notification['data'])
         except Exception:
             logger.exception('Unexpected error handling message')
-
-

@@ -92,11 +92,11 @@ class ChromecastState:
 
     def __set_chromecasts(self):
         with self.lock:
-            self.__chromecasts = {}
             for cc in pychromecast.get_chromecasts():
-                logger.info("Found %s" % cc.device.friendly_name)
                 cc.wait()
-                self.__chromecasts[cc.device.friendly_name] = ChromecastWrapper(cc)
+                if not cc.device.friendly_name in self.__chromecasts.keys():
+                    logger.info("Adding %s" % cc.device.friendly_name)
+                    self.__chromecasts[cc.device.friendly_name] = ChromecastWrapper(cc)
             self.expiry = datetime.now()
 
     def expire_chromecasts(self):
@@ -104,12 +104,15 @@ class ChromecastState:
             time.sleep(1)
             refresh_period = timedelta(minutes=120)
             if (self.expiry + refresh_period) < datetime.now():
+                logger.info("Searching for new Chromecasts...")
                 self.__set_chromecasts()
+                logger.info("Search completed.")
 
     def __init__(self):
         self.running = True
         self.expiry = datetime.now()
         self.lock = threading.Lock()
+        self.__chromecasts = {}
         self.__set_chromecasts()
         self.thread = threading.Thread(target=self.expire_chromecasts)
         self.thread.start()
@@ -129,6 +132,7 @@ class ChromecastState:
 class Skill():
 
     def __init__(self):
+
         logger.info("Finding Chromecasts...")
         self.chromecast_controller = ChromecastState()
         if self.chromecast_controller.count == 0:
@@ -161,6 +165,10 @@ class Skill():
     def pause(self, data, name):
         cc = self.get_chromecast(name)
         cc.media_controller.pause()
+
+    def shutdown(self, signum, frame):
+        logger.info('Shutting down periodic Chromecast scanning')
+        self.chromecast_controller.stop()
 
     def stop(self, data, name):
         self.get_chromecast(name).cast.quit_app()
