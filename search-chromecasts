@@ -2,7 +2,7 @@
 
 import pychromecast
 
-chromecasts = pychromecast.get_chromecasts()
+chromecasts = pychromecast.get_chromecasts()[0]
 
 if len(chromecasts) > 0:
   for cc in chromecasts:

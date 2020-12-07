@@ -16,7 +16,7 @@ class TestLocal(unittest.TestCase):
         load_dotenv(dotenv_path)
         from local.main import ChromecastController
         self.chromecast_controller = ChromecastController()
-        self.cc_name = 'Living Room'
+        self.cc_name = 'Media Room'
 
     def tearDown(self):
         self.chromecast_controller.chromecast_collector.stop()

@@ -8,8 +8,7 @@ MOVIEDB_API_KEY = os.getenv("MOVIEDB_API_KEY", False)
 MOVIEDB_API_URI = "https://api.themoviedb.org/3"
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-logger.propagate = False
+logger.setLevel(logging.INFO)
 
 def moviedb_search_movies(movie):
     if not MOVIEDB_API_KEY:

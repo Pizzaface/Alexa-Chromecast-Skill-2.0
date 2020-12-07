@@ -102,7 +102,7 @@ class ChromecastCollector:
 
     def __set_chromecasts(self):
         with self.lock:
-            for cc in pychromecast.get_chromecasts():
+            for cc in pychromecast.get_chromecasts()[0]:
                 cc.wait()
                 if not cc.device.friendly_name in self.__chromecasts.keys():
                     logger.info("Adding %s" % cc.device.friendly_name)
