@@ -20,7 +20,7 @@ Lambda Fucntion via SNS notifications.
 class Subscriber(BaseHTTPRequestHandler):
 
     def __init__(self, skills, ip, port, topic_arn=os.getenv('AWS_SNS_TOPIC_ARN')):
-        self.PING_SECS = 300
+        self.PING_SECS = 600
         self.last_ping_sent = datetime.now()
         self.last_ping_received = False
         self.ping_thread = threading.Thread(target=self.ping)
@@ -42,6 +42,9 @@ class Subscriber(BaseHTTPRequestHandler):
         self.topic_arn = topic_arn
         instance = self
 
+        """
+        HTTP Server implementation - receives messages from SNS
+        """
         class SNSRequestHandler(BaseHTTPRequestHandler):
             def do_POST(self):
                 self.send_response(200)
@@ -60,7 +63,7 @@ class Subscriber(BaseHTTPRequestHandler):
                     
                 elif type == 'Notification':
                     if data['Message']:
-                        logger.info('Received message...\n%s' % json.dumps(data['Message']))
+                        logger.info('Received message: %s' % json.dumps(data['Message']))
                         instance.dispatch_notification(json.loads(data['Message']))
 
             def log_message(self, format, *args):
@@ -78,10 +81,14 @@ class Subscriber(BaseHTTPRequestHandler):
     def serve_forever(self):
         try:
             while not self.stopped:
+                #No timeout - so blocks while waiting for a request
                 self.server.handle_request()
         except Exception:
             logger.exception('Unexpected error')
 
+    """
+    Sends a simple ping message to SNS
+    """
     def ping(self):
         while not self.stopped:
             if (datetime.now() - self.last_ping_sent).total_seconds() > self.PING_SECS:
@@ -90,7 +97,9 @@ class Subscriber(BaseHTTPRequestHandler):
                 self.last_ping_sent = datetime.now()
             else:
                 time.sleep(1)
-
+    """
+    Performs a graceful shutdown stopping HTTP Server and Ping thread
+    """
     def shutdown(self, signum, frame):
         if self.stopped: return
         self.stopped = True
@@ -109,6 +118,10 @@ class Subscriber(BaseHTTPRequestHandler):
     def get_external_ip(self):
         return get('https://api.ipify.org').text
 
+    """
+    Subscribes to recieve message from SNS for the specified topic.
+    A subscription confirmation request should then be received from SNS.
+    """
     def subscribe(self):
         if not self.manual_port_forward:
             try:
@@ -137,6 +150,9 @@ class Subscriber(BaseHTTPRequestHandler):
             logger.exception('SNS Topic ({}) is invalid. Please check in AWS.'.format(self.topic_arn))
             sys.exit(1)
 
+    """
+    Confirms a subscriptiuon based on the received subscription confirmation request from sNS
+    """
     def confirm_subscription(self, topic_arn, token):
         
         try:
@@ -153,6 +169,9 @@ class Subscriber(BaseHTTPRequestHandler):
             logger.exception('Failed to confirm subscription. Please check in AWS.')
             sys.exit(1)
 
+    """
+    Unsubscribe from SNS Topic - stop receiving messages
+    """
     def unsubscribe(self):
 
         if not self.manual_port_forward:
@@ -179,6 +198,9 @@ class Subscriber(BaseHTTPRequestHandler):
 
         sys.exit(0)
 
+    """
+    Call 
+    """
     def dispatch_notification(self, notification):
         try:
             if notification['command'] == 'ping':

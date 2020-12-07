@@ -17,7 +17,7 @@ import sys
 import signal
 import logging
 from local.SkillSubscriber import Subscriber
-from local.ChromecastSkill import Skill
+from local.ChromecastSkill import ChromecastController
 
 cwd = os.getcwd()
 
@@ -42,13 +42,13 @@ class Main(object):
         #Exit gracefully on docker/command-line stop
         signal.signal(signal.SIGINT, self.shutdown)
         signal.signal(signal.SIGTERM, self.shutdown)
-        self.chromecast_skill = Skill()
-        self.subscriber = Subscriber({'chromecast': self.chromecast_skill}, IP, PORT)
+        self.chromecast_controller = ChromecastController()
+        self.subscriber = Subscriber({'chromecast': self.chromecast_controller}, IP, PORT)
         self.subscriber.serve_forever()
 
     def shutdown(self, signum, frame):
         root_logger.info('Shutdown in progress...')
-        self.chromecast_skill.shutdown(signum, frame)
+        self.chromecast_controller.shutdown(signum, frame)
         self.subscriber.shutdown(signum, frame)
 
 if __name__ == "__main__":

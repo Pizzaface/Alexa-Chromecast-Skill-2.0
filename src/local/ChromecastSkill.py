@@ -18,6 +18,9 @@ import local.moviedb_search as moviedb_search
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
+"""
+Youtube Controller extension
+"""
 class MyYouTubeController(YouTubeController):
     
     def __init__(self):
@@ -54,6 +57,9 @@ class MyYouTubeController(YouTubeController):
 
             previous_id = video['data-video-id']
 
+"""
+Thin wrapper to register controllers and listeners
+"""
 class ChromecastWrapper:
     @property
     def cast(self) -> Chromecast:
@@ -80,7 +86,11 @@ class ChromecastWrapper:
     def new_cast_status(self, status):
         pass
 
-class ChromecastState:
+"""
+Stores available Chromecasts.
+Every 2 hours it will check, and add any new Chromecasts
+"""
+class ChromecastCollector:
 
     @property
     def count(self):
@@ -129,23 +139,26 @@ class ChromecastState:
         result.cast.wait()
         return result
 
-class Skill():
+"""
+Wrapper to send commands to different named Chromecasts
+"""
+class ChromecastController():
 
     def __init__(self):
 
         logger.info("Finding Chromecasts...")
-        self.chromecast_controller = ChromecastState()
-        if self.chromecast_controller.count == 0:
+        self.chromecast_collector = ChromecastCollector()
+        if self.chromecast_collector.count == 0:
             logger.info("No Chromecasts found")
             exit(1)
-        logger.info("%i Chromecasts found" % self.chromecast_controller.count)
+        logger.info("%i Chromecasts found" % self.chromecast_collector.count)
 
     def get_chromecast(self, name) -> ChromecastWrapper:
-        return self.chromecast_controller.get_chromecast(name)
+        return self.chromecast_collector.get_chromecast(name)
 
     def handle_command(self, room, command, data):
         try:
-            chromecast = self.chromecast_controller.match_chromecast(room)
+            chromecast = self.chromecast_collector.match_chromecast(room)
             if not chromecast:
                 logger.warn('No Chromecast found matching: %s' % room)
                 return
@@ -168,7 +181,7 @@ class Skill():
 
     def shutdown(self, signum, frame):
         logger.info('Shutting down periodic Chromecast scanning')
-        self.chromecast_controller.stop()
+        self.chromecast_collector.stop()
 
     def stop(self, data, name):
         self.get_chromecast(name).cast.quit_app()

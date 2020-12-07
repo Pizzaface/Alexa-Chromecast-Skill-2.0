@@ -14,34 +14,34 @@ class TestLocal(unittest.TestCase):
         dotenv_path = join(dirname(__file__), '.testenv')
         # Load file from the path.
         load_dotenv(dotenv_path)
-        from local.main import Skill
-        self.skill = Skill()
+        from local.main import ChromecastController
+        self.chromecast_controller = ChromecastController()
         self.cc_name = 'Living Room'
 
     def tearDown(self):
-        self.skill.chromecast_controller.stop()
+        self.chromecast_controller.chromecast_collector.stop()
 
     def test_play_trailer(self):
-        self.skill.handle_command(self.cc_name, 'play_trailer', {'title': 'The Matrix'})
+        self.chromecast_controller.handle_command(self.cc_name, 'play_trailer', {'title': 'The Matrix'})
 
     def test_play_on_app(self):
-        self.skill.handle_command(self.cc_name, 'play_video', {'title': 'songs by Macklemore', 'app': 'youtube'})
+        self.chromecast_controller.handle_command(self.cc_name, 'play_video', {'title': 'songs by Macklemore', 'app': 'youtube'})
         for _loops in range(5):
             time.sleep(60)
 
     def test_playlist(self):
-        self.skill.handle_command(self.cc_name, 'play_video', {'title': 'macklemore playlist', 'app': 'youtube'})
+        self.chromecast_controller.handle_command(self.cc_name, 'play_video', {'title': 'macklemore playlist', 'app': 'youtube'})
         time.sleep(20)
-        self.skill.handle_command(self.cc_name, 'play_next', {})
+        self.chromecast_controller.handle_command(self.cc_name, 'play_next', {})
         time.sleep(20)
-        self.skill.handle_command(self.cc_name, 'play_previous', {})
+        self.chromecast_controller.handle_command(self.cc_name, 'play_previous', {})
         time.sleep(60)
 
     def test_play_next(self):
-        self.skill.handle_command(self.cc_name, 'play_next', {})
+        self.chromecast_controller.handle_command(self.cc_name, 'play_next', {})
 
     def test_pause(self):
-        self.skill.handle_command(self.cc_name, 'pause', {})
+        self.chromecast_controller.handle_command(self.cc_name, 'pause', {})
 
     def test_play_previous(self):
-        self.skill.handle_command(self.cc_name, 'play_previous', {})
+        self.chromecast_controller.handle_command(self.cc_name, 'play_previous', {})

@@ -3,4 +3,4 @@ miniupnpc>=2.0.1
 PyChromecast==6.0.0
 requests>=2.18.4
 zeroconf>=0.19.1
-youtube-search>=1.1.0
+youtube-search==1.1.0
