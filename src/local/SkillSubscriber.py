@@ -11,7 +11,7 @@ import logging
 from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 """
 Generic Skill Subscription class to handle commands from an

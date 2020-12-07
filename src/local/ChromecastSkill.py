@@ -16,7 +16,7 @@ import local.youtube as youtube_search
 import local.moviedb_search as moviedb_search
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 """
 Youtube Controller extension
