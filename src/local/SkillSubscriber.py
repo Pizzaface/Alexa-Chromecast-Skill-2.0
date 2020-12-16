@@ -8,15 +8,10 @@ from requests import get
 import miniupnpc
 import boto3
 import logging
-from datetime import datetime, timedelta
-from local.main import main
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-
-
-def restart():
-    os.execl(sys.executable, sys.executable, *['-m', 'local.main'])
 
 
 class Subscriber(BaseHTTPRequestHandler):
@@ -103,16 +98,18 @@ class Subscriber(BaseHTTPRequestHandler):
 
                 if self.last_ping_received and (datetime.now() - self.last_ping_received).total_seconds() > self.PING_SECS * 2:
                     logger.error('No ping received for %i seconds. Restarting process...')
-                    self.shutdown()
-                    time.sleep(5)
-                    restart()
+                    self.restart()
 
                 logger.info('Sending ping...')
                 self.sns_client.publish(TopicArn=self.topic_arn, Message=json.dumps({'command': 'ping'}))
                 self.last_ping_sent = datetime.now()
+                self.restart()
             else:
                 time.sleep(1)
 
+    def restart(self):
+       os.execl(sys.executable, sys.executable, *['-m', 'local.main'])
+ 
     def shutdown(self, signum, frame):
         """
         Performs a graceful shutdown stopping HTTP Server and Ping thread
@@ -231,3 +228,4 @@ class Subscriber(BaseHTTPRequestHandler):
             skill.handle_command(notification['room'], notification['command'], notification['data'])
         except Exception:
             logger.exception('Unexpected error handling message')
+
