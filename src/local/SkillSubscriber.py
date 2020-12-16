@@ -103,7 +103,6 @@ class Subscriber(BaseHTTPRequestHandler):
                 logger.info('Sending ping...')
                 self.sns_client.publish(TopicArn=self.topic_arn, Message=json.dumps({'command': 'ping'}))
                 self.last_ping_sent = datetime.now()
-                self.restart()
             else:
                 time.sleep(1)
 
