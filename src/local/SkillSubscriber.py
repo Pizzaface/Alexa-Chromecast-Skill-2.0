@@ -9,19 +9,25 @@ import miniupnpc
 import boto3
 import logging
 from datetime import datetime, timedelta
+from local.main import main
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-"""
-Generic Skill Subscription class to handle commands from an
-Lambda Fucntion via SNS notifications.
-"""
+
+def restart():
+    os.execl(sys.executable, sys.executable, *['-m', 'local.main'])
+
+
 class Subscriber(BaseHTTPRequestHandler):
+    """
+    Generic Skill Subscription class to handle commands from an
+    Lambda Fucntion via SNS notifications.
+    """
 
     def __init__(self, skills, ip, port, topic_arn=os.getenv('AWS_SNS_TOPIC_ARN')):
         self.PING_SECS = 600
-        self.last_ping_sent = datetime.now()
+        self.last_ping_sent = False
         self.last_ping_received = False
         self.ping_thread = threading.Thread(target=self.ping)
 
@@ -34,7 +40,8 @@ class Subscriber(BaseHTTPRequestHandler):
             try:
                 self.initialize_upnp()
             except Exception:
-                logger.exception('Failed to configure UPnP. Please map port manually and pass PORT environment variable.')
+                logger.exception(
+                    'Failed to configure UPnP. Please map port manually and pass PORT environment variable.')
                 sys.exit(1)
 
         self.sns_client = boto3.client('sns')
@@ -45,6 +52,7 @@ class Subscriber(BaseHTTPRequestHandler):
         """
         HTTP Server implementation - receives messages from SNS
         """
+
         class SNSRequestHandler(BaseHTTPRequestHandler):
             def do_POST(self):
                 self.send_response(200)
@@ -55,12 +63,12 @@ class Subscriber(BaseHTTPRequestHandler):
                 data = json.loads(raw_data)
                 topic_arn = self.headers.get('X-Amz-Sns-Topic-Arn')
                 type = data['Type']
- 
+
                 if type == 'SubscriptionConfirmation':
                     logger.info('Received subscription confirmation...')
                     token = data['Token']
                     instance.confirm_subscription(topic_arn, token)
-                    
+
                 elif type == 'Notification':
                     if data['Message']:
                         logger.info('Received message: %s' % json.dumps(data['Message']))
@@ -73,34 +81,42 @@ class Subscriber(BaseHTTPRequestHandler):
 
         port = self.server.server_port
         if not ip:
-          ip = self.get_external_ip() 
+            ip = self.get_external_ip()
         self.endpoint_url = 'http://{}:{}'.format(ip, port)
         logger.info('Listening on {}'.format(self.endpoint_url))
         self.subscribe()
-    
+
     def serve_forever(self):
         try:
             while not self.stopped:
-                #No timeout - so blocks while waiting for a request
+                # No timeout - so blocks while waiting for a request
                 self.server.handle_request()
         except Exception:
             logger.exception('Unexpected error')
 
-    """
-    Sends a simple ping message to SNS
-    """
     def ping(self):
+        """
+        Sends a simple ping message to SNS
+        """
         while not self.stopped:
-            if (datetime.now() - self.last_ping_sent).total_seconds() > self.PING_SECS:
+            if not self.last_ping_sent or (datetime.now() - self.last_ping_sent).total_seconds() > self.PING_SECS:
+
+                if self.last_ping_received and (datetime.now() - self.last_ping_received).total_seconds() > self.PING_SECS * 2:
+                    logger.error('No ping received for %i seconds. Restarting process...')
+                    self.shutdown()
+                    time.sleep(5)
+                    restart()
+
                 logger.info('Sending ping...')
                 self.sns_client.publish(TopicArn=self.topic_arn, Message=json.dumps({'command': 'ping'}))
                 self.last_ping_sent = datetime.now()
             else:
                 time.sleep(1)
-    """
-    Performs a graceful shutdown stopping HTTP Server and Ping thread
-    """
+
     def shutdown(self, signum, frame):
+        """
+        Performs a graceful shutdown stopping HTTP Server and Ping thread
+        """
         if self.stopped: return
         self.stopped = True
         logger.info('Shutting down HTTP listener')
@@ -122,6 +138,7 @@ class Subscriber(BaseHTTPRequestHandler):
     Subscribes to recieve message from SNS for the specified topic.
     A subscription confirmation request should then be received from SNS.
     """
+
     def subscribe(self):
         if not self.manual_port_forward:
             try:
@@ -153,8 +170,9 @@ class Subscriber(BaseHTTPRequestHandler):
     """
     Confirms a subscriptiuon based on the received subscription confirmation request from sNS
     """
+
     def confirm_subscription(self, topic_arn, token):
-        
+
         try:
             self.sns_client.confirm_subscription(
                 TopicArn=topic_arn,
@@ -162,9 +180,9 @@ class Subscriber(BaseHTTPRequestHandler):
                 AuthenticateOnUnsubscribe="false")
             logger.info('Subscribed.')
 
-            #start ping
+            # start ping
             self.ping_thread.start()
-        
+
         except Exception:
             logger.exception('Failed to confirm subscription. Please check in AWS.')
             sys.exit(1)
@@ -172,6 +190,7 @@ class Subscriber(BaseHTTPRequestHandler):
     """
     Unsubscribe from SNS Topic - stop receiving messages
     """
+
     def unsubscribe(self):
 
         if not self.manual_port_forward:
@@ -191,7 +210,7 @@ class Subscriber(BaseHTTPRequestHandler):
                 break
 
         if (subscription_arn is not None and
-                subscription_arn[:12] == 'arn:aws:sns:'):
+            subscription_arn[:12] == 'arn:aws:sns:'):
             self.sns_client.unsubscribe(
                 SubscriptionArn=subscription_arn
             )
@@ -201,6 +220,7 @@ class Subscriber(BaseHTTPRequestHandler):
     """
     Call 
     """
+
     def dispatch_notification(self, notification):
         try:
             if notification['command'] == 'ping':
