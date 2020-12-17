@@ -1,11 +1,9 @@
 import os
 import logging
-import requests
 import boto3
 import json
 import ask_sdk_core.utils as ask_utils
 
-from ask_sdk_core.skill_builder import SkillBuilder
 from ask_sdk_core.dispatch_components import AbstractRequestHandler
 from ask_sdk_core.dispatch_components import AbstractExceptionHandler
 from ask_sdk_core.handler_input import HandlerInput
@@ -123,10 +121,11 @@ class BaseIntentHandler(AbstractRequestHandler):
             "data": data
         }
         sns_client = boto3.client("sns")
-        response = sns_client.list_subscriptions()
-        subscriptions = response['Subscriptions']
-        if len(subscriptions) == 0:
-            raise SNSPublishError('No clients are subscribed.')
+        # Disable check subscriptions - failed with a valid subscription
+        # response = sns_client.list_subscriptions()
+        # subscriptions = response['Subscriptions']
+        # if len(subscriptions) == 0:
+        #     raise SNSPublishError('No clients are subscribed.')
         response = sns_client.publish(
             TargetArn=AWS_SNS_ARN,
             Message=json.dumps({"default": json.dumps(message)}),
