@@ -1,4 +1,4 @@
 ROLE_NAME="AmazonAlexaSkill"
 SNS_TOPIC_NAME="AlexaChromecastSkillCommands"
-S3_BUCKET_NAME="alexa-user-persistence"
+S3_BUCKET_NAME="alexa-user-persistence2"
 LAMBDA_FUNCTION_NAME="AlexaChromecastSkill"

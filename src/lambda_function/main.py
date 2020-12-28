@@ -22,13 +22,13 @@ logger.setLevel(logging.INFO)
 
 AWS_SNS_ARN = os.getenv('AWS_SNS_ARN')
 AWS_S3_BUCKET = os.getenv('AWS_S3_BUCKET')
-CARD_TITLE = 'Alexa Chromecast Controller'
+CARD_TITLE = 'Controlar Chromecast con Alexa'
 
 HELP_TEXT = ''.join([
-    "Welcome to the Alexa Chromecast controller. This skill allows you to control your Chromecasts in different rooms. ",
-    "An Alexa Device can be configured to control a Chromecast in a particular room. ",
-    "Then you can say something like: Alexa, ask Chromecast to play, or: Alexa, ask Chromecast to pause. ",
-    "Or you can control a specific room, by saying something like: Alexa, ask Chromecast to play in the media room."
+    "Bienvenido al controlador de Chromecast de Alexa. Esta habilidad le permite controlar sus chromecast en diferentes habitaciones. ",
+    "Un Dispositivo Alexa puede ser configurado para controlar un Cromecast en una habitación particular. ",
+    "Entonces puedes decir algo como: Alexa, pídele a Chromecast que reproduzca, o: Alexa, pídele a Chromecast que pause. ",
+    "O puedes controlar una habitación específica, diciendo algo como: Alexa, pídele a Chromecast que reproduzca en la sala de estar"
 ])
 
 class SNSPublishError(Exception):
@@ -75,7 +75,7 @@ class BaseIntentHandler(AbstractRequestHandler):
         return {}
 
     def get_response(self, data):
-        return 'Ok'
+        return 'Vale'
 
     def handle(self, handler_input):
         room = utils.get_slot_value(handler_input, 'room', False)
@@ -84,11 +84,11 @@ class BaseIntentHandler(AbstractRequestHandler):
         if not room:
             room = utils.get_persistent_session_attribute(handler_input, 'DEVICE_'+device_id, False)
             if not room:
-                speak_output = 'I need to set the room of the Chromecast that this Alexa device will control. Please say something like: set room to media room.'
+                speak_output = 'Tengo que establecer la sala del Chromecast que este dispositivo de Alexa controlará. Por favor, di algo como: ver en la sala de estar.'
                 return (
                     handler_input.response_builder
                         .speak(speak_output)
-                        .ask('Please set the Chromecasts room, by saying something like: set room to media room.')
+                        .ask('Por favor, establezca la sala del Chromecast, diciendo algo como: establecer habitación a sala de estar.')
                         .set_card(ui.SimpleCard(CARD_TITLE, speak_output))
                         .response
                 )
@@ -105,7 +105,7 @@ class BaseIntentHandler(AbstractRequestHandler):
             )
         except SNSPublishError as error:
             logger.error('Sending command to the Chromecast failed', exc_info=error)
-            speak_output = 'There was an error sending the command to the Chromecast'
+            speak_output = 'Hubo un error al enviar la orden al Chromecast'
             return (
                 handler_input.response_builder
                     .speak(speak_output)
@@ -141,7 +141,7 @@ class SetRoomIntentHandler(BaseIntentHandler):
         room = utils.get_slot_value(handler_input, 'room') #Must have a value enforced by Alexa dialog
         utils.set_persistent_session_attribute(handler_input, 'DEVICE_'+device_id, room)
         handler_input.attributes_manager.save_persistent_attributes()
-        speak_output = 'Ok, this Alexa device will control the Chromecast in the %s. To control another room you can say something like: Alexa, play in the media room.' % room
+        speak_output = 'De acuerdo, este dispositivo de Alexa controlará el Chromecast en %s. Para controlar otra habitación puedes decir algo como: Alexa, reproduce en la sala de estar.' % room
         return (
             handler_input.response_builder
                 .speak(speak_output)
@@ -177,7 +177,7 @@ class SetVolumeIntentHandler(BaseIntentHandler):
     def get_data(self, handler_input):
         volume = int(utils.get_slot_value(handler_input, 'volume'))
         if volume > 10 or volume < 0:
-            return "Sorry, you can only set the volume between 0 and 10."
+            return "Lo siento, sólo se puede ajustar el volumen entre 0 y 10."
         return {"volume": volume}
 
 class NextIntentHandler(BaseIntentHandler):
@@ -206,7 +206,7 @@ class PlayTrailerIntentHandler(BaseIntentHandler):
         return {"title": utils.get_slot_value(handler_input, 'movie')}
 
     def get_response(self, data):
-        return 'Playing trailer for %s' % data['title']
+        return 'Reproduciendo el tráiler de %s' % data['title']
 
 class PlayOnAppIntentHandler(BaseIntentHandler):
     def get_action(self):
@@ -220,7 +220,7 @@ class PlayOnAppIntentHandler(BaseIntentHandler):
             }
 
     def get_response(self, data):
-        return 'Playing %s on YouTube' % data['title']
+        return 'Reproduciendo %s en YouTube' % data['title']
 
 class HelpIntentHandler(AbstractRequestHandler):
     def can_handle(self, handler_input):
@@ -243,7 +243,7 @@ class CancelIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
-        speak_output = "Goodbye!"
+        speak_output = "¡Hasta luego!"
 
         return (
             handler_input.response_builder
@@ -272,7 +272,7 @@ class IntentReflectorHandler(AbstractRequestHandler):
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
         intent_name = ask_utils.get_intent_name(handler_input)
-        speak_output = "You just triggered " + intent_name + "."
+        speak_output = "Acabas de activar " + intent_name + "."
 
         return (
             handler_input.response_builder
@@ -294,7 +294,7 @@ class CatchAllExceptionHandler(AbstractExceptionHandler):
         # type: (HandlerInput, Exception) -> Response
         logger.error(exception, exc_info=True)
 
-        speak_output = "Sorry, I had trouble doing what you asked. Please try again."
+        speak_output = "Lo siento, tuve problemas para hacer lo que me pediste. Por favor, inténtalo de nuevo."
 
         return (
             handler_input.response_builder

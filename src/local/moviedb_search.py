@@ -19,7 +19,7 @@ def moviedb_search_movies(movie):
 
     query = {
         "api_key": MOVIEDB_API_KEY,
-        "language": 'en-GB',
+        "language": 'es-ES',
         "query": movie,
         "page": 1,
         "include_adult": False
@@ -39,7 +39,7 @@ def moviedb_search_movies(movie):
 def moviedb_search_movie_videos(moviedb_id):
     query = {
         "api_key": MOVIEDB_API_KEY,
-        "language": 'en-GB'
+        "language": 'es-ES'
     }
     url = "{}/movie/{}/videos?{}".format(MOVIEDB_API_URI, moviedb_id, urllib.parse.urlencode(query))
     r = requests.get(url)

@@ -51,8 +51,8 @@ class TestChromecast(unittest.TestCase):
         handler_input = Mock()
         handler_input.response_builder = MockResponseBuilder()
         handler_input.request_envelope.request.intent.slots = {
-            'movie': SlotValue('The Matrix'),
-            'room': SlotValue('Media Room')
+            'movie': SlotValue('Matrix'),
+            'room': SlotValue('Sala de Estar')
             }
         response = req.handle(handler_input)
-        self.assertTrue('playing' in response.speak_text.lower())
+        self.assertTrue('reproduciendo' in response.speak_text.lower())

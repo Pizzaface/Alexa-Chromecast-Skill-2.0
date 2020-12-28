@@ -16,21 +16,21 @@ class TestLocal(unittest.TestCase):
         load_dotenv(dotenv_path)
         from local.main import Skill
         self.skill = Skill()
-        self.cc_name = 'Living Room'
+        self.cc_name = 'Sala de Estar'
 
     def tearDown(self):
         self.skill.chromecast_controller.stop()
 
     def test_play_trailer(self):
-        self.skill.handle_command(self.cc_name, 'play_trailer', {'title': 'The Matrix'})
+        self.skill.handle_command(self.cc_name, 'play_trailer', {'title': 'Matrix'})
 
     def test_play_on_app(self):
-        self.skill.handle_command(self.cc_name, 'play_video', {'title': 'songs by Macklemore', 'app': 'youtube'})
+        self.skill.handle_command(self.cc_name, 'play_video', {'title': 'canciones de Aurora', 'app': 'youtube'})
         for _loops in range(5):
             time.sleep(60)
 
     def test_playlist(self):
-        self.skill.handle_command(self.cc_name, 'play_video', {'title': 'macklemore playlist', 'app': 'youtube'})
+        self.skill.handle_command(self.cc_name, 'play_video', {'title': 'playlist de Aurora', 'app': 'youtube'})
         time.sleep(20)
         self.skill.handle_command(self.cc_name, 'play_next', {})
         time.sleep(20)
