@@ -18,7 +18,7 @@
                 {
                     "name": "AMAZON.NavigateHomeIntent",
                     "samples": [
-                        "open"
+                        "abrir"
                     ]
                 },
                 {
@@ -30,16 +30,30 @@
                         }
                     ],
                     "samples": [
-                        "in {room} to resume",
-                        "in {room} to play",
-                        "to resume in {room}",
-                        "to play in {room}",
-                        "to resume",
-                        "to play",
-                        "resume",
-                        "play",
-                        "resume in {room}",
-                        "play in {room}"
+                        "que reproduzca en {room}",
+                        "que se encienda",
+                        "adelante",
+                        "en {room} seguir",
+                        "en {room} continuar",
+                        "seguir en {room}",
+                        "continuar en {room}",
+                        "seguir",
+                        "continuar",
+                        "sigue",
+                        "continua",
+                        "dale al play",
+                        "sigue en {room}",
+                        "continua en {room}",
+                        "en {room} reanudar",
+                        "en {room} reproducir",
+                        "reanudar en {room}",
+                        "reproducir en {room}",
+                        "reanudar",
+                        "reproducir",
+                        "reanuda",
+                        "reproduce",
+                        "reanuda en {room}",
+                        "reproduce en {room}"
                     ]
                 },
                 {
@@ -51,11 +65,16 @@
                         }
                     ],
                     "samples": [
-                        "in {room} to pause",
-                        "to pause in {room}",
-                        "to pause",
-                        "pause in {room}",
-                        "pause"
+                        "que pause",
+                        "pausa el chromecast",
+                        "pausa la televisión",
+                        "pausa la tele",
+                        "pausalo",
+                        "en {room} pausar",
+                        "pausar en {room}",
+                        "pausar",
+                        "pausa en {room}",
+                        "pausa"
                     ]
                 },
                 {
@@ -71,10 +90,25 @@
                         }
                     ],
                     "samples": [
-                        "set default room to the {room}",
-                        "set devices room to {room}",
-                        "set the room to {room}",
-                        "set room to {room}"
+                        "ajustar habitación a {room}",
+                        "establecer habitación a {room}",
+                        "que se vea en {room}",
+                        "ver en {room}",
+                        "controlar dispositivo {room}",
+                        "controlar el dispositivo {room}",
+                        "seleccionar dispositivo {room}",
+                        "controlar el {room}",
+                        "controlar la {room}",
+                        "controlar la habitación {room}",
+                        "controlar {room}",
+                        "seleccionar como favorita {room}",
+                        "seleccionar como predeterminada {room}",
+                        "seleccionar habitación favorita {room}",
+                        "seleccionar habitación por defecto {room}",
+                        "seleccionar como habitación predeterminada {room}",
+                        "seleccionar habitación del dispositivo {room}",
+                        "seleccionar la habitación {room}",
+                        "seleccionar habitación {room}"
                     ]
                 },
                 {
@@ -86,9 +120,18 @@
                         }
                     ],
                     "samples": [
-                        "in {room} to stop",
-                        "to stop {room}",
-                        "to stop in {room}"
+                        "que pare la reproducción",
+                        "paralo",
+                        "detenlo",
+                        "detener la televisión",
+                        "deten la televisión",
+                        "deten la tele",
+                        "en {room} detener",
+                        "detener {room}",
+                        "detener en {room}",
+                        "en {room} parar",
+                        "parar {room}",
+                        "parar en {room}"
                     ]
                 },
                 {
@@ -104,9 +147,13 @@
                         }
                     ],
                     "samples": [
-                        "play {video} in {room}",
-                        "play {video}",
-                        "in {room} play {video}"
+                        "que ponga {video}",
+                        "pon {video}",
+                        "poner {video} en {room}",
+                        "en {room} pon {video}",
+                        "reproducir {video} en {room}",
+                        "reproduce {video}",
+                        "en {room} reproduce {video}"
                     ]
                 },
                 {
@@ -122,23 +169,47 @@
                         }
                     ],
                     "samples": [
-                        "play the {movie} trailer",
-                        "play the trailer for {movie}",
-                        "in {room} play {movie} trailer",
-                        "play {movie} trailer in {room}",
-                        "play {movie} trailer",
-                        "in {room} play trailer for {movie}",
-                        "play trailer for {movie} in {room}",
-                        "play trailer for {movie} "
+                        "que ponga el trailer de {movie} en {room}",
+                        "que ponga el trailer de {movie}",
+                        "pon el trailer de la película {movie} en {room}",
+                        "pon trailer de la película {movie}",
+                        "en la {room} pon el trailer de {movie}",
+                        "en el {room} pon el trailer de {movie}",
+                        "pon el trailer de {movie} en la {room}",
+                        "pon el trailer de {movie} en el {room}",
+                        "pon el trailer de {movie}",
+                        "pon el trailer de la película {movie}",
+                        "en {room} pon trailer de {movie}",
+                        "pon el trailer de {movie} en {room}",
+                        "pon trailer de {movie}",
+                        "pon trailer de {movie} en {room}",
+                        "reproduce el trailer de la película {movie} en {room}",
+                        "reproduce trailer de la película {movie}",
+                        "en la {room} reproduce el trailer de {movie}",
+                        "en el {room} reproduce el trailer de {movie}",
+                        "reproduce el trailer de {movie} en la {room}",
+                        "reproduce el trailer de {movie} en el {room}",
+                        "reproduce el trailer de {movie}",
+                        "reproduce el trailer de la película {movie}",
+                        "en {room} reproduce trailer de {movie}",
+                        "reproduce el trailer de {movie} en {room}",
+                        "reproduce trailer de {movie}",
+                        "reproduce trailer de {movie} en {room}"
                     ]
                 },
                 {
                     "name": "RestartIntent",
                     "slots": [],
                     "samples": [
-                        "reboot",
-                        "restart",
-                        "to restart"
+                        "que se reinicie",
+                        "enciende y apaga chromecast",
+                        "reinicia el chromecast",
+                        "reiniciar el chromecast",
+                        "reinicia chromecast",
+                        "reiniciar chromecast",
+                        "reiniciar",
+                        "enciende y apaga el chromecast",
+                        "reinicia"
                     ]
                 },
                 {
@@ -155,25 +226,36 @@
                         }
                     ],
                     "samples": [
-                        "set volume to {volume}"
+                        "que ponga el volumen a {volume}",
+                        "que baje el volumen a {volume}",
+                        "que suba el volumen a {volume}",
+                        "baja el volumen a {volume}",
+                        "sube el volumen a {volume}",
+                        "pon el volumen a {volume}"
                     ]
                 },
                 {
                     "name": "NextIntent",
                     "slots": [],
                     "samples": [
-                        "next",
-                        "to play next",
-                        "play next"
+                        "que ponga el siguiente",
+                        "pon siguiente",
+                        "pon el siguiente",
+                        "siguiente",
+                        "reproduce el siguiente",
+                        "reproduce siguiente"
                     ]
                 },
                 {
                     "name": "PreviousIntent",
                     "slots": [],
                     "samples": [
-                        "to play previous",
-                        "previous",
-                        "play previous"
+                        "que ponga el anterior",
+                        "pon anterior",
+                        "pon el anterior",
+                        "anterior",
+                        "reproduce el anterior",
+                        "reproduce anterior"
                     ]
                 }
             ],
@@ -267,7 +349,7 @@
                 "variations": [
                     {
                         "type": "PlainText",
-                        "value": "For what room?"
+                        "value": "¿A qué habitación?"
                     }
                 ]
             },
@@ -276,7 +358,7 @@
                 "variations": [
                     {
                         "type": "PlainText",
-                        "value": "Are you sure you want to restart the Chromecast?"
+                        "value": "¿Estás seguro de que quieres reiniciar el Chromecast?"
                     }
                 ]
             },
@@ -285,7 +367,7 @@
                 "variations": [
                     {
                         "type": "PlainText",
-                        "value": "Please say a number between one and ten to set the volume to"
+                        "value": "Por favor, diga un número entre el uno y el diez para ajustar el volumen"
                     }
                 ]
             }
