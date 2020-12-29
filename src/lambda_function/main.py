@@ -23,7 +23,7 @@ logger.setLevel(logging.INFO)
 AWS_SNS_ARN = os.getenv('AWS_SNS_ARN')
 AWS_S3_BUCKET = os.getenv('AWS_S3_BUCKET')
 CARD_TITLE = 'Controlar Chromcast con Alexa'
-LAUNCH_TEXT = "Bienvenido, ¿qué quieres hacer?"
+
 HELP_TEXT = ''.join([
     "Bienvenido al controlador de Chromcast de Alexa. Esta habilidad le permite controlar sus Chromcast en diferentes habitaciones. ",
     "Un Dispositivo Alexa puede ser configurado para controlar un Chromcast en una habitación particular. ",
@@ -40,12 +40,12 @@ class LaunchRequestHandler(AbstractRequestHandler):
         return ask_utils.is_request_type("LaunchRequest")(handler_input) or ask_utils.is_intent_name('AMAZON.NavigateHomeIntent')(handler_input)
 
     def handle(self, handler_input):
-        speak_output = LAUNCH_TEXT
+        speak_output = 'Bienvenido, ¿qué quieres hacer?'
         return (
             handler_input.response_builder
                 .speak(speak_output)
+                .ask(speak_output)
                 .set_card(ui.SimpleCard(CARD_TITLE, speak_output))
-                .ask(reprompt)
                 .response
         )
 
