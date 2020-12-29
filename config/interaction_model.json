@@ -1,42 +1,23 @@
 {
     "interactionModel": {
         "languageModel": {
-            "invocationName": "chrome cast",
+            "invocationName": "controla chromecast",
             "intents": [
                 {
                     "name": "AMAZON.CancelIntent",
-                    "samples": [
-                        "cancela eso",
-                        "olvídalo",
-                        "cancelalo",
-                        "cancelar",
-                        "cancela"
-                    ]
+                    "samples": []
                 },
                 {
                     "name": "AMAZON.HelpIntent",
-                    "samples": [
-                        "ayúdame",
-                        "ayuda"
-                    ]
+                    "samples": []
                 },
                 {
                     "name": "AMAZON.StopIntent",
-                    "samples": [
-                        "cállate",
-                        "callar",
-                        "apaga",
-                        "apagar",
-                        "parar",
-                        "para"
-                    ]
+                    "samples": []
                 },
                 {
                     "name": "AMAZON.NavigateHomeIntent",
-                    "samples": [
-                        "al inicio",
-                        "vuelve"
-                    ]
+                    "samples": []
                 },
                 {
                     "name": "PlayIntent",
@@ -101,8 +82,8 @@
                             "name": "room",
                             "type": "AMAZON.Room",
                             "samples": [
-                                "the master bedroom",
-                                "the media room"
+                                "sala de estar",
+                                "cocina"
                             ]
                         }
                     ],
@@ -113,13 +94,7 @@
                         "establecer habitación a {room}",
                         "que se vea en {room}",
                         "ver en {room}",
-                        "controlar dispositivo {room}",
-                        "controlar el dispositivo {room}",
                         "seleccionar dispositivo {room}",
-                        "controlar el {room}",
-                        "controlar la {room}",
-                        "controlar la habitación {room}",
-                        "controlar {room}",
                         "seleccionar como favorita {room}",
                         "seleccionar como predeterminada {room}",
                         "seleccionar habitación favorita {room}",
