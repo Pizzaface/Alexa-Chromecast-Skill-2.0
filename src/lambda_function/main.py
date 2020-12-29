@@ -26,9 +26,9 @@ CARD_TITLE = 'Controlar Chromecast con Alexa'
 
 HELP_TEXT = ''.join([
     "Bienvenido al controlador de Chromecast de Alexa. Esta habilidad le permite controlar sus chromecast en diferentes habitaciones. ",
-    "Un Dispositivo Alexa puede ser configurado para controlar un Cromecast en una habitación particular. ",
+    "Un Dispositivo Alexa puede ser configurado para controlar un Chromecast en una habitación particular. ",
     "Entonces puedes decir algo como: Alexa, pídele a Chromecast que reproduzca, o: Alexa, pídele a Chromecast que pause. ",
-    "O puedes controlar una habitación específica, diciendo algo como: Alexa, pídele a Chromecast que reproduzca en la sala de estar"
+    "O puedes controlar una habitación específica, diciendo algo como: Alexa, cambia a sala de estar"
 ])
 
 class SNSPublishError(Exception):
@@ -141,7 +141,7 @@ class SetRoomIntentHandler(BaseIntentHandler):
         room = utils.get_slot_value(handler_input, 'room') #Must have a value enforced by Alexa dialog
         utils.set_persistent_session_attribute(handler_input, 'DEVICE_'+device_id, room)
         handler_input.attributes_manager.save_persistent_attributes()
-        speak_output = 'De acuerdo, este dispositivo de Alexa controlará el Chromecast en %s. Para controlar otra habitación puedes decir algo como: Alexa, reproduce en la sala de estar.' % room
+        speak_output = 'De acuerdo, este dispositivo de Alexa controlará el Chromecast en %s. Para controlar otra habitación puedes decir algo como: Alexa, ver en sala de estar.' % room
         return (
             handler_input.response_builder
                 .speak(speak_output)
