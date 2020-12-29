@@ -1,24 +1,41 @@
 {
     "interactionModel": {
         "languageModel": {
-            "invocationName": "chromecast",
+            "invocationName": "chrome cast",
             "intents": [
                 {
                     "name": "AMAZON.CancelIntent",
-                    "samples": []
+                    "samples": [
+                        "cancela eso",
+                        "olvídalo",
+                        "cancelalo",
+                        "cancelar",
+                        "cancela"
+                    ]
                 },
                 {
                     "name": "AMAZON.HelpIntent",
-                    "samples": []
+                    "samples": [
+                        "ayúdame",
+                        "ayuda"
+                    ]
                 },
                 {
                     "name": "AMAZON.StopIntent",
-                    "samples": []
+                    "samples": [
+                        "cállate",
+                        "callar",
+                        "apaga",
+                        "apagar",
+                        "parar",
+                        "para"
+                    ]
                 },
                 {
                     "name": "AMAZON.NavigateHomeIntent",
                     "samples": [
-                        "abrir"
+                        "al inicio",
+                        "vuelve"
                     ]
                 },
                 {
@@ -30,6 +47,7 @@
                         }
                     ],
                     "samples": [
+                        "abre chromecast",
                         "que reproduzca en {room}",
                         "que se encienda",
                         "adelante",
@@ -90,6 +108,8 @@
                         }
                     ],
                     "samples": [
+                        "cambiar a {room}",
+                        "cambia a {room}",
                         "ajustar habitación a {room}",
                         "establecer habitación a {room}",
                         "que se vea en {room}",
@@ -147,6 +167,7 @@
                         }
                     ],
                     "samples": [
+                        "pon {video} en {room}",
                         "que ponga {video}",
                         "pon {video}",
                         "poner {video} en {room}",
@@ -219,9 +240,9 @@
                             "name": "volume",
                             "type": "AMAZON.NUMBER",
                             "samples": [
-                                "one",
-                                "ten",
-                                "two"
+                                "uno",
+                                "diez",
+                                "dos"
                             ]
                         }
                     ],
