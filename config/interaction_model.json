@@ -47,7 +47,6 @@
                         }
                     ],
                     "samples": [
-                        "abre chromecast",
                         "que reproduzca en {room}",
                         "que se encienda",
                         "adelante",
@@ -222,15 +221,12 @@
                     "name": "RestartIntent",
                     "slots": [],
                     "samples": [
+                        "reiniciate",
                         "que se reinicie",
-                        "enciende y apaga chromecast",
-                        "reinicia el chromecast",
-                        "reiniciar el chromecast",
-                        "reinicia chromecast",
-                        "reiniciar chromecast",
+                        "reinicia",
+                        "reinicialo",
                         "reiniciar",
-                        "enciende y apaga el chromecast",
-                        "reinicia"
+                        "enciende y apaga"
                     ]
                 },
                 {
