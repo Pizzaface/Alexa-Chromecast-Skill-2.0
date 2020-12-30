@@ -1,4 +1,4 @@
-# Alexa Chromecast Skill
+# Alexa Chromecast Skill (Version en español)
 
 Allows Amazon Alexa to control Google Chromecast
 
