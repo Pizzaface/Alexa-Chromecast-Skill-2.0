@@ -1,7 +1,7 @@
 {
     "interactionModel": {
         "languageModel": {
-            "invocationName": "controla chromecast",
+            "invocationName": "chromecast",
             "intents": [
                 {
                     "name": "AMAZON.CancelIntent",
@@ -28,8 +28,8 @@
                         }
                     ],
                     "samples": [
-                        "que reproduzca en {room}",
-                        "que se encienda",
+                        "reproduzca en {room}",
+                        "se encienda",
                         "adelante",
                         "en {room} seguir",
                         "en {room} continuar",
@@ -63,7 +63,7 @@
                         }
                     ],
                     "samples": [
-                        "que pause",
+                        "pause",
                         "pausa el chromecast",
                         "pausa la televisión",
                         "pausa la tele",
@@ -92,7 +92,7 @@
                         "cambia a {room}",
                         "ajustar habitación a {room}",
                         "establecer habitación a {room}",
-                        "que se vea en {room}",
+                        "se vea en {room}",
                         "ver en {room}",
                         "seleccionar dispositivo {room}",
                         "seleccionar como favorita {room}",
@@ -114,7 +114,7 @@
                         }
                     ],
                     "samples": [
-                        "que pare la reproducción",
+                        "pare la reproducción",
                         "paralo",
                         "detenlo",
                         "detener la televisión",
@@ -141,8 +141,9 @@
                         }
                     ],
                     "samples": [
+                        "Ver {video}",
                         "pon {video} en {room}",
-                        "que ponga {video}",
+                        "ponga {video}",
                         "pon {video}",
                         "poner {video} en {room}",
                         "en {room} pon {video}",
@@ -164,8 +165,8 @@
                         }
                     ],
                     "samples": [
-                        "que ponga el trailer de {movie} en {room}",
-                        "que ponga el trailer de {movie}",
+                        "ponga el trailer de {movie} en {room}",
+                        "ponga el trailer de {movie}",
                         "pon el trailer de la película {movie} en {room}",
                         "pon trailer de la película {movie}",
                         "en la {room} pon el trailer de {movie}",
@@ -197,7 +198,7 @@
                     "slots": [],
                     "samples": [
                         "reiniciate",
-                        "que se reinicie",
+                        "se reinicie",
                         "reinicia",
                         "reinicialo",
                         "reiniciar",
@@ -218,9 +219,11 @@
                         }
                     ],
                     "samples": [
-                        "que ponga el volumen a {volume}",
-                        "que baje el volumen a {volume}",
-                        "que suba el volumen a {volume}",
+                        "ajustar volumen a {volume}",
+                        "ajusta el volumen a {volume}",
+                        "ponga el volumen a {volume}",
+                        "baje el volumen a {volume}",
+                        "suba el volumen a {volume}",
                         "baja el volumen a {volume}",
                         "sube el volumen a {volume}",
                         "pon el volumen a {volume}"
@@ -230,7 +233,11 @@
                     "name": "NextIntent",
                     "slots": [],
                     "samples": [
-                        "que ponga el siguiente",
+                        "reproduzca el siguiente video",
+                        "reproducir el siguiente",
+                        "reproducir siguiente",
+                        "reproduzca el siguiente",
+                        "ponga el siguiente",
                         "pon siguiente",
                         "pon el siguiente",
                         "siguiente",
@@ -242,7 +249,11 @@
                     "name": "PreviousIntent",
                     "slots": [],
                     "samples": [
-                        "que ponga el anterior",
+                        "reproduzca el anterior video",
+                        "reproducir el anterior",
+                        "reproducir anterior",
+                        "reproduzca  anterior",
+                        "ponga el anterior",
                         "pon anterior",
                         "pon el anterior",
                         "anterior",
