@@ -28,6 +28,10 @@
                         }
                     ],
                     "samples": [
+                        "comience a reproducir",
+                        "comienza a reproducir",
+                        "empieza a reproducir",
+                        "empiece a reproducir",
                         "reproduzca en {room}",
                         "se encienda",
                         "adelante",
@@ -88,6 +92,8 @@
                         }
                     ],
                     "samples": [
+                        "cambia de habitación",
+                        "cambie de habitación",
                         "cambiar a {room}",
                         "cambia a {room}",
                         "ajustar habitación a {room}",
