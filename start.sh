@@ -19,12 +19,12 @@ done
 
 if [ $HELP -eq 1 ]; then
   echo
-  echo "Usage:"
-  echo "docker_start.sh -- Run with defaults in interactive mode"
-  echo "docker_start.sh [params]"
-  echo "-h      -- Show help"
-  echo "-i IP   -- Specify an external IP address to use"
-  echo "-p port -- Specify an external port to use"
+  echo "Modo de uso:"
+  echo "start.sh --Ejecutar los valores por defecto en modo interactivo"
+  echo "start.sh [params]"
+  echo "-h      -- Mostrar ayuda"
+  echo "-i IP   -- Especificar una dirección IP externa para usar"
+  echo "-p port -- Especificar un puerto externo para usar"
   echo
   exit 0
 fi
@@ -34,7 +34,7 @@ set -e -o pipefail
 cd $(dirname $0)
 
 if [ ! -f .env ] || [ ! -d ~/.aws ]; then
-  echo "Expected AWS settings not found. Please run the aws-setup script."
+  echo "No se ha encontrado la configuración de AWS. Por favor, ejecute el script de configuración de AWS aws-setup."
   exit 1
 fi
 

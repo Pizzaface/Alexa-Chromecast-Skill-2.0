@@ -6,6 +6,6 @@ chromecasts = pychromecast.get_chromecasts()
 
 if len(chromecasts) > 0:
   for cc in chromecasts:
-    print("Found '{}' ChromeCast".format(cc.device.friendly_name))
+    print("Se ha descubierto el ChromeCast'{}'".format(cc.device.friendly_name))
 else:
-  print("No ChromeCasts found on this network!")
+  print("¡No se han descubierto ChromeCast en la red local!")

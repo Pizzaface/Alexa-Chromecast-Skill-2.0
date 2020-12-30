@@ -1,79 +1,76 @@
-# Alexa Chromecast Skill (Version en español)
+# Alexa Chromecast Skill (Versión en español)
 
-Allows Amazon Alexa to control Google Chromecast
+Permite a Alexa de Amazon controlar Google Chromecast
 
-This skill supports controlling a single Chromecast or multiple Chromecasts in different rooms.
-Each Alexa device can be set to control a different room. This is done by matching the room name to your Chromecast device's name.
-E.g. If your Chromecast is named: "Master Bedroom TV", then set the Alexa room to control to "Master Bedroom"
+Esta habilidad o skill te permite controlar uno o varios Chromecast en diferentes habitaciones. Cada dispositivo de Alexa puede ser configurado para controlar una habitación diferente. Esto se hace emparejando el nombre de la habitación con el nombre de su dispositivo Chromecast. Por ejemplo, si el nombre de su Chromecast es: "Dormitorio principal", entonces configura la habitación de Alexa para controlar el "Dormitorio principal"
 
-The following will then pause the Chromecast in the Master Bedroom: 
-> Alexa, ask Chromecast to pause
+El siguiente comando detiene el Chromecast del Dormitorio Principal: 
+> Alexa, pídele a Chromecast que pause
 
-You can control another room by saying something like:
-> Alexa, ask the Chromecast to pause in the Media Room
+También puedes controlar otra habitación diciendo algo como:
+> Alexa, pide a Chromecast que pause en Sala de Estar
 
-To change the room a particular Alexa device controls you can say:
-> Alexa, ask the Chromecast to set the room
+Para cambiar la habitación que un dispositivo particular de Alexa controla puedes decir:
+> Alexa, pídele a Chromecast que cambie de habitación
 
-Here are some example voice commands:
+Aquí hay algunos ejemplos de comandos de voz:
 
-> Alexa, tell Chromecast to play
+> Alexa, dile a Chromecast que empiece a reproducir
 
-> Alexa, tell Chromecast to play songs by Macklemore
+> Alexa, dile a Chromecast que ponga canciones de Macklemore
 
-> Alexa, tell Chromecast to play maroon 5 playlist
+> Alexa, dile a Chromecast que ponga la lista de reproducción de Maroon 5
 
-> Alexa, tell Chromecast to play The Matrix trailer
+> Alexa, dile a Chromecast que ponga el tráiler de Matrix
 
-> Alexa, tell Chromecast to set the volume to 5
+> Alexa, dile a Chromecast que ponga el volumen a 5
 
-> Alexa, tell Chromecast to stop
+> Alexa, dile a Chromecast que se detenga
 
-Or:
+O,
 
-> Alexa, ask the Chromecast in the Media Room to stop
+> Alexa, pídele al Chromecast de la Sala de Estar que pare
 
-> Alexa, ask the Chromecast to play in the Media Room
+> Alexa, pide a Chromecast que siga en la Sala de Estar
 
-## How it works
+## Cómo funciona
 
-Alexa skills run in the cloud, but this skill needs to be on your local network to control the Chromecast.
-This skill implements a hybrid approach: the command is handled by Alexa on AWS, which sends a notification to your local server.
+Las skills de Alexa se ejecutan en la nube, pero esta skill debe estar en su red local para controlar el Chromecast. Esta habilidad implementa un enfoque híbrido: el comando es manejado por Alexa en AWS(Amazon Web Services), que envía una notificación a su servidor local.
 
-The Lambda component is in `src/lambda`, and the local component is in `src/local`.
+El componente Lambda está en `src/lambda`, y el componente local está en `src/local`.
 
-![Architecture Overview](docs/diagram.jpg "Architecture Overview")
+![Visión general de arquitectura](docs/diagrama.jpg "Visión general de arquitectura")
 
-Both the Chromecast and the Raspberry Pi (or whatever the local notification handler will run on) **MUST** be on the same network in order for the Chromecast to be discoverable.
+Tanto el Chromecast como el Raspberry Pi (o lo que sea con lo que se ejecute el gestor de notificaciones locales) **DEBE** estar en la misma red para que el Chromecast pueda ser reconocido.
 
-## Dependencies
+## Dependencias
 
-Installation requires a UNIX environment with:
+La instalación requiere un entorno UNIX con:
 
 - BASH
 - Python 3.7
 - [Pip](https://pip.pypa.io/en/stable/installing/)
 
-## Setup and installation
+## Configuración e instalación
 
-### Build the AWS Lambda Function
-1. Create an [Amazon Web Services](http://aws.amazon.com/) account
-2. Run aws-setup.sh to create a Role, Lambda Function, and SNS Topic. (*It will run `aws configure`, so have an key id and access key ready*)
-### Setup the Alexa Skill
-3. Go to developer.amazon.com and choose "Create Skill"
-4. Select "Custom" and "Provision your own", then click "Create skill". On the template screen just use the "Hello World Skill" template
-5. Click on "Interaction Model" in the left menu, then "JSON Editor"
-6. Copy and paste the content from `config/interaction_model.json` into the editor, then click "Save Model"
-7. Click on "Endpoint" in the left menu. Enter the Lambda function ARN by the aws-setup.sh. Click "Save Endpoints"
-8. Click on "Invocation" in the left menu. Click on "Build Model"
-9. Click on the "Test" tab. Enter 
-### Install the local application which control the Chromecasts
-10. Install local dependencies with `sudo pip3 install -r ./src/local/requirements.txt`
-11. Run `./start.sh` to start the listener, or `./docker-start.sh` to run in an interactive docker session. Or `./docker-start.sh -d` to run as a service.
-The service attempts to AWS SNS using UPNP. If UPNP is disabled in your network you can specify a port. `./start.sh -p 30000`
-To see other options run `./start.sh -h` or `./docker-start.sh -h`.
+### Construir la función lambda de AWS
+1. Crea una cuenta de [Amazon Web Services](http://aws.amazon.com/)
+2. Ejecuta aws-setup.sh para crear un Rol, Función Lambda y SNS Topic. (*Se ejecutará `aws configure`, así que ten un id de clave y una clave de acceso lista*)
+### Configurar la Skill de Alexa
+3. Ve a [ASK Console](developer.amazon.com/alexa/console/ask) y elige "Create Skill"
+4. Selecciona "Custom" y "Provision your own", y luego haga clic en "Create skill". En la pantalla de la plantilla escoge la plantilla "Hello World Skill"
+5. Haz clic en "Interaction Model" en el menú de la izquierda, y luego en "JSON Editor"
+6. Copia y pega el contenido de `config/interaction_model.json` en el editor, luego haga clic en "Save Model"
+7. Haz clic en "Endpoint" en el menú de la izquierda. Introduce el ARN de la función Lambda que has obtenido al ejecutar aws-setup.sh. Y después haz clic en "Save Endpoints"
+8. Haz clic en "Invocation" en el menú de la izquierda. Y haz clic en "Build Model"
+9. Haz clic en la pestaña "Test". Prueba cómo funciona.
+### Instalar la aplicación local que controla los Chromecast
+10. Instala las dependencias locales con `sudo pip3 install -r ./src/local/requirements.txt`
+11. Ejecuta `./start.sh` para iniciar el receptor, o `./docker-start.sh` para operar en una sesión interactiva de docker. O `./docker-start.sh -d` para ejecutar como un servicio.
+El servicio intenta comunicar con AWS SNS usando UPNP. Si UPNP está deshabilitado en tu red, puedes especificar un puerto. `./start.sh -p 30000`
+Para ver otras opciones ejecuta `./start.sh -h` o `./docker-start.sh -h`.
 
-When run you should see something like the following:
+Cuando se ejecute deberías ver algo como lo siguiente:
 ```
 2020-07-12 11:10:40,688 - root - INFO - Starting Alexa Chromecast listener...
 2020-07-12 11:10:40,688 - local.ChromecastSkill - INFO - Finding Chromecasts...
@@ -88,71 +85,68 @@ When run you should see something like the following:
 2020-07-12 11:10:47,344 - local.SkillSubscriber - INFO - Received subscription confirmation...
 2020-07-12 11:10:47,431 - local.SkillSubscriber - INFO - Subscribed.
 ```
-### Finally
-12. Say "Alexa ask Chromecast to play"
-The skill will take you through any required room setup.
+### Por último
+12. Di "Alexa abre Chromecast", y después "Ayuda"
+La skill te enseñará cómo se puede utilizar.
 
-### Shell example
+### Ejemplo de Shell o intérprete de comandos
 
   `./start.sh`
 
 ### Docker
 
-The skill subscriber can be run with docker:
+El suscriptor de la Skill se puede ejecutar con docker:
 
-`./docker-start.sh` - for an interactive session
-`./docker-start.sh -d` - to run as a service
+`./docker-start.sh` - para una sesión interactiva
 
-### Environment variables
+`./docker-start.sh -d` - para ejecutar como un servicio
 
-The skill subscriber (local) uses these environment variables:
+### Variables de entorno
 
-- **AWS_SNS_TOPIC_ARN** - AWS SNS Topic ARN (can be found in the `.env` file after running `aws-setup.sh`)
-- **AWS_ACCESS_KEY_ID** - AWS User Access Key
-- **AWS_SECRET_ACCESS_KEY** - AWS Secret Access Key
-- **AWS_DEFAULT_REGION** - AWS Lambda and SNS Region (e.g. eu-west-1)
+El suscriptor de la skill (local) utiliza estas variables de entorno:
 
-If you have run `aws configure`, you will not need to set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, or AWS_DEFAULT_REGION.
+- **AWS_SNS_TOPIC_ARN** - ARN de AWS SNS Topic (se puede encontrar en el archivo `.env` después de ejecutar `aws-setup.sh`)
+- **AWS_ACCESS_KEY_ID** - Clave de acceso de usuario de AWS
+- **AWS_SECRET_ACCESS_KEY** - Clave de acceso secreta de AWS
+- **AWS_DEFAULT_REGION** - Región de AWS Lambda y SNS (ej. eu-west-1)
+
+Si has ejecutado `aws configure`, no necesitarás configurar AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, o AWS_DEFAULT_REGION.
 
 ## Scripts
 
 ### aws-setup.sh
 
-Sets up an AWS environment for the Alexa Skill:
+Establece un entorno AWS para la Skill de Alexa:
 
-1. Creates an IAM role for Alexa (with permissions for SNS)
-2. Creates an SNS topic to communicate over
-3. Creates an S3 persistent store for persisting the room to Alexa device mapping 
-4. Creates a Lambda function
+1. Crea un rol IAM para Alexa (con permisos para el SNS)
+2. Crea un SNS Topic para comunicarse a través de él
+3. Crea un almacén de S3 persistente para la habitación seleccionada a la que el dispositivo Alexa está accediendo
+4. Crea una función Lambda
 
 ### build-lambda-bundle.sh
 
-Creates a lambda-bundle.zip, which can be uploaded to an AWS Lambda function.
+Crea un lambda-bundle.zip, que puede subirse a una función Lambda de AWS.
 
 ### aws-update-lambda.sh
 
-Runs build-lambda-bundle and automatically uploads the bundle to AWS Lambda.
+Ejecuta build-lambda-bundle y automáticamente sube el paquete a AWS Lambda.
 
 
 ## FAQ
 
 ### "No Chromecasts found"
-When the local service starts it searches for Chromecasts on the network. If there are no ChromeCasts found, it will exit.
-To fix this, you must confirm that the Chromecast is on and working, make sure you can access it from your phone, and make sure that everything is on the same network.
-To debug, a tool to search and list found ChomeCasts is provided at `./search-chromecasts` (make sure to make it executable with `chmod +x ./search-chromecasts`).
+Cuando el servicio local comienza a buscar Chromecast en la red. Si no se encuentran Chromecast, se saldrá. Para solucionar esto, debes confirmar que el Chromecast está encendido y funcionando, asegúrate de que puedes acceder a él desde tu teléfono, y asegúrate de que todo está en la misma red. Para depurar, se proporciona una herramienta para buscar y listar los Chomecast encontrados en `./search-chromecasts` (asegúrate de que se pueda ejecutar con `chmod +x ./search-chromecasts`).
 
-### Local listener fails to subscribe
-If the local listener fails to subscribe (no subscribe messages or an error) then the Chromecasts won't receive commands from Alexa
-By default the local listener uses UPNP and a dynamic port to establish an external connection, you can override this if required.
-1. Check UPNP is enabled/allowed on your network
-2. If UPNP is not enabled or working try and manually specify a port, and ensure your firewall/router is configured to allow external access to this port
-e.g. to use port 30000 run `./start.sh -p 30000` or `./docker-start.sh -p 30000`
-3. Log into the AWS console and check the SNS topic is setup, and check the Cloud Watch logs for your the lambda function for any errors.
+### El receptor local no se suscribe
+Si el receptor local no se suscribe (no hay mensajes de suscripción o un error) entonces los Chromecast no recibirán comandos de Alexa Por defecto, el receptor local utiliza UPNP y un puerto dinámico para establecer una conexión externa, que puede ser anulada si es necesario.
+1. Comprueba que UPNP está habilitado/permitido en su red
+2. Si UPNP no está habilitado o no funciona, intenta especificar manualmente un puerto y asegúrate de que su cortafuegos/rúter esté configurado para permitir el acceso externo a este puerto. por ejemplo, para usar el puerto 30000 ejecuta `./start.sh -p 30000` o `./docker-start.sh -p 30000`
+3. Entra en la consola AWS y comprueba que el SNS Topic está instalado, y comprueba los registros de Cloud Watch para tu función lambda por si hay algún error.
 
-### Alexa had an error launching the skill or processing a command
-1. Try redeploying the lambda skill. `./aws-update-lambda.sh`
-2. If that didn't work go to the AWS Console and check the CloudWatch logs associated with the lambda function
+### Alexa tuvo un error al lanzar la skill o al procesar un comando
+1. Intenta reemplazar la skill lambda con `./aws-update-lambda.sh`
+2. Si eso no funcionó, ve a la consola AWS y comprueba los registros de CloudWatch asociados a la función lambda.
 
-### Alexa accepted the command but it didn't seem to work
-1. Check the local listener output, it should show the received command and any error that was encountered
-2. To check the docker service logs run something like `docker logs alexa_chromecast --since=30m`, which shows the logs for the last 30 minutes
+### Alexa aceptó el comando pero no parece que funcione.
+1. Revisa el output del receptor local, debería mostrar el comando recibido y cualquier error que se haya encontrado
+2. Para comprobar los registros del servicio de docker, ejecuta algo como `docker logs alexa_chromecast --since=30m`, que te mostrará los registros de los últimos 30 minutos

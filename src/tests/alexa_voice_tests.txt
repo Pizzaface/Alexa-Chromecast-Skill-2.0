@@ -1,18 +1,19 @@
-Alexa ask Chromecast to pause
-Alexa ask Chromecast to play
-Alexa ask Chromecast to pause in the media room
-Alexa ask Chromecast to play in the media room
-Alexa ask the Chromecast in the media room to pause
-Alexa ask the Chromecast in the media room to play
+Alexa pide a Chromecast que haga una pausa
+Alexa pide a Chromecast que siga
+Alexa pide a Chromecast que pause en sala de estar
+Alexa dile a Chromecast que reproduzca en la sala de estar
+Alexa dile al Chromecast en la sala de estar que se pause
+Alexa dile al Chromecast en la sala de estar que continúe
 
-Alexa ask Chromecast to set volume to 5
 
-Alexa ask Chromecast to stop
-Alexa ask Chromecast to restart
-Alexa ask Chromecast to reboot
+Alexa dile a Chromecast que ponga el volumen a 5
 
-Alexa ask Chromecast to play songs by macklemore
-Alexa ask Chromecast next
-Alexa ask Chromecast previous
+Alexa di a Chromecast que se detenga
+Alexa dile a Chromecast que se reinicie
+Alexa dile a Chromecast que reinicie
 
-Alexa ask Chromecast to play the trailer for the matrix
+Alexa pídele a Chromecast que ponga canciones de Macklemore
+Alexa pide a Chromecast que ponga el siguiente
+Alexa di a Chromecast pon el anterior
+
+Alexa pídele a Chromecast que reproduzca el tráiler de Matrix
