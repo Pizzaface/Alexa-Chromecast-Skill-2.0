@@ -28,6 +28,18 @@
                         }
                     ],
                     "samples": [
+                        "de el {room} que continúe",
+                        "de el {room} que reproduzca",
+                        "de el {room} que siga",
+                        "del {room} que continúe",
+                        "del {room} que reproduzca",
+                        "del {room} que siga",
+                        "de la {room} que continúe",
+                        "de la {room} que reproduzca",
+                        "de la {room}  siga",
+                        "de {room} que continúe",
+                        "de {room} que reproduzca",
+                        "de {room} que siga",
                         "comience a reproducir",
                         "comienza a reproducir",
                         "empieza a reproducir",
@@ -67,6 +79,10 @@
                         }
                     ],
                     "samples": [
+                        "de el {room} que pause",
+                        "del {room} que pause",
+                        "de la {room} que pause",
+                        "de {room} que pause",
                         "pause",
                         "pausa el chromecast",
                         "pausa la televisión",
@@ -92,6 +108,7 @@
                         }
                     ],
                     "samples": [
+                        "cambie a {room}",
                         "cambia de habitación",
                         "cambie de habitación",
                         "cambiar a {room}",
@@ -120,6 +137,14 @@
                         }
                     ],
                     "samples": [
+                        "de el {room} que se detenga",
+                        "de el {room} que pare",
+                        "del {room} que se detenga",
+                        "del {room} que pare",
+                        "de la {room} que se detenga",
+                        "de la {room} que pare",
+                        "de {room} que se detenga",
+                        "de {room} que pare",
                         "pare la reproducción",
                         "paralo",
                         "detenlo",
@@ -225,6 +250,8 @@
                         }
                     ],
                     "samples": [
+                        "cambia el volumen a {volume}",
+                        "cambie el volumen a {volume}",
                         "ajustar volumen a {volume}",
                         "ajusta el volumen a {volume}",
                         "ponga el volumen a {volume}",
