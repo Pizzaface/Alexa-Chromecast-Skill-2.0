@@ -13,9 +13,9 @@ logger.propagate = False
 
 def moviedb_search_movies(movie):
     if not MOVIEDB_API_KEY:
-        logger.error('You need to set a moviedb API key. e.g. export MOVIEDB_API_KEY=xxxxxx')
-        logger.error('You can request this at: %s' % MOVIEDB_API_URI)
-        raise Exception("No MovieDb API Key")
+        logger.error('Necesitas escoger una clave API de MovieDb. ej. export MOVIEDB_API_KEY=xxxxxx')
+        logger.error('Puedes solicitar esto en: %s' % MOVIEDB_API_URI)
+        raise Exception("No has escogido una clave API de MovieDb")
 
     query = {
         "api_key": MOVIEDB_API_KEY,
@@ -34,7 +34,7 @@ def moviedb_search_movies(movie):
         first_result = response["results"][0]
         return first_result
     else:
-        raise Exception("No Results")
+        raise Exception("Sin resultados")
 
 def moviedb_search_movie_videos(moviedb_id):
     query = {
@@ -50,7 +50,7 @@ def moviedb_search_movie_videos(moviedb_id):
     try:
         return response["results"][0]["key"]
     except Exception as err:
-        logger.exception('Unexpected error parsing MovieDb response')
+        logger.exception('Error inesperado analizando la respuesta de MovieDb')
         raise err
 
 

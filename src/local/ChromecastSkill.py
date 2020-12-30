@@ -25,7 +25,7 @@ class MyYouTubeController(YouTubeController):
         super().__init__()
 
     def receive_message(self, msg, data):
-        logger.debug('Received: %s %s' % (msg, data))
+        logger.debug('Recibido: %s %s' % (msg, data))
         return YouTubeController.receive_message(self, msg, data)
 
     def init_playlist(self):
@@ -94,7 +94,7 @@ class ChromecastState:
         with self.lock:
             self.__chromecasts = {}
             for cc in pychromecast.get_chromecasts():
-                logger.info("Found %s" % cc.device.friendly_name)
+                logger.info("Se ha descubierto %s" % cc.device.friendly_name)
                 cc.wait()
                 self.__chromecasts[cc.device.friendly_name] = ChromecastWrapper(cc)
             self.expiry = datetime.now()
@@ -129,12 +129,12 @@ class ChromecastState:
 class Skill():
 
     def __init__(self):
-        logger.info("Finding Chromecasts...")
+        logger.info("Buscando Chromecast...")
         self.chromecast_controller = ChromecastState()
         if self.chromecast_controller.count == 0:
-            logger.info("No Chromecasts found")
+            logger.info("No se han descubierto Chromecast")
             exit(1)
-        logger.info("%i Chromecasts found" % self.chromecast_controller.count)
+        logger.info("%i Chromecasts descubiertos" % self.chromecast_controller.count)
 
     def get_chromecast(self, name) -> ChromecastWrapper:
         return self.chromecast_controller.get_chromecast(name)
@@ -143,14 +143,14 @@ class Skill():
         try:
             chromecast = self.chromecast_controller.match_chromecast(room)
             if not chromecast:
-                logger.warn('No Chromecast found matching: %s' % room)
+                logger.warn('No hay ningún Chromecast llamado: %s' % room)
                 return
             func = command.replace('-','_')
-            logger.info('Sending %s command to Chromecast: %s' % (func, chromecast.name))
+            logger.info('Enviando comando %s a Chromecast: %s' % (func, chromecast.name))
 
             getattr(self, func)(data, chromecast.name)
         except Exception:
-            logger.exception('Unexpected error')
+            logger.exception('Error inesperado')
 
     def resume(self, data, name):
         self.play(data, name)
@@ -187,7 +187,7 @@ class Skill():
         if streaming_app == 'youtube':
             video_playlist = youtube_search.search(video_title)
             if len(video_playlist) == 0:
-                logger.info('Unable to find youtube video for: %s' % video_title)
+                logger.info('Incapáz de encontrar el vídeo: %s' % video_title)
                 return
             playing = False
             yt.init_playlist()
@@ -197,17 +197,17 @@ class Skill():
                         #Youtube controller will clear for a playlist
                         yt.clear_playlist()
                     yt.play_video(video['id'], video['playlist_id'])
-                    logger.debug('Currently playing: %s' % video['id'])
+                    logger.debug('Se está reproduciendo: %s' % video['id'])
                     playing = True
                 else:
                     yt.add_to_queue(video['id'])
-            logger.info('Asked chromecast to play %i titles matching: %s on YouTube' % (len(video_playlist), video_title))
+            logger.info('Se ha solicitado a Chromecast reporoducir %i títulos que coinciden con: %s en YouTube' % (len(video_playlist), video_title))
 
         elif streaming_app == 'plex':
             #TODO: Future support other apps - Not Implemented
-            logger.info('Asked chromecast to play title: %s on Plex' % video_title)
+            logger.info('Se ha solicitado a Chromecast reproducir: %s en Plex' % video_title)
         else:
-            logger.info('The streaming application %s is not supported' % streaming_app)
+            logger.info('La aplicación de streaming %s no se permite' % streaming_app)
 
     def play_trailer(self, data, name):
         cc = self.get_chromecast(name)
@@ -215,7 +215,7 @@ class Skill():
         moviedb_result = moviedb_search.get_movie_trailer_youtube_id(data['title'])
         video_id = moviedb_result["youtube_id"]
         yt.play_video(video_id)
-        logger.info('video sent to chromecast, id: %s' % video_id)
+        logger.info('vídeo enviado a Chromecast, id: %s' % video_id)
 
     def restart(self, data, name):
         self.get_chromecast(name).cast.reboot()

@@ -26,7 +26,7 @@ class Subscriber(BaseHTTPRequestHandler):
             try:
                 self.initialize_upnp()
             except Exception:
-                logger.exception('Failed to configure UPnP. Please map port manually and pass PORT environment variable.')
+                logger.exception('Fallo al configurar UPnP. Por favor, configúralo manualmente e introduce la variable de entorno PORT.')
                 sys.exit(1)
 
         self.sns_client = boto3.client('sns')
@@ -46,12 +46,12 @@ class Subscriber(BaseHTTPRequestHandler):
                 type = data['Type']
  
                 if type == 'SubscriptionConfirmation':
-                    logger.info('Received subscription confirmation...')
+                    logger.info('Confirmación de subscripción recibida...')
                     token = data['Token']
                     instance.confirm_subscription(topic_arn, token)
                     
                 elif type == 'Notification':
-                    logger.info('Received message...')
+                    logger.info('Mensaje recibido...')
                     if data['Message']:
                         instance.dispatch_notification(json.loads(data['Message']))
 
@@ -64,7 +64,7 @@ class Subscriber(BaseHTTPRequestHandler):
         if not ip:
           ip = self.get_external_ip() 
         self.endpoint_url = 'http://{}:{}'.format(ip, port)
-        logger.info('Listening on {}'.format(self.endpoint_url))
+        logger.info('Escuchando a {}'.format(self.endpoint_url))
         signal.signal(signal.SIGINT,
                       lambda signal, frame: self.unsubscribe())
         self.subscribe()
@@ -92,12 +92,12 @@ class Subscriber(BaseHTTPRequestHandler):
                     ''
                 )
             except:
-                logger.error('Failed to automatically forward port.')
-                logger.error('Please set port as an environment variable and forward manually.')
+                logger.error('No se pudo reenviar automáticamente el puerto.')
+                logger.error('Por favor, establezca el puerto como una variable de entorno y envíelo manualmente.')
                 sys.exit(1)
 
         try:
-            logger.info("Subscribing for Alexa commands...")
+            logger.info("Suscribiéndose a los comandos de Alexa...")
             self.sns_client.subscribe(
                 TopicArn=self.topic_arn,
                 Protocol='http',
@@ -105,7 +105,7 @@ class Subscriber(BaseHTTPRequestHandler):
             )
 
         except Exception:
-            logger.exception('SNS Topic ({}) is invalid. Please check in AWS.'.format(self.topic_arn))
+            logger.exception('El SNS Topic ({}) no es válido. Por favor, compruébalo en AWS.'.format(self.topic_arn))
             sys.exit(1)
 
     def confirm_subscription(self, topic_arn, token):
@@ -115,10 +115,10 @@ class Subscriber(BaseHTTPRequestHandler):
                 TopicArn=topic_arn,
                 Token=token,
                 AuthenticateOnUnsubscribe="false")
-            logger.info('Subscribed.')
+            logger.info('Subscrito.')
         
         except Exception:
-            logger.exception('Failed to confirm subscription. Please check in AWS.')
+            logger.exception('No se confirmó la suscripción. Por favor, compruébalo en AWS.')
             sys.exit(1)
 
     def unsubscribe(self):
@@ -127,10 +127,10 @@ class Subscriber(BaseHTTPRequestHandler):
             result = self.upnp.deleteportmapping(self.server.server_port, 'TCP')
 
             if result:
-                logger.debug('Removed forward for port {}.'.format(self.server.server_port))
+                logger.debug('Se eliminó el reenvío al puerto {}.'.format(self.server.server_port))
             else:
                 raise RuntimeError(
-                    'Failed to remove port forward for {}.'.format(self.server.server_port))
+                    'No se pudo eliminar el reenvío al puerto {}.'.format(self.server.server_port))
 
         subscription_arn = None
         response = self.sns_client.list_subscriptions_by_topic(TopicArn=self.topic_arn)
@@ -152,6 +152,6 @@ class Subscriber(BaseHTTPRequestHandler):
             skill = self.skills.get(notification['handler_name'])
             skill.handle_command(notification['room'], notification['command'], notification['data'])
         except Exception:
-            logger.exception('Unexpected error handling message')
+            logger.exception('Error inesperado gestionando mensaje')
 
 

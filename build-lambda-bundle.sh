@@ -6,19 +6,19 @@ cd $(dirname $0)
 
 # Generate Lambda zip file
 
-echo "Building Lambda bundle."
+echo "."
 
-echo "Copying files to lambda-build ..."
+echo "Construyendo el paquete Lambda ..."
 mkdir lambda-build
 cp -R ./src/lambda_function lambda-build/.
 cd lambda-build
 
-echo "Running pip install ..."
+echo "Iniciando pip install ..."
 pip3 install -I -r ./lambda_function/requirements.txt --target=../lambda-build
 
-echo "Zipping files ..."
+echo "Comprimiendo archivos ..."
 zip -q -r ../lambda-build.zip .
 
-echo "Cleaning up ..."
+echo "Limpiando ..."
 cd - >/dev/null
 rm -rf lambda-build

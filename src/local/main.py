@@ -36,6 +36,6 @@ PORT = os.getenv('EXTERNAL_PORT')
 IP = os.getenv('EXTERNAL_IP')
 
 if __name__ == "__main__":
-    root_logger.info("Starting Alexa Chromecast listener...")
+    root_logger.info("Iniciando receptor de Alexa Chromecast...")
     chromecast_skill = Skill()
     Subscriber({'chromecast': chromecast_skill}, IP, PORT)

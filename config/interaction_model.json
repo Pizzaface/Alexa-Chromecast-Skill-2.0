@@ -28,6 +28,7 @@
                         }
                     ],
                     "samples": [
+                        "siga",
                         "de el {room} que continúe",
                         "de el {room} que reproduzca",
                         "de el {room} que siga",
