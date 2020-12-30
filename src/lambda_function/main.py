@@ -22,14 +22,18 @@ logger.setLevel(logging.INFO)
 
 AWS_SNS_ARN = os.getenv('AWS_SNS_ARN')
 AWS_S3_BUCKET = os.getenv('AWS_S3_BUCKET')
-CARD_TITLE = 'Controlar Cromcast con Alexa'
+CARD_TITLE = 'Controlar Chromecast con Alexa'
 
 HELP_TEXT = ''.join([
-    "Bienvenido al controlador de Cromcast de Alexa. Esta habilidad le permite controlar sus Cromcast en diferentes habitaciones. ",
-    "Un Dispositivo Alexa puede ser configurado para controlar un Cromcast en una habitación particular. ",
-    "Entonces puedes decir algo como: Alexa, pídele a Cromcast que reproduzca, o: Alexa, pídele a Cromcast que pause. ",
+    "Bienvenido al controlador de " + SSML_CHROMECAST + " de Alexa. Esta habilidad le permite controlar sus " + SSML_CHROMECAST +" en diferentes habitaciones. ",
+    "Un Dispositivo Alexa puede ser configurado para controlar un " + SSML_CHROMECAST + " en una habitación particular. ",
+    "Entonces puedes decir algo como: Alexa, pídele a " + SSML_CHROMECAST + " que reproduzca, o: Alexa, pídele a " + SSML_CHROMECAST + " que pause. ",
     "O puedes controlar una habitación específica, diciendo algo como: Alexa, cambia a sala de estar"
 ])
+
+SSML_START = '<speak>'
+SSML_CHROMECAST = '<phoneme alphabet="ipa" ph="krowmkaast">Chromecast</phoneme>'
+SSML_END = '</speak>'
 
 class SNSPublishError(Exception):
     """ If something goes wrong with publishing to SNS """
@@ -85,12 +89,14 @@ class BaseIntentHandler(AbstractRequestHandler):
         if not room:
             room = utils.get_persistent_session_attribute(handler_input, 'DEVICE_'+device_id, False)
             if not room:
-                speak_output = 'Tengo que establecer la sala del Cromcast que este dispositivo de Alexa controlará. Por favor, di algo como: ver en la sala de estar.'
+                speak_output = 'Tengo que establecer la sala del ' + SSML_CHROMECAST + ' que este dispositivo de Alexa controlará. Por favor, di algo como: ver en la sala de estar.'
+                speak_text = 'Tengo que establecer la sala del Chromecast que este dispositivo de Alexa controlará. Por favor, di algo como: ver en la sala de estar.'
                 return (
                     handler_input.response_builder
                         .speak(speak_output)
-                        .ask('Por favor, establezca la sala del Cromcast, diciendo algo como: establecer habitación a sala de estar.')
-                        .set_card(ui.SimpleCard(CARD_TITLE, speak_output))
+                        .ask('Por favor, establezca la sala del ' + SSML_CHROMECAST + ', diciendo algo como: establecer habitación a sala de estar.')
+                        .set_card(ui.SimpleCard(CARD_TITLE, speak_text))
+                        .set_should_end_session(False)
                         .response
                 )
 
@@ -101,16 +107,19 @@ class BaseIntentHandler(AbstractRequestHandler):
             return (
                 handler_input.response_builder
                     .speak(speak_output)
-                    .set_card(ui.SimpleCard(CARD_TITLE, speak_output))
+                    .set_card(ui.SimpleCard(CARD_TITLE, speak_text))
+                    .set_should_end_session(False)
                     .response
             )
         except SNSPublishError as error:
             logger.error('Sending command to the Chromecast failed', exc_info=error)
-            speak_output = 'Hubo un error al enviar la orden al Cromcast'
+            speak_output = 'Hubo un error al enviar la orden al ' + SSML_CHROMECAST
+            speak_text = 'Hubo un error al enviar la orden al Chromecast'
             return (
                 handler_input.response_builder
                     .speak(speak_output)
-                    .set_card(ui.SimpleCard(CARD_TITLE, speak_output))
+                    .set_card(ui.SimpleCard(CARD_TITLE, speak_text))
+                    .set_should_end_session(False)
                     .response
             )
 
@@ -142,11 +151,13 @@ class SetRoomIntentHandler(BaseIntentHandler):
         room = utils.get_slot_value(handler_input, 'room') #Must have a value enforced by Alexa dialog
         utils.set_persistent_session_attribute(handler_input, 'DEVICE_'+device_id, room)
         handler_input.attributes_manager.save_persistent_attributes()
-        speak_output = 'De acuerdo, este dispositivo de Alexa controlará el Cromcast en %s. Para controlar otra habitación puedes decir algo como: Alexa, ver en sala de estar.' % room
+        speak_output = 'De acuerdo, este dispositivo de Alexa controlará el ' + SSML_CHROMECAST + ' en %s. Para controlar otra habitación puedes decir algo como: Alexa, ver en sala de estar.' % room
+        speak_text = 'De acuerdo, este dispositivo de Alexa controlará el Chromecast en %s. Para controlar otra habitación puedes decir algo como: Alexa, ver en sala de estar.' % room
         return (
             handler_input.response_builder
                 .speak(speak_output)
-                .set_card(ui.SimpleCard(CARD_TITLE, speak_output))
+                .set_card(ui.SimpleCard(CARD_TITLE, speak_text))
+                .set_should_end_session(False)
                 .response
         )
 
@@ -204,10 +215,7 @@ class PlayTrailerIntentHandler(BaseIntentHandler):
         return 'play-trailer'
 
     def get_data(self, handler_input):
-        return {
-            "title": utils.get_slot_value(handler_input, 'movie'),
-            "app": 'youtube'
-            }
+        return {"title": utils.get_slot_value(handler_input, 'movie')}
     def get_response(self, data):
         return 'Reproduciendo el tráiler de %s' % data['title']
 
@@ -230,16 +238,18 @@ class HelpIntentHandler(AbstractRequestHandler):
         return ask_utils.is_intent_name("AMAZON.HelpIntent")(handler_input)
 
     def handle(self, handler_input):
-        speak_output = HELP_TEXT
+        speak_output = HELP_OUTPUT
+        speak_text = 'Bienvenido al controlador de Chromecast de Alexa. Esta habilidad le permite controlar sus Chromecast en diferentes habitaciones. Un Dispositivo Alexa puede ser configurado para controlar un Chromecast en una habitación particular. Entonces puedes decir algo como: Alexa, pídele a Chromecast que reproduzca, o: Alexa, pídele a Chromecast que pause. O puedes controlar una habitación específica, diciendo algo como: Alexa, cambia a sala de estar'
         return (
             handler_input.response_builder
                 .speak(speak_output)
-                .set_card(ui.SimpleCard(CARD_TITLE, speak_output))
+                .set_card(ui.SimpleCard(CARD_TITLE, speak_text))
+                .set_should_end_session(False)
                 .response
         )
 
 class CancelIntentHandler(AbstractRequestHandler):
-    """Single handler for Cancel and Stop Intent."""
+    """Handler for Cancel Intent."""
     def can_handle(self, handler_input):
         # type: (HandlerInput) -> bool
         return ask_utils.is_intent_name("AMAZON.CancelIntent")(handler_input)
@@ -247,6 +257,22 @@ class CancelIntentHandler(AbstractRequestHandler):
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
         speak_output = "¡Hasta luego!"
+
+        return (
+            handler_input.response_builder
+                .speak(speak_output)
+                .response
+        )
+
+class StopIntentHandler(AbstractRequestHandler):
+    """Handler for Stop Intent."""
+    def can_handle(self, handler_input):
+        # type: (HandlerInput) -> bool
+        return ask_utils.is_intent_name("AMAZON.StopIntent")(handler_input)
+
+    def handle(self, handler_input):
+        # type: (HandlerInput) -> Response
+        speak_output = "¡Adiós!"
 
         return (
             handler_input.response_builder
@@ -280,7 +306,7 @@ class IntentReflectorHandler(AbstractRequestHandler):
         return (
             handler_input.response_builder
                 .speak(speak_output)
-                # .ask("add a reprompt if you want to keep the session open for the user to respond")
+                # .ask("add the reprompt if you want to keep the session open for the user to respond")
                 .response
         )
 
