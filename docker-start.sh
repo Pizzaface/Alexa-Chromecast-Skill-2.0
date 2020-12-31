@@ -34,7 +34,7 @@ if [ $HELP -eq 1 ]; then
 fi
 
 if [ ! -f .env ] || [ ! -d ~/.aws ]; then
-  echo "No se ha encontrado la configuración de AWS. Por favor, ejecute el script de configuración de AWS aws-setup."
+  echo "No se ha encontrado la configuración de AWS. Por favor, ejecute el script aws-setup."
   exit 1
 fi
 source .env

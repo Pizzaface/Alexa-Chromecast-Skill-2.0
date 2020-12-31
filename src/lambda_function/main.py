@@ -25,8 +25,10 @@ AWS_S3_BUCKET = os.getenv('AWS_S3_BUCKET')
 CARD_TITLE = 'Controlar Chromecast con Alexa'
 
 SSML_START = '<speak>'
-SSML_CHROMECAST = '<phoneme alphabet="ipa" ph="krowmkaast">Chromecast</phoneme>'
 SSML_END = '</speak>'
+SSML_CHROMECAST = '<phoneme alphabet="ipa" ph="krowmkast">Chromecast</phoneme>'
+SSML_BYE = '<phoneme alphabet="ipa" ph="¡a·dios!">¡Adiós!</phoneme>'
+SSML_SYS = '<say-as interpret-as="interjection">¡Hasta luego!</say-as>'
 
 HELP_OUTPUT = ''.join([
     "Bienvenido al controlador de " + SSML_CHROMECAST + " de Alexa. Esta habilidad le permite controlar sus " + SSML_CHROMECAST +" en diferentes habitaciones. ",
@@ -81,7 +83,7 @@ class BaseIntentHandler(AbstractRequestHandler):
         return {}
 
     def get_response(self, data):
-        return {SSML_START + <amazon:emotion name="excited" intensity="low">Vale</amazon:emotion> + SSML_END}
+        return ('Vale')
 
     def handle(self, handler_input):
         room = utils.get_slot_value(handler_input, 'room', False)
@@ -97,7 +99,6 @@ class BaseIntentHandler(AbstractRequestHandler):
                         .speak(speak_output)
                         .ask(SSML_START + 'Por favor, establece la sala del ' + SSML_CHROMECAST + ', diciendo algo como: establecer habitación a sala de estar.' + SSML_END)
                         .set_card(ui.SimpleCard(CARD_TITLE, speak_text))
-                        .set_should_end_session(False)
                         .response
                 )
 
@@ -109,7 +110,6 @@ class BaseIntentHandler(AbstractRequestHandler):
                 handler_input.response_builder
                     .speak(speak_output)
                     .set_card(ui.SimpleCard(CARD_TITLE, speak_output))
-                    .set_should_end_session(False)
                     .response
             )
         except SNSPublishError as error:
@@ -120,7 +120,6 @@ class BaseIntentHandler(AbstractRequestHandler):
                 handler_input.response_builder
                     .speak(speak_output)
                     .set_card(ui.SimpleCard(CARD_TITLE, speak_text))
-                    .set_should_end_session(False)
                     .response
             )
 
@@ -152,13 +151,12 @@ class SetRoomIntentHandler(BaseIntentHandler):
         room = utils.get_slot_value(handler_input, 'room') #Must have a value enforced by Alexa dialog
         utils.set_persistent_session_attribute(handler_input, 'DEVICE_'+device_id, room)
         handler_input.attributes_manager.save_persistent_attributes()
-        speak_output = SSML_START + 'De acuerdo, este dispositivo de Alexa controlará el ' + SSML_CHROMECAST + ' en %s. Para controlar otra habitación puedes decir algo como: Alexa, ver en sala de estar.' + SSML_END % room
+        speak_output = SSML_START + 'De acuerdo, este dispositivo de Alexa controlará el ' + SSML_CHROMECAST + ' en %s. Para controlar otra habitación puedes decir algo como: Alexa, ver en sala de estar.' % room + SSML_END
         speak_text = 'De acuerdo, este dispositivo de Alexa controlará el Chromecast en %s. Para controlar otra habitación puedes decir algo como: Alexa, ver en sala de estar.' % room
         return (
             handler_input.response_builder
                 .speak(speak_output)
                 .set_card(ui.SimpleCard(CARD_TITLE, speak_text))
-                .set_should_end_session(False)
                 .response
         )
 
@@ -190,7 +188,7 @@ class SetVolumeIntentHandler(BaseIntentHandler):
     def get_data(self, handler_input):
         volume = int(utils.get_slot_value(handler_input, 'volume'))
         if volume > 10 or volume < 0:
-            return {SSML_START + <amazon:emotion name="dissapointed" intensity="low">Lo siento, sólo se puede ajustar el volumen entre 0 y 10.</amazon:emotion> + SSML_END}
+            return 'Lo siento, sólo se puede ajustar el volumen entre 0 y 10.'
         return {"volume": volume}
 
 class NextIntentHandler(BaseIntentHandler):
@@ -239,13 +237,13 @@ class HelpIntentHandler(AbstractRequestHandler):
         return ask_utils.is_intent_name("AMAZON.HelpIntent")(handler_input)
 
     def handle(self, handler_input):
-        speak_output = SSML_START + <amazon:domain name="long-form">HELP_OUTPUT</amazon:domain> + SSML_END
+        speak_output = SSML_START + HELP_OUTPUT + SSML_END
         speak_text = 'Bienvenido al controlador de Chromecast de Alexa. Esta habilidad le permite controlar sus Chromecast en diferentes habitaciones. Un Dispositivo Alexa puede ser configurado para controlar un Chromecast en una habitación particular. Entonces puedes decir algo como: Alexa, pídele a Chromecast que reproduzca, o: Alexa, pídele a Chromecast que pause. O puedes controlar una habitación específica, diciendo algo como: Alexa, cambia a sala de estar'
         return (
             handler_input.response_builder
                 .speak(speak_output)
                 .set_card(ui.SimpleCard(CARD_TITLE, speak_text))
-                .set_should_end_session(False)
+                .shouldEndSession(false)
                 .response
         )
 
@@ -257,7 +255,7 @@ class CancelIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
-        speak_output = SSML_START + <amazon:emotion name="excited" intensity="low">¡Hasta luego!</amazon:emotion> + SSML_END
+        speak_output = SSML_START + SSML_SYS + SSML_END
 
         return (
             handler_input.response_builder
@@ -273,7 +271,7 @@ class StopIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
-        speak_output = SSML_START + <amazon:emotion name="excited" intensity="low">¡Adios!</amazon:emotion> + SSML_END
+        speak_output = SSML_START + SSML_BYE + SSML_END
 
         return (
             handler_input.response_builder

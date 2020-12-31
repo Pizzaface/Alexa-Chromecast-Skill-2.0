@@ -56,7 +56,7 @@ aws iam attach-role-policy --role-name $ROLE_NAME --policy-arn arn:aws:iam::aws:
 echo "Creando topic $SNS_TOPIC_NAME."
 sns_response=$(aws sns create-topic --name $SNS_TOPIC_NAME)
 sns_topic_arn=$(echo $sns_response | python3 -c "import sys, json; print(json.load(sys.stdin)['TopicArn'])")
-echo "exportando AWS_SNS_TOPIC_ARN=$sns_topic_arn" >> .env
+echo "export AWS_SNS_TOPIC_ARN=$sns_topic_arn" >> .env
 
 # Create S3 Bucket (and store ARN in .env)
 echo "Creando bucket S3 $S3_BUCKET_NAME."
@@ -67,7 +67,7 @@ echo "Creando función lambda $LAMBDA_FUNCTION_NAME."
 ./build-lambda-bundle.sh
 lambda_response=$(aws lambda create-function --role $role_arn --function-name $LAMBDA_FUNCTION_NAME --runtime "python3.7" --handler "lambda_function.main.lambda_handler" --role $role_arn --zip-file fileb://lambda-build.zip)
 lambda_arn=$(echo $lambda_response | python3 -c "import sys, json; print(json.load(sys.stdin)['FunctionArn'])")
-echo "exportando LAMBDA_FUNCTION_ARN=$lambda_arn" >> .env
+echo "export LAMBDA_FUNCTION_ARN=$lambda_arn" >> .env
 aws lambda update-function-configuration --role $role_arn --function-name $LAMBDA_FUNCTION_NAME --environment "Variables={AWS_SNS_ARN=$sns_topic_arn, AWS_S3_BUCKET=$S3_BUCKET_NAME}"
 aws lambda add-permission --function-name $LAMBDA_FUNCTION_NAME --statement-id 1 --action lambda:invokeFunction --principal alexa-appkit.amazon.com
 

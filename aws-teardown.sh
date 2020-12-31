@@ -18,11 +18,11 @@ if [ -f .env ]; then
   source .env
 fi
 
-echo "Descartando política de rol AmazonSNSFullAccess del rol $ROLE_NAME"
+echo "Desechando credenciales AmazonSNSFullAccess del rol $ROLE_NAME"
 aws iam detach-role-policy --role-name "$ROLE_NAME" --policy-arn arn:aws:iam::aws:policy/AmazonSNSFullAccess || true
-echo "Descartando política de rol AmazonLambdaBasicExecutionRole del rol $ROLE_NAME"
+echo "Desechando credenciales AmazonLambdaBasicExecutionRole del rol $ROLE_NAME"
 aws iam detach-role-policy --role-name "$ROLE_NAME" --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole || true
-echo "Descartando política de rol AmazonS3FullAccess del rol $ROLE_NAME"
+echo "Desechando credenciales AmazonS3FullAccess del rol $ROLE_NAME"
 aws iam detach-role-policy --role-name "$ROLE_NAME" --policy-arn arn:aws:iam::aws:policy/AmazonS3FullAccess || true
 
 echo "Eliminando rol $ROLE_NAME"
@@ -39,7 +39,7 @@ if [ ! -z "$S3_BUCKET_NAME" ]; then
 fi
 
 if [ ! -z "$LAMBDA_FUNCTION_NAME" ]; then
-  echo "Eliminando dunción lambda $LAMBDA_FUNCTION_NAME"
+  echo "Eliminando función lambda $LAMBDA_FUNCTION_NAME"
   aws lambda delete-function --function-name "$LAMBDA_FUNCTION_NAME" || true
 fi
 
