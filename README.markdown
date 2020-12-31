@@ -2,7 +2,9 @@
 
 Permite a Alexa de Amazon controlar Google Chromecast
 
-Esta habilidad o skill te permite controlar uno o varios Chromecast en diferentes habitaciones. Cada dispositivo de Alexa puede ser configurado para controlar una habitación diferente. Esto se hace emparejando el nombre de la habitación con el nombre de su dispositivo Chromecast. Por ejemplo, si el nombre de su Chromecast es: "Dormitorio principal", entonces configura la habitación de Alexa para controlar el "Dormitorio principal"
+Esta habilidad o skill te permite controlar uno o varios Chromecast en diferentes habitaciones. Cada dispositivo de Alexa puede ser configurado para controlar una habitación diferente. 
+
+Esto se hace emparejando el nombre de la habitación con el nombre de su dispositivo Chromecast. Por ejemplo, si el nombre de su Chromecast es: "Dormitorio principal", entonces configura la habitación de Alexa para controlar el "Dormitorio principal"
 
 El siguiente comando detiene el Chromecast del Dormitorio Principal: 
 > Alexa, pídele a Chromecast que pause
@@ -31,7 +33,7 @@ O,
 
 > Alexa, pídele al Chromecast de la Sala de Estar que pare
 
-> Alexa, pide a Chromecast que siga en la Sala de Estar
+> Alexa, pide a Chromecast que siga en Sala de Estar
 
 ## Cómo funciona
 
@@ -55,7 +57,7 @@ La instalación requiere un entorno UNIX con:
 
 ### Construir la función lambda de AWS
 1. Crea una cuenta de [Amazon Web Services](http://aws.amazon.com/)
-2. Ejecuta aws-setup.sh para crear un Rol, Función Lambda y SNS Topic. (*Se ejecutará `aws configure`, así que ten un id de clave y una clave de acceso lista*)
+2. Ejecuta aws-setup.sh para crear un Rol, Función Lambda y SNS Topic. (*Se ejecutará `aws configure`, así que ten un id de clave y una clave de acceso a mano*)
 ### Configurar la Skill de Alexa
 3. Ve a [ASK Console](developer.amazon.com/alexa/console/ask) y elige "Create Skill"
 4. Selecciona "Custom" y "Provision your own", y luego haga clic en "Create skill". En la pantalla de la plantilla escoge la plantilla "Hello World Skill"
@@ -72,21 +74,23 @@ Para ver otras opciones ejecuta `./start.sh -h` o `./docker-start.sh -h`.
 
 Cuando se ejecute deberías ver algo como lo siguiente:
 ```
-2020-07-12 11:10:40,688 - root - INFO - Starting Alexa Chromecast listener...
-2020-07-12 11:10:40,688 - local.ChromecastSkill - INFO - Finding Chromecasts...
-2020-07-12 11:10:45,696 - pychromecast - INFO - Querying device status
-2020-07-12 11:10:45,727 - pychromecast - INFO - Querying device status
-2020-07-12 11:10:45,767 - local.ChromecastSkill - INFO - Found Media Room TV
-2020-07-12 11:10:45,768 - local.ChromecastSkill - INFO - Found Living Room TV
-2020-07-12 11:10:45,769 - local.ChromecastSkill - INFO - 2 Chromecasts found
-2020-07-12 11:10:45,809 - botocore.credentials - INFO - Found credentials in environment variables.
-2020-07-12 11:10:46,967 - local.SkillSubscriber - INFO - Listening on http://123.123.123.123:30000
-2020-07-12 11:10:46,968 - local.SkillSubscriber - INFO - Subscribing for Alexa commands...
-2020-07-12 11:10:47,344 - local.SkillSubscriber - INFO - Received subscription confirmation...
-2020-07-12 11:10:47,431 - local.SkillSubscriber - INFO - Subscribed.
+2020-12-30 11:10:02,484 - root - INFO - Iniciando receptor de Alexa Chromecast...
+2020-12-30 11:10:02,498 - local.ChromecastSkill - INFO - Buscando Chromecast...
+2020-12-30 11:10:07,618 - pychromecast - INFO - Querying device status
+2020-12-30 11:10:07,789 - pychromecast - INFO - Querying device status
+2020-12-30 11:10:07,998 - local.ChromecastSkill - INFO - Se ha descubierto Dormitorio principal
+2020-12-30 11:10:08,159 - local.ChromecastSkill - INFO - Se ha descubierto Habitación Fernando
+2020-12-30 11:10:08,389 - local.ChromecastSkill - INFO - 2 Chromecasts descubiertos
+2020-12-30 11:10:10,475 - botocore.credentials - INFO - Found credentials in environment variables.
+2020-12-30 11:10:12,684 - local.SkillSubscriber - INFO - Escuchando a http://93.114.157.209:38523
+2020-12-30 11:10:12,717 - local.SkillSubscriber - INFO - Suscribiéndose a los comandos de Alexa...
+2020-12-30 11:10:13,603 - local.SkillSubscriber - INFO - Confirmación de subscripción recibida...
+2020-12-30 11:10:13,913 - local.SkillSubscriber - INFO - Subscrito.
+
 ```
 ### Por último
 12. Di "Alexa abre Chromecast", y después "Ayuda"
+
 La skill te enseñará cómo se puede utilizar.
 
 ### Ejemplo de Shell o intérprete de comandos
@@ -145,7 +149,7 @@ Si el receptor local no se suscribe (no hay mensajes de suscripción o un error)
 
 ### Alexa tuvo un error al lanzar la skill o al procesar un comando
 1. Intenta reemplazar la skill lambda con `./aws-update-lambda.sh`
-2. Si eso no funcionó, ve a la consola AWS y comprueba los registros de CloudWatch asociados a la función lambda.
+2. Si esto no funciona, ve a la consola AWS y comprueba los registros de CloudWatch asociados a la función lambda.
 
 ### Alexa aceptó el comando pero no parece que funcione.
 1. Revisa el output del receptor local, debería mostrar el comando recibido y cualquier error que se haya encontrado
