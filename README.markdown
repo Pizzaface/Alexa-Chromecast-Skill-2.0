@@ -1,3 +1,5 @@
+[🇪🇸 Español](https://github.com/Pizzaface/Alexa-Chromecast-Skill-2.0/blob/spanish/README.markdown)
+
 # Alexa Chromecast Skill
 
 Allows Amazon Alexa to control Google Chromecast
