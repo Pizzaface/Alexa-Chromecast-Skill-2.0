@@ -8,4 +8,4 @@ if len(chromecasts) > 0:
   for cc in chromecasts:
     print("Se ha descubierto el ChromeCast'{}'".format(cc.device.friendly_name))
 else:
-  print("¡No se han descubierto ChromeCast en la red local!")
+  print("¡No se han descubierto ChromeCast en esta red!")

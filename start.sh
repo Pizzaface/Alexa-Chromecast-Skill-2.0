@@ -12,7 +12,7 @@ while getopts "hi:p:" opt; do
     ;;
     p) export EXTERNAL_PORT="$OPTARG"
     ;;
-    \?) echo "Invalid option -$OPTARG" >&2; exit 1
+    \?) echo "Opción inválida -$OPTARG" >&2; exit 1
     ;;
   esac
 done
@@ -34,7 +34,7 @@ set -e -o pipefail
 cd $(dirname $0)
 
 if [ ! -f .env ] || [ ! -d ~/.aws ]; then
-  echo "No se ha encontrado la configuración de AWS. Por favor, ejecute el script de configuración de AWS aws-setup."
+  echo "No se ha encontrado la configuración de AWS. Por favor, ejecute el script aws-setup."
   exit 1
 fi
 

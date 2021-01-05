@@ -46,7 +46,7 @@ class Subscriber(BaseHTTPRequestHandler):
                 type = data['Type']
  
                 if type == 'SubscriptionConfirmation':
-                    logger.info('Confirmación de subscripción recibida...')
+                    logger.info('Confirmación de suscripción recibida...')
                     token = data['Token']
                     instance.confirm_subscription(topic_arn, token)
                     
@@ -115,7 +115,7 @@ class Subscriber(BaseHTTPRequestHandler):
                 TopicArn=topic_arn,
                 Token=token,
                 AuthenticateOnUnsubscribe="false")
-            logger.info('Subscrito.')
+            logger.info('Suscrito.')
         
         except Exception:
             logger.exception('No se confirmó la suscripción. Por favor, compruébalo en AWS.')

@@ -243,7 +243,6 @@ class HelpIntentHandler(AbstractRequestHandler):
             handler_input.response_builder
                 .speak(speak_output)
                 .set_card(ui.SimpleCard(CARD_TITLE, speak_text))
-                .shouldEndSession(false)
                 .response
         )
 

@@ -25,12 +25,12 @@ class TestLocal(unittest.TestCase):
         self.skill.handle_command(self.cc_name, 'play_trailer', {'title': 'Matrix'})
 
     def test_play_on_app(self):
-        self.skill.handle_command(self.cc_name, 'play_video', {'title': 'canciones de Aurora', 'app': 'youtube'})
+        self.skill.handle_command(self.cc_name, 'play_video', {'title': 'canciones de Macklemore', 'app': 'youtube'})
         for _loops in range(5):
             time.sleep(60)
 
     def test_playlist(self):
-        self.skill.handle_command(self.cc_name, 'play_video', {'title': 'playlist de Aurora', 'app': 'youtube'})
+        self.skill.handle_command(self.cc_name, 'play_video', {'title': 'playlist de Macklemore', 'app': 'youtube'})
         time.sleep(20)
         self.skill.handle_command(self.cc_name, 'play_next', {})
         time.sleep(20)

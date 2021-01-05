@@ -16,7 +16,7 @@ if [ -z "$(type pip3)" ]; then
 fi
 
 if [ -z "$(type zip)" ]; then
-  echo "zip no encontrado. Por favor, instálalo. ej. sudo apt install zip."
+  echo "Zip no encontrado. Por favor, instálalo. ej. sudo apt install zip."
   exit 1
 fi
 
@@ -45,7 +45,7 @@ rm -f .env
 
 AWS_DEFAULT_REGION="$( /usr/bin/awk -F' = ' '$1 == "region" {print $2}' ~/.aws/config )"
 # Create Role
-#echo "Creating $ROLE_NAME role."
+echo "Creando rol $ROLE_NAME."
 role_response=$(aws iam create-role --role-name $ROLE_NAME --assume-role-policy-document file://$(pwd)/config/aws-lambda-role-policy.json)
 role_arn=$(echo $role_response | python3 -c "import sys, json; print(json.load(sys.stdin)['Role']['Arn'])")
 aws iam attach-role-policy --role-name $ROLE_NAME --policy-arn arn:aws:iam::aws:policy/AmazonSNSFullAccess
@@ -76,5 +76,5 @@ echo
 echo "A continuación, ve a https://developer.amazon.com/edw/home.html#/skills/list y crea una Skill de Alexa"
 echo "ARN de función lambda: $lambda_arn"
 echo
-echo "Después, ejecuta el gestor local."
+echo "Después, ejecuta el agente local de notificaciones."
 echo "ARN de SNS Topic $sns_topic_arn"
