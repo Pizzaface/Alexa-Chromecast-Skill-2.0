@@ -134,7 +134,7 @@ class Skill():
         if self.chromecast_controller.count == 0:
             logger.info("No se han descubierto Chromecast")
             exit(1)
-        logger.info("%i Chromecasts descubiertos" % self.chromecast_controller.count)
+        logger.info("%i Chromecast descubiertos" % self.chromecast_controller.count)
 
     def get_chromecast(self, name) -> ChromecastWrapper:
         return self.chromecast_controller.get_chromecast(name)

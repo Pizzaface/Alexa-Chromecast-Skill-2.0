@@ -4,7 +4,7 @@ from youtube_search import YoutubeSearch
 def search(video_title):
     attempts = 4
     results = []
-    is_playlist = 'playlist' in video_title
+    is_playlist = 'playlist' or 'lista de reproducción' in video_title
 
     for _attempt in range(attempts):
         #Not found - sometimes we get an empty list - so try again

@@ -1,10 +1,13 @@
-# Alexa Chromecast Skill (Versión en español)
+[⬅️ Back](https://github.com/Pizzaface/Alexa-Chromecast-Skill-2.0/) 
+# Alexa Chromecast Skill
 
 Permite a Alexa de Amazon controlar Google Chromecast
 
-Esta habilidad o skill te permite controlar uno o varios Chromecast en diferentes habitaciones. Cada dispositivo de Alexa puede ser configurado para controlar una habitación diferente. 
+Esta habilidad o skill te permite controlar uno o varios Chromecast en diferentes habitaciones. Cada dispositivo de Alexa puede ser configurado para controlar una habitación diferente.
 
-Esto se hace emparejando el nombre de la habitación con el nombre de su dispositivo Chromecast. Por ejemplo, si el nombre de su Chromecast es: "Dormitorio principal", entonces configura la habitación de Alexa para controlar el "Dormitorio principal"
+Esto se hace emparejando el nombre de la habitación con el nombre de su dispositivo Chromecast. 
+
+Por ejemplo, si el nombre de su Chromecast es: "Dormitorio Principal", entonces configura la habitación de Alexa para controlar el "Dormitorio Principal"
 
 El siguiente comando detiene el Chromecast del Dormitorio Principal: 
 > Alexa, pídele a Chromecast que pause
@@ -15,7 +18,7 @@ También puedes controlar otra habitación diciendo algo como:
 Para cambiar la habitación que un dispositivo particular de Alexa controla puedes decir:
 > Alexa, pídele a Chromecast que cambie de habitación
 
-Aquí hay algunos ejemplos de comandos de voz:
+Algunos ejemplos de comandos de voz:
 
 > Alexa, dile a Chromecast que empiece a reproducir
 
@@ -31,9 +34,9 @@ Aquí hay algunos ejemplos de comandos de voz:
 
 O,
 
-> Alexa, pídele al Chromecast de la Sala de Estar que pare
+> Alexa, pídele al Chromecast de la Sala de estar que pare
 
-> Alexa, pide a Chromecast que siga en Sala de Estar
+> Alexa, pide a Chromecast que siga en Sala de estar
 
 ## Cómo funciona
 
@@ -43,7 +46,7 @@ El componente Lambda está en `src/lambda`, y el componente local está en `src/
 
 ![Visión general de arquitectura](docs/diagrama.jpg "Visión general de arquitectura")
 
-Tanto el Chromecast como el Raspberry Pi (o lo que sea con lo que se ejecute el gestor de notificaciones locales) **DEBE** estar en la misma red para que el Chromecast pueda ser reconocido.
+Tanto el Chromecast como el Raspberry Pi (o lo que sea con lo que se ejecute el agente local de notificaciones) **DEBE** estar en la misma red para que el Chromecast pueda ser reconocido.
 
 ## Dependencias
 
@@ -59,7 +62,7 @@ La instalación requiere un entorno UNIX con:
 1. Crea una cuenta de [Amazon Web Services](http://aws.amazon.com/)
 2. Ejecuta aws-setup.sh para crear un Rol, Función Lambda y SNS Topic. (*Se ejecutará `aws configure`, así que ten un id de clave y una clave de acceso a mano*)
 ### Configurar la Skill de Alexa
-3. Ve a [ASK Console](developer.amazon.com/alexa/console/ask) y elige "Create Skill"
+3. Ve a [ASK Console](https://developer.amazon.com/alexa/console/ask) y elige "Create Skill"
 4. Selecciona "Custom" y "Provision your own", y luego haga clic en "Create skill". En la pantalla de la plantilla escoge la plantilla "Hello World Skill"
 5. Haz clic en "Interaction Model" en el menú de la izquierda, y luego en "JSON Editor"
 6. Copia y pega el contenido de `config/interaction_model.json` en el editor, luego haga clic en "Save Model"
@@ -80,18 +83,18 @@ Cuando se ejecute deberías ver algo como lo siguiente:
 2020-12-30 11:10:07,789 - pychromecast - INFO - Querying device status
 2020-12-30 11:10:07,998 - local.ChromecastSkill - INFO - Se ha descubierto Dormitorio principal
 2020-12-30 11:10:08,159 - local.ChromecastSkill - INFO - Se ha descubierto Habitación Fernando
-2020-12-30 11:10:08,389 - local.ChromecastSkill - INFO - 2 Chromecasts descubiertos
+2020-12-30 11:10:08,389 - local.ChromecastSkill - INFO - 2 Chromecast descubiertos
 2020-12-30 11:10:10,475 - botocore.credentials - INFO - Found credentials in environment variables.
 2020-12-30 11:10:12,684 - local.SkillSubscriber - INFO - Escuchando a http://93.114.157.209:38523
 2020-12-30 11:10:12,717 - local.SkillSubscriber - INFO - Suscribiéndose a los comandos de Alexa...
-2020-12-30 11:10:13,603 - local.SkillSubscriber - INFO - Confirmación de subscripción recibida...
-2020-12-30 11:10:13,913 - local.SkillSubscriber - INFO - Subscrito.
+2020-12-30 11:10:13,603 - local.SkillSubscriber - INFO - Confirmación de suscripción recibida...
+2020-12-30 11:10:13,913 - local.SkillSubscriber - INFO - Suscrito.
 
 ```
 ### Por último
 12. Di "Alexa abre Chromecast", y después "Ayuda"
 
-La skill te enseñará cómo se puede utilizar.
+La skill te enseñará cómo se utiliza.
 
 ### Ejemplo de Shell o intérprete de comandos
 
@@ -138,7 +141,7 @@ Ejecuta build-lambda-bundle y automáticamente sube el paquete a AWS Lambda.
 
 ## FAQ
 
-### "No Chromecasts found"
+### "No se han descubierto Chromecast"
 Cuando el servicio local comienza a buscar Chromecast en la red. Si no se encuentran Chromecast, se saldrá. Para solucionar esto, debes confirmar que el Chromecast está encendido y funcionando, asegúrate de que puedes acceder a él desde tu teléfono, y asegúrate de que todo está en la misma red. Para depurar, se proporciona una herramienta para buscar y listar los Chomecast encontrados en `./search-chromecasts` (asegúrate de que se pueda ejecutar con `chmod +x ./search-chromecasts`).
 
 ### El receptor local no se suscribe
