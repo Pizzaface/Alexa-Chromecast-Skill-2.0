@@ -1,4 +1,4 @@
-[🇪🇸 Español](https://github.com/Pizzaface/Alexa-Chromecast-Skill-2.0/blob/spanish/README.markdown)
+[🇪🇸 Español](https://github.com/Pizzaface/Alexa-Chromecast-Skill-2.0/tree/spanish)
 
 # Alexa Chromecast Skill
 
@@ -62,7 +62,7 @@ Installation requires a UNIX environment with:
 1. Create an [Amazon Web Services](http://aws.amazon.com/) account
 2. Run aws-setup.sh to create a Role, Lambda Function, and SNS Topic. (*It will run `aws configure`, so have an key id and access key ready*)
 ### Setup the Alexa Skill
-3. Go to developer.amazon.com and choose "Create Skill"
+3. Go to [ASK Console](developer.amazon.com/alexa/console/ask) and choose "Create Skill"
 4. Select "Custom" and "Provision your own", then click "Create skill". On the template screen just use the "Hello World Skill" template
 5. Click on "Interaction Model" in the left menu, then "JSON Editor"
 6. Copy and paste the content from `config/interaction_model.json` into the editor, then click "Save Model"
