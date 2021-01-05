@@ -14,7 +14,7 @@ cp -R ./src/lambda_function lambda-build/.
 cd lambda-build
 
 echo "Running pip install ..."
-pip3 install -I -r ./lambda_function/requirements.txt --install-option="--install-purelib=$PWD"
+pip3 install -I -r ./lambda_function/requirements.txt --target=../lambda-build
 
 echo "Zipping files ..."
 zip -q -r ../lambda-build.zip .
