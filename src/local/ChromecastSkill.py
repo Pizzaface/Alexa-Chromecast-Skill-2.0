@@ -1,17 +1,10 @@
-import os
-import sys
 import threading
 import time
-import logging
 import logging.handlers
 from datetime import datetime, timedelta
 import pychromecast
 from pychromecast import Chromecast
 from pychromecast.controllers.youtube import YouTubeController
-from pychromecast.controllers.plex import PlexController
-import subprocess
-import requests
-from enum import Enum
 import local.youtube as youtube_search
 import local.moviedb_search as moviedb_search
 
@@ -138,7 +131,7 @@ class ChromecastCollector:
     def match_chromecast(self, room) -> ChromecastWrapper:
         with self.lock:
             result = next((x for x in self.__chromecasts.values() if
-                           str.lower(room.strip()) in str.lower(x.name).replace(' the ', '')), False)
+                           str.lower(room.strip()) in str.lower(x.name).replace(' the ', '')), None)
             if result:
                 result.cast.wait()
             return result

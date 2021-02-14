@@ -103,7 +103,8 @@ class Subscriber(BaseHTTPRequestHandler):
                 else:
                     logger.info('%i clients are subscribed.' % len(subscriptions))
 
-                if self.last_ping_received and (datetime.now() - self.last_ping_received).total_seconds() > self.PING_SECS * 2:
+                if self.last_ping_received and (
+                    datetime.now() - self.last_ping_received).total_seconds() > self.PING_SECS * 2:
                     logger.error('No ping received for %i seconds. Restarting process...')
                     self.restart()
 
@@ -114,8 +115,8 @@ class Subscriber(BaseHTTPRequestHandler):
                 time.sleep(1)
 
     def restart(self):
-       os.execl(sys.executable, sys.executable, *['-m', 'local.main'])
- 
+        os.execl(sys.executable, sys.executable, *['-m', 'local.main'])
+
     def shutdown(self, signum, frame):
         """
         Performs a graceful shutdown stopping HTTP Server and Ping thread
@@ -138,7 +139,7 @@ class Subscriber(BaseHTTPRequestHandler):
         return get('https://api.ipify.org').text
 
     """
-    Subscribes to recieve message from SNS for the specified topic.
+    Subscribes to receive message from SNS for the specified topic.
     A subscription confirmation request should then be received from SNS.
     """
 
@@ -170,11 +171,10 @@ class Subscriber(BaseHTTPRequestHandler):
             logger.exception('SNS Topic ({}) is invalid. Please check in AWS.'.format(self.topic_arn))
             sys.exit(1)
 
-    """
-    Confirms a subscriptiuon based on the received subscription confirmation request from sNS
-    """
-
     def confirm_subscription(self, topic_arn, token):
+        """
+        Confirms a subscription based on the received subscription confirmation request from sNS
+        """
 
         try:
             self.sns_client.confirm_subscription(
@@ -190,11 +190,10 @@ class Subscriber(BaseHTTPRequestHandler):
             logger.exception('Failed to confirm subscription. Please check in AWS.')
             sys.exit(1)
 
-    """
-    Unsubscribe from SNS Topic - stop receiving messages
-    """
-
     def unsubscribe(self):
+        """
+        Unsubscribe from SNS Topic - stop receiving messages
+        """
 
         if not self.manual_port_forward:
             result = self.upnp.deleteportmapping(self.server.server_port, 'TCP')
@@ -212,19 +211,14 @@ class Subscriber(BaseHTTPRequestHandler):
                 subscription_arn = sub['SubscriptionArn']
                 break
 
-        if (subscription_arn is not None and
-            subscription_arn[:12] == 'arn:aws:sns:'):
-            self.sns_client.unsubscribe(
-                SubscriptionArn=subscription_arn
-            )
-
+        if subscription_arn is not None and subscription_arn[:12] == 'arn:aws:sns:':
+            self.sns_client.unsubscribe(SubscriptionArn=subscription_arn)
         sys.exit(0)
 
-    """
-    Call 
-    """
-
     def dispatch_notification(self, notification):
+        """
+        Handle the notification
+        """
         try:
             if notification['command'] == 'ping':
                 logger.info('Received ping.')
@@ -234,5 +228,3 @@ class Subscriber(BaseHTTPRequestHandler):
             skill.handle_command(notification['room'], notification['command'], notification['data'])
         except:
             logger.exception('Unexpected error handling message')
-
-
