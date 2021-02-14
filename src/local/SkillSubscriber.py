@@ -17,7 +17,7 @@ logger.setLevel(logging.INFO)
 class Subscriber(BaseHTTPRequestHandler):
     """
     Generic Skill Subscription class to handle commands from an
-    Lambda Fucntion via SNS notifications.
+    Lambda Function via SNS notifications.
     """
 
     def __init__(self, skills, ip, port, topic_arn=os.getenv('AWS_SNS_TOPIC_ARN')):
@@ -34,7 +34,7 @@ class Subscriber(BaseHTTPRequestHandler):
             self.manual_port_forward = False
             try:
                 self.initialize_upnp()
-            except Exception:
+            except:
                 logger.exception(
                     'Failed to configure UPnP. Please map port manually and pass PORT environment variable.')
                 sys.exit(1)
@@ -86,7 +86,7 @@ class Subscriber(BaseHTTPRequestHandler):
             while not self.stopped:
                 # No timeout - so blocks while waiting for a request
                 self.server.handle_request()
-        except Exception:
+        except:
             logger.exception('Unexpected error')
 
     def ping(self):
@@ -95,6 +95,13 @@ class Subscriber(BaseHTTPRequestHandler):
         """
         while not self.stopped:
             if not self.last_ping_sent or (datetime.now() - self.last_ping_sent).total_seconds() > self.PING_SECS:
+                sns_client = boto3.client("sns")
+                response = sns_client.list_subscriptions_by_topic(TopicArn=self.topic_arn)
+                subscriptions = response['Subscriptions']
+                if len(subscriptions) == 0:
+                    logger.error('No clients are subscribed.')
+                else:
+                    logger.info('%i clients are subscribed.' % len(subscriptions))
 
                 if self.last_ping_received and (datetime.now() - self.last_ping_received).total_seconds() > self.PING_SECS * 2:
                     logger.error('No ping received for %i seconds. Restarting process...')
@@ -159,7 +166,7 @@ class Subscriber(BaseHTTPRequestHandler):
                 Endpoint=self.endpoint_url
             )
 
-        except Exception:
+        except:
             logger.exception('SNS Topic ({}) is invalid. Please check in AWS.'.format(self.topic_arn))
             sys.exit(1)
 
@@ -179,7 +186,7 @@ class Subscriber(BaseHTTPRequestHandler):
             # start ping
             self.ping_thread.start()
 
-        except Exception:
+        except:
             logger.exception('Failed to confirm subscription. Please check in AWS.')
             sys.exit(1)
 
@@ -225,6 +232,7 @@ class Subscriber(BaseHTTPRequestHandler):
                 return
             skill = self.skills.get(notification['handler_name'])
             skill.handle_command(notification['room'], notification['command'], notification['data'])
-        except Exception:
+        except:
             logger.exception('Unexpected error handling message')
+
 

@@ -21,8 +21,10 @@ logger.setLevel(logging.INFO)
 """
 Youtube Controller extension
 """
+
+
 class MyYouTubeController(YouTubeController):
-    
+
     def __init__(self):
         self.play_list = {}
         super().__init__()
@@ -35,8 +37,8 @@ class MyYouTubeController(YouTubeController):
         self.playlist = {}
 
     def play_previous(self, current_id):
-        #This is not pretty.... it rebuilds the playlist on a previous command to make it work
-        #There should be a way to play from a position in the queue, but I couldn't find it
+        # This is not pretty.... it rebuilds the playlist on a previous command to make it work
+        # There should be a way to play from a position in the queue, but I couldn't find it
         select_from_here = False
         if len(self.playlist) == 0:
             self.playlist = self._session.get_queue_videos()
@@ -57,9 +59,12 @@ class MyYouTubeController(YouTubeController):
 
             previous_id = video['data-video-id']
 
+
 """
 Thin wrapper to register controllers and listeners
 """
+
+
 class ChromecastWrapper:
     @property
     def cast(self) -> Chromecast:
@@ -80,16 +85,19 @@ class ChromecastWrapper:
         self.youtube_controller = MyYouTubeController()
         cc.register_handler(self.youtube_controller)
 
-    def new_media_status(self, status:pychromecast.controllers.media.MediaStatus):
+    def new_media_status(self, status: pychromecast.controllers.media.MediaStatus):
         pass
 
     def new_cast_status(self, status):
         pass
 
+
 """
 Stores available Chromecasts.
 Every 2 hours it will check, and add any new Chromecasts
 """
+
+
 class ChromecastCollector:
 
     @property
@@ -129,7 +137,8 @@ class ChromecastCollector:
 
     def match_chromecast(self, room) -> ChromecastWrapper:
         with self.lock:
-            result = next((x for x in self.__chromecasts.values() if str.lower(room.strip()) in str.lower(x.name).replace(' the ', '')), False)
+            result = next((x for x in self.__chromecasts.values() if
+                           str.lower(room.strip()) in str.lower(x.name).replace(' the ', '')), False)
             if result:
                 result.cast.wait()
             return result
@@ -139,9 +148,12 @@ class ChromecastCollector:
         result.cast.wait()
         return result
 
+
 """
 Wrapper to send commands to different named Chromecasts
 """
+
+
 class ChromecastController():
 
     def __init__(self):
@@ -160,13 +172,13 @@ class ChromecastController():
         try:
             chromecast = self.chromecast_collector.match_chromecast(room)
             if not chromecast:
-                logger.warn('No Chromecast found matching: %s' % room)
+                logger.warning('No Chromecast found matching: %s' % room)
                 return
-            func = command.replace('-','_')
+            func = command.replace('-', '_')
             logger.info('Sending %s command to Chromecast: %s' % (func, chromecast.name))
 
             getattr(self, func)(data, chromecast.name)
-        except Exception:
+        except:
             logger.exception('Unexpected error')
 
     def resume(self, data, name):
@@ -174,7 +186,7 @@ class ChromecastController():
 
     def play(self, data, name):
         self.get_chromecast(name).media_controller.play()
-    
+
     def pause(self, data, name):
         cc = self.get_chromecast(name)
         cc.media_controller.pause()
@@ -187,12 +199,12 @@ class ChromecastController():
         self.get_chromecast(name).cast.quit_app()
 
     def set_volume(self, data, name):
-        volume = data['volume'] # volume as 0-10
-        volume_normalized = float(volume) / 10.0 # volume as 0-1
+        volume = data['volume']  # volume as 0-10
+        volume_normalized = float(volume) / 10.0  # volume as 0-1
         self.get_chromecast(name).cast.set_volume(volume_normalized)
 
     def play_next(self, data, name):
-        #mc.queue_next() didn't work
+        # mc.queue_next() didn't work
         self.get_chromecast(name).media_controller.skip()
 
     def play_previous(self, data, name):
@@ -215,17 +227,18 @@ class ChromecastController():
             for video in video_playlist:
                 if not playing:
                     if not video['playlist_id']:
-                        #Youtube controller will clear for a playlist
+                        # Youtube controller will clear for a playlist
                         yt.clear_playlist()
                     yt.play_video(video['id'], video['playlist_id'])
                     logger.debug('Currently playing: %s' % video['id'])
                     playing = True
                 else:
                     yt.add_to_queue(video['id'])
-            logger.info('Asked chromecast to play %i titles matching: %s on YouTube' % (len(video_playlist), video_title))
+            logger.info(
+                'Asked chromecast to play %i titles matching: %s on YouTube' % (len(video_playlist), video_title))
 
         elif streaming_app == 'plex':
-            #TODO: Future support other apps - Not Implemented
+            # TODO: Future support other apps - Not Implemented
             logger.info('Asked chromecast to play title: %s on Plex' % video_title)
         else:
             logger.info('The streaming application %s is not supported' % streaming_app)

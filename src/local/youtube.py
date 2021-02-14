@@ -6,7 +6,7 @@ def search(video_title):
     
     results = []
     #is_playlist = 'playlist' in video_title
-    video_ids = subprocess.run(['youtube-dl','-j','ytsearch2:%s' % video_title], stdout=subprocess.PIPE)
+    video_ids = subprocess.run(['youtube-dl','-j','ytsearch10:%s' % video_title], stdout=subprocess.PIPE)
 
     for video in video_ids.stdout.splitlines():
         video = json.loads(video)
