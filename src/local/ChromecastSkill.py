@@ -184,9 +184,11 @@ def get_ssl_cert_name(hostname, port):
 
 def play_plex(cc, video_title):
     plex = cc.plex_controller
-    hostname = os.environ.get('PLEX_SERVER')
+    hostname = os.environ.get('PLEX_HOST')
+    port = int(os.environ.get('PLEX_PORT'))
     token = os.environ.get('PLEX_TOKEN')
-    port = 32400
+    logger.info(f'Plex Host: {hostname}, Port: {port}')
+
     cert_common_name = get_ssl_cert_name(hostname, port)
     plex_server = PlexServer(f'https://{hostname.replace(".", "-")}{cert_common_name}:{port}', token)
 

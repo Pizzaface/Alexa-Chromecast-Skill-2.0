@@ -62,9 +62,10 @@ if [ $SERVICE -eq 1 ]; then
    -e "AWS_SNS_TOPIC_ARN=$AWS_SNS_TOPIC_ARN"\
    -e "EXTERNAL_IP=$EXTERNAL_IP"\
    -e "EXTERNAL_PORT=$EXTERNAL_PORT"\
-   -e "MOVIEDB_API_KEY=${MOVIEDB_API_KEY}"\
-   -e "PLEX_HOST=${PLEX_HOST}"\
-   -e "PLEX_TOKEN=${PLEX_TOKEN}"\
+   -e "MOVIEDB_API_KEY=$MOVIEDB_API_KEY"\
+   -e "PLEX_HOST=$PLEX_HOST"\
+   -e "PLEX_PORT=$PLEX_PORT"\
+   -e "PLEX_TOKEN=$PLEX_TOKEN"\
    alexa-skill-chromecast
 else
   docker run --network="host" -it\
@@ -75,9 +76,10 @@ else
    -e "AWS_SNS_TOPIC_ARN=$AWS_SNS_TOPIC_ARN"\
    -e "EXTERNAL_IP=$EXTERNAL_IP"\
    -e "EXTERNAL_PORT=$EXTERNAL_PORT"\
-   -e "MOVIEDB_API_KEY=${MOVIEDB_API_KEY}"\
-   -e "PLEX_HOST=${PLEX_HOST}"\
-   -e "PLEX_TOKEN=${PLEX_TOKEN}"\
+   -e "MOVIEDB_API_KEY=$MOVIEDB_API_KEY"\
+   -e "PLEX_HOST=$PLEX_HOST"\
+   -e "PLEX_PORT=$PLEX_PORT"\
+   -e "PLEX_TOKEN=$PLEX_TOKEN"\
    alexa-skill-chromecast
 fi
 
