@@ -370,6 +370,7 @@ try:
     sb.add_request_handler(SetVolumeIntentHandler())
     sb.add_request_handler(PreviousIntentHandler())
     sb.add_request_handler(NextIntentHandler())
+    sb.add_request_handler(OpenIntentHandler())
 
     sb.add_request_handler(RestartIntentHandler())
     sb.add_request_handler(PlayTrailerIntentHandler())
