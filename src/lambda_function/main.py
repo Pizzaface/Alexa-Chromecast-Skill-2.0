@@ -256,11 +256,11 @@ class PlayOnAppIntentHandler(BaseIntentHandler):
         # TODO: Support other apps in the future
         return {
             "title": utils.get_slot_value(handler_input, 'video'),
-            "app": 'youtube'
+            "app": utils.get_slot_value(handler_input, 'app', '')
         }
 
     def get_response(self, data):
-        return 'Playing %s on YouTube' % data['title']
+        return 'Playing %s' % data['title']
 
 
 class HelpIntentHandler(AbstractRequestHandler):
