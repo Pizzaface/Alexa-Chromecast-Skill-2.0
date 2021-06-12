@@ -136,7 +136,7 @@ Runs build-lambda-bundle and automatically uploads the bundle to AWS Lambda.
 
 ## FAQ
 
-### "No Chromecasts found"
+### No Chromecasts found
 When the local service starts it searches for Chromecasts on the network. If there are no ChromeCasts found, it will exit.
 To fix this, you must confirm that the Chromecast is on and working, make sure you can access it from your phone, and make sure that everything is on the same network.
 To debug, a tool to search and list found ChomeCasts is provided at `./search-chromecasts` (make sure to make it executable with `chmod +x ./search-chromecasts`).
@@ -156,3 +156,6 @@ e.g. to use port 30000 run `./start.sh -p 30000` or `./docker-start.sh -p 30000`
 ### Alexa accepted the command but it didn't seem to work
 1. Check the local listener output, it should show the received command and any error that was encountered
 2. To check the docker service logs run something like `docker logs alexa_chromecast --since=30m`, which shows the logs for the last 30 minutes
+3. If the command wasn't received then try restarting the service. Consider scheduling a daily restart if it's a common issue.
+e.g.
+`docker restart alexa_chromecast`

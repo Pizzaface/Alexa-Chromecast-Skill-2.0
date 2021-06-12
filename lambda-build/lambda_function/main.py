@@ -218,12 +218,6 @@ class NextIntentHandler(BaseIntentHandler):
         return 'play-next'
 
 
-class RewindIntentHandler(BaseIntentHandler):
-
-    def get_action(self):
-        return 'rewind'
-
-
 class PreviousIntentHandler(BaseIntentHandler):
     def match_other_intent_names(self):
         return ['AMAZON.PreviousIntent']

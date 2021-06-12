@@ -1,9 +1,14 @@
+import os
+import socket
+import ssl
 import threading
 import time
 import logging.handlers
 from datetime import datetime, timedelta
 import pychromecast
+from plexapi.server import PlexServer
 from pychromecast import Chromecast
+from pychromecast.controllers.plex import PlexController
 from pychromecast.controllers.youtube import YouTubeController
 import local.youtube as youtube_search
 import local.moviedb_search as moviedb_search
@@ -11,12 +16,11 @@ import local.moviedb_search as moviedb_search
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-"""
-Youtube Controller extension
-"""
-
 
 class MyYouTubeController(YouTubeController):
+    """
+    Youtube Controller extension
+    """
 
     def __init__(self):
         self.play_list = {}
@@ -53,12 +57,10 @@ class MyYouTubeController(YouTubeController):
             previous_id = video['data-video-id']
 
 
-"""
-Thin wrapper to register controllers and listeners
-"""
-
-
 class ChromecastWrapper:
+    """
+    Thin wrapper to register controllers and listeners
+    """
     @property
     def cast(self) -> Chromecast:
         return self.__cc
@@ -75,8 +77,12 @@ class ChromecastWrapper:
         self.__cc = cc
         cc.media_controller.register_status_listener(self)
         cc.register_status_listener(self)
+
         self.youtube_controller = MyYouTubeController()
         cc.register_handler(self.youtube_controller)
+
+        self.plex_controller = PlexController()
+        cc.register_handler(self.plex_controller)
 
     def new_media_status(self, status: pychromecast.controllers.media.MediaStatus):
         pass
@@ -85,13 +91,11 @@ class ChromecastWrapper:
         pass
 
 
-"""
-Stores available Chromecasts.
-Every 2 hours it will check, and add any new Chromecasts
-"""
-
-
 class ChromecastCollector:
+    """
+    Stores available Chromecasts.
+    Every 2 hours it will check, and add any new Chromecasts
+    """
 
     @property
     def count(self):
@@ -142,12 +146,72 @@ class ChromecastCollector:
         return result
 
 
-"""
-Wrapper to send commands to different named Chromecasts
-"""
+def play_youtube(cc, video_title):
+    yt = cc.youtube_controller
+    video_playlist = youtube_search.search(video_title)
+    if len(video_playlist) == 0:
+        logger.info('Unable to find youtube video for: %s' % video_title)
+        return
+    playing = False
+    yt.init_playlist()
+    for video in video_playlist:
+        if not playing:
+            if not video['playlist_id']:
+                # Youtube controller will clear for a playlist
+                yt.clear_playlist()
+            yt.play_video(video['id'], video['playlist_id'])
+            logger.debug('Currently playing: %s' % video['id'])
+            playing = True
+        else:
+            yt.add_to_queue(video['id'])
+    logger.info(
+        'Asked chromecast to play %i titles matching: %s on YouTube' % (len(video_playlist), video_title))
+
+def get_ssl_cert_name(hostname, port):
+    context = ssl.create_default_context()
+    context.check_hostname = False
+    conn = context.wrap_socket(
+        socket.socket(socket.AF_INET),
+        server_hostname=hostname,
+    )
+    # 5 second timeout
+    conn.settimeout(5.0)
+    conn.connect((hostname, port))
+    domain = conn.getpeercert()['subject'][0][0][1]
+    domain = domain.replace('*', '')
+    return domain
 
 
-class ChromecastController():
+def play_plex(cc, video_title):
+    plex = cc.plex_controller
+    hostname = os.environ.get('PLEX_SERVER')
+    token = os.environ.get('PLEX_TOKEN')
+    port = 32400
+    cert_common_name = get_ssl_cert_name(hostname, port)
+    plex_server = PlexServer(f'https://{hostname.replace(".", "-")}{cert_common_name}:{port}', token)
+
+    # Find best match
+    items = plex_server.search(video_title)
+    media = False
+    for item in items:
+        if item.TYPE == 'show':
+            # Play most recent episode
+            episodes = item.episodes()
+            # Get last unwatched one
+            media = next((episode for episode in item.episodes() if not episode.isWatched), False)
+        if not media and item.TYPE == 'movie':
+            media = item
+        if not media and item.TYPE == 'episode':
+            media = item
+        if media:
+            break
+    plex.block_until_playing(media)
+
+
+class ChromecastController:
+    """
+    Wrapper to send commands to different named Chromecasts
+    """
 
     def __init__(self):
 
@@ -191,6 +255,15 @@ class ChromecastController():
     def stop(self, data, name):
         self.get_chromecast(name).cast.quit_app()
 
+    def open(self, data, name):
+        app = data['app']
+        if app == 'youtube':
+            self.get_chromecast(name).youtube_controller.launch()
+        elif app == 'plex':
+            self.get_chromecast(name).plex_controller.launch()
+        else:
+            pass
+
     def set_volume(self, data, name):
         volume = data['volume']  # volume as 0-10
         volume_normalized = float(volume) / 10.0  # volume as 0-1
@@ -200,6 +273,9 @@ class ChromecastController():
         # mc.queue_next() didn't work
         self.get_chromecast(name).media_controller.skip()
 
+    def rewind(self, data, name):
+        self.get_chromecast(name).media_controller.seek(0)
+
     def play_previous(self, data, name):
         cc = self.get_chromecast(name)
         current_id = cc.media_controller.status.content_id
@@ -207,30 +283,19 @@ class ChromecastController():
 
     def play_video(self, data, name):
         cc = self.get_chromecast(name)
-        yt = cc.youtube_controller
         video_title = data['title']
-        streaming_app = data['app']
-        if streaming_app == 'youtube':
-            video_playlist = youtube_search.search(video_title)
-            if len(video_playlist) == 0:
-                logger.info('Unable to find youtube video for: %s' % video_title)
-                return
-            playing = False
-            yt.init_playlist()
-            for video in video_playlist:
-                if not playing:
-                    if not video['playlist_id']:
-                        # Youtube controller will clear for a playlist
-                        yt.clear_playlist()
-                    yt.play_video(video['id'], video['playlist_id'])
-                    logger.debug('Currently playing: %s' % video['id'])
-                    playing = True
-                else:
-                    yt.add_to_queue(video['id'])
-            logger.info(
-                'Asked chromecast to play %i titles matching: %s on YouTube' % (len(video_playlist), video_title))
+        streaming_app = data['app'] if 'app' in data.keys() else ''
 
+        if not streaming_app:
+            if cc.cast.app_id == pychromecast.APP_YOUTUBE:
+                streaming_app = 'youtube'
+            elif cc.cast.app_id == '9AC194DC':
+                streaming_app = 'plex'
+
+        if streaming_app == 'youtube':
+            play_youtube(cc, video_title)
         elif streaming_app == 'plex':
+            play_plex(cc, video_title)
             # TODO: Future support other apps - Not Implemented
             logger.info('Asked chromecast to play title: %s on Plex' % video_title)
         else:

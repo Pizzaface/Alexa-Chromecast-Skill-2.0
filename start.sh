@@ -20,8 +20,8 @@ done
 if [ $HELP -eq 1 ]; then
   echo
   echo "Usage:"
-  echo "docker_start.sh -- Run with defaults in interactive mode"
-  echo "docker_start.sh [params]"
+  echo "start.sh -- Run with defaults in interactive mode"
+  echo "start.sh [params]"
   echo "-h      -- Show help"
   echo "-i IP   -- Specify an external IP address to use"
   echo "-p port -- Specify an external port to use"

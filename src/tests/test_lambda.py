@@ -5,12 +5,15 @@ from dotenv import load_dotenv
 from os.path import join, dirname
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../../src")
+
 
 class SlotValue:
     def __init__(self, value, resolutions=False):
         self.value = value
         self.resolutions = resolutions
+
 
 class MockResponseBuilder:
 
@@ -35,8 +38,9 @@ class MockResponseBuilder:
     def response(self):
         return self
 
+
 class TestChromecast(unittest.TestCase):
-    
+
     def setUp(self):
         dotenv_path = join(dirname(__file__), '.testenv')
         # Load file from the path.
@@ -47,12 +51,12 @@ class TestChromecast(unittest.TestCase):
         req = PlayTrailerIntentHandler()
         req.publish_command_to_sns = Mock()
 
-        #Mock handler inputs
+        # Mock handler inputs
         handler_input = Mock()
         handler_input.response_builder = MockResponseBuilder()
         handler_input.request_envelope.request.intent.slots = {
             'movie': SlotValue('The Matrix'),
             'room': SlotValue('Media Room')
-            }
+        }
         response = req.handle(handler_input)
         self.assertTrue('playing' in response.speak_text.lower())

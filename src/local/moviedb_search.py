@@ -10,6 +10,7 @@ MOVIEDB_API_URI = "https://api.themoviedb.org/3"
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+
 def moviedb_search_movies(movie):
     if not MOVIEDB_API_KEY:
         logger.error('You need to set a moviedb API key. e.g. export MOVIEDB_API_KEY=xxxxxx')
@@ -35,6 +36,7 @@ def moviedb_search_movies(movie):
     else:
         raise Exception("No Results")
 
+
 def moviedb_search_movie_videos(moviedb_id):
     query = {
         "api_key": MOVIEDB_API_KEY,
@@ -44,7 +46,7 @@ def moviedb_search_movie_videos(moviedb_id):
     r = requests.get(url)
     response = r.json()
 
-    print (url, response)
+    print(url, response)
 
     try:
         return response["results"][0]["key"]
@@ -60,4 +62,3 @@ def get_movie_trailer_youtube_id(movie_name):
         "youtube_id": youtube_id,
         "title": moviedb_movie["title"]
     }
-

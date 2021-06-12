@@ -21,7 +21,7 @@ from local.ChromecastSkill import ChromecastController
 
 cwd = os.getcwd()
 
-#Setup root logger to log to stdout and a file
+# Setup root logger to log to stdout and a file
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 handler = logging.StreamHandler(sys.stdout)
 handler.setFormatter(formatter)
@@ -29,7 +29,8 @@ root_logger = logging.getLogger()
 root_logger.setLevel(logging.INFO)
 root_logger.addHandler(handler)
 
-handler = logging.handlers.TimedRotatingFileHandler(cwd+os.path.sep+'alexa-chromecast.log', when='D', interval=1, backupCount=5)
+handler = logging.handlers.TimedRotatingFileHandler(cwd + os.path.sep + 'alexa-chromecast.log', when='D', interval=1,
+                                                    backupCount=5)
 handler.setFormatter(formatter)
 root_logger.addHandler(handler)
 
@@ -38,9 +39,9 @@ IP = os.getenv('EXTERNAL_IP')
 
 
 class Main(object):
-    
+
     def __init__(self):
-        #Exit gracefully on docker/command-line stop
+        # Exit gracefully on docker/command-line stop
         signal.signal(signal.SIGINT, self.shutdown)
         signal.signal(signal.SIGTERM, self.shutdown)
         self.chromecast_controller = ChromecastController()
@@ -52,8 +53,7 @@ class Main(object):
         self.chromecast_controller.shutdown(signum, frame)
         self.subscriber.shutdown(signum, frame)
 
+
 if __name__ == "__main__":
     root_logger.info("Starting Alexa Chromecast listener...")
     main = Main()
-
-
