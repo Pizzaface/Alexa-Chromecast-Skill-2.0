@@ -4,7 +4,7 @@ set -e -o pipefail
 
 cd $(dirname $0)
 
-source config/variables
+source config/aws_variable_names
 
 ./build-lambda-bundle.sh
 

@@ -29,7 +29,6 @@ if [ $HELP -eq 1 ]; then
   exit 0
 fi
 
-
 set -e -o pipefail
 cd $(dirname $0)
 
@@ -38,6 +37,12 @@ if [ ! -f .env ] || [ ! -d ~/.aws ]; then
   exit 1
 fi
 
+if [ ! -f .custom_env ]; then
+  cp ./config/custom_variables .custom_env
+fi
+
 . .env
+. .custom_env
+
 cd src
 python3 -m local.main

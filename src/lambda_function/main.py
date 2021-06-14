@@ -223,6 +223,23 @@ class RewindIntentHandler(BaseIntentHandler):
     def get_action(self):
         return 'rewind'
 
+    def get_data(self, handler_input):
+        return {
+            "duration": utils.get_slot_value(handler_input, 'duration', '')
+        }
+
+
+class MuteIntentHandler(BaseIntentHandler):
+
+    def get_action(self):
+        return 'mute'
+
+
+class UnMuteIntentHandler(BaseIntentHandler):
+
+    def get_action(self):
+        return 'unmute'
+
 
 class PreviousIntentHandler(BaseIntentHandler):
     def match_other_intent_names(self):
@@ -248,6 +265,20 @@ class PlayTrailerIntentHandler(BaseIntentHandler):
         return 'Playing trailer for %s' % data['title']
 
 
+class SeekIntentHandler(BaseIntentHandler):
+    def get_action(self):
+        return 'seek'
+
+    def get_data(self, handler_input):
+        return {
+            "duration": utils.get_slot_value(handler_input, 'duration', 'PT30S'),  # 30 seconds
+            "direction": utils.get_slot_value(handler_input, 'direction', 'forward')
+        }
+
+    def get_response(self, data):
+        return 'Playing trailer for %s' % data['title']
+
+
 class PlayOnAppIntentHandler(BaseIntentHandler):
     def get_action(self):
         return 'play-video'
@@ -255,12 +286,51 @@ class PlayOnAppIntentHandler(BaseIntentHandler):
     def get_data(self, handler_input):
         # TODO: Support other apps in the future
         return {
-            "title": utils.get_slot_value(handler_input, 'video'),
-            "app": utils.get_slot_value(handler_input, 'app', '')
+            "title": utils.get_slot_value(handler_input, 'title'),
+            "app": utils.get_slot_value(handler_input, 'app', ''),
+            "room": utils.get_slot_value(handler_input, 'room', '')
         }
 
     def get_response(self, data):
         return 'Playing %s' % data['title']
+
+
+class FindIntentHandler(BaseIntentHandler):
+    def get_action(self):
+        return 'find'
+
+    def get_data(self, handler_input):
+        return {
+            "title": utils.get_slot_value(handler_input, 'title'),
+            "app": utils.get_slot_value(handler_input, 'app', '')
+        }
+
+    def get_response(self, data):
+        return 'Searching for %s' % data['title']
+
+
+class SubtitleOnIntentHandler(BaseIntentHandler):
+    def get_action(self):
+        return 'subtitle-on'
+
+    def get_response(self, data):
+        return 'Turning subtitles on'
+
+
+class SubtitleOffIntentHandler(BaseIntentHandler):
+    def get_action(self):
+        return 'subtitle-off'
+
+    def get_response(self, data):
+        return 'Turning subtitles off'
+
+
+class ChangeAudioIntentHandler(BaseIntentHandler):
+    def get_action(self):
+        return 'change-audio'
+
+    def get_response(self, data):
+        return 'Changing audio stream'
 
 
 class HelpIntentHandler(AbstractRequestHandler):
@@ -363,6 +433,7 @@ try:
 
     sb.add_request_handler(LaunchRequestHandler())
 
+    # Chromecast standard
     sb.add_request_handler(SetRoomIntentHandler())
     sb.add_request_handler(PauseIntentHandler())
     sb.add_request_handler(PlayIntentHandler())
@@ -372,8 +443,17 @@ try:
     sb.add_request_handler(NextIntentHandler())
     sb.add_request_handler(OpenIntentHandler())
     sb.add_request_handler(RewindIntentHandler())
-
+    sb.add_request_handler(SeekIntentHandler())
     sb.add_request_handler(RestartIntentHandler())
+    sb.add_request_handler(MuteIntentHandler())
+    sb.add_request_handler(UnMuteIntentHandler())
+
+    # Plex specific
+    sb.add_request_handler(FindIntentHandler())
+    sb.add_request_handler(ChangeAudioIntentHandler())
+    sb.add_request_handler(SubtitleOnIntentHandler())
+    sb.add_request_handler(SubtitleOffIntentHandler())
+
     sb.add_request_handler(PlayTrailerIntentHandler())
     sb.add_request_handler(PlayOnAppIntentHandler())
 

@@ -20,7 +20,7 @@ if [ -z "$(type zip)" ]; then
   exit 1
 fi
 
-source ./config/variables
+source ./config/aws_variable_names
 
 if [ -z "$(type aws)" ]; then
   echo "aws not found. Installing AWS CLI tools."

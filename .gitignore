@@ -12,3 +12,7 @@ __pycache__
 venv
 /.vscode/
 /.idea/
+/sonar-project.properties
+/.scannerwork/report-task.txt
+/.scannerwork/.sonar_lock
+/.coverage

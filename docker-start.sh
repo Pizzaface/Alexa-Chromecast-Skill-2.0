@@ -5,6 +5,7 @@ SERVICE=0
 EXTERNAL_IP=
 EXTERNAL_PORT=
 
+
 while getopts "hdi:p:" opt; do
   case $opt in
     h) HELP=1
@@ -37,7 +38,13 @@ if [ ! -f .env ] || [ ! -d ~/.aws ]; then
   echo "Expected AWS settings not found. Please run the aws-setup script."
   exit 1
 fi
+
+if [ ! -f .custom_env ]; then
+  cp ./config/custom_variables .custom_env
+fi
+
 source .env
+source .custom_env
 
 AWS_ACCESS_KEY_ID="$( /usr/bin/awk -F' = ' '$1 == "aws_access_key_id" {print $2}' ~/.aws/credentials )"
 AWS_SECRET_ACCESS_KEY="$( /usr/bin/awk -F' = ' '$1 == "aws_secret_access_key" {print $2}' ~/.aws/credentials )"

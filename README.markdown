@@ -15,25 +15,70 @@ You can control another room by saying something like:
 To change the room a particular Alexa device controls you can say:
 > Alexa, ask the Chromecast to set the room
 
-Here are some example voice commands:
 
-> Alexa, tell Chromecast to play
+###Standard commands
+The following media commands are available:
+```
+ pause                 -> Pause a playing item
+ play                  -> Play a paused item
+ stop                  -> Stop the playing item (and application)
+ set volume to 5       -> Change the volume between 0 and 10
+ mute                  -> mute the volume
+ unmute                -> unmute the volume
+ rewind                -> Restart the playing item (restart does the same thing)
+ rewind 30 seconds     -> Rewind back 30 seconds (skip back/seek back/go back do the same thing)
+ fast forward          -> Fast forward 30 seconds (skip forward/seek forward/go forward do the same thing) 
+ fast forward 1 minute -> Fast forward 1 minute
+ restart device        -> Restarts the Chromecast (reboot does the same thing)
+ open plex             -> Opens the Plex app
+ open youtube          -> Opens the YouTube app
+ ```
 
-> Alexa, tell Chromecast to play songs by Macklemore
+###YouTube app commands
+Find or play creates a list of 5 items.
+You can use "next match" and "previous match" to go through it.   
+```
+ play {title}         -> Searches and queues 5 items matching the title
+ play {title} trailer -> Searches and plays any matching trailer for the title
+ next match     -> Play the next item in the queue
+ previous match -> Play the previous item in the queue
+```
 
-> Alexa, tell Chromecast to play maroon 5 playlist
+###Plex app commands
+The find or play command creates a queue of 10 items.
+You can use "next match" and "previous match" to move through it.   
+```
+ play                        -> Resumes from pause, or plays the displayed item
+ stop                        -> Stops playing and displays the item details
+ play/find {title}           -> Play/Find the title
+ play/find the show {title}  -> Play/Find a show matching the title
+ play/find the movie {title} -> Play/Find a movie matching the title
+ play/find the song {title}  -> Play/Find a song matching the title
+ play/find the album {title} -> Play/Find an album matching the title
+ 
+ play the playlist {title}   -> Play an album matching the title
+ play songs by {artist}      -> Shuffle and play songs by the specified artist
+ next match                  -> Play or show the next item in the queue
+ previous match              -> Play or show the previous item in the queue
+ turn on subtitles           -> Turns on subtitles in the configurged language
+ turn off subtitles          -> Turns off subtitles
+ switch audio                -> Switches to another audio track if available (e.g. to the directors commentry)
+ 
+ play {show} season {#}             -> Start playing the specified show and season
+ play {show} season {#} episode {#} -> Start playing the specified show episode
+ next episode                       -> Play or show the next TV show episode
+ previous episode                   -> Play or show the previous TV show episode
+  
+```
 
-> Alexa, tell Chromecast to play The Matrix trailer
-
-> Alexa, tell Chromecast to set the volume to 5
-
-> Alexa, tell Chromecast to stop
-
-Or:
-
-> Alexa, ask the Chromecast in the Media Room to stop
-
-> Alexa, ask the Chromecast to play in the Media Room
+##Example Commands
+> Alexa, ask Chromecast to play Mythic Quest on plex
+> 
+> Alexa, ask Chromecast to play The Matrix trailer
+>
+> Alexa, ask Chromecast to pause
+>
+> Alexa, ask Chromecast to resume
 
 ## How it works
 

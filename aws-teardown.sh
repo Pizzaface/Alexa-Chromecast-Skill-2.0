@@ -12,7 +12,7 @@ fi
 
 cd $(dirname $0)
 
-source ./config/variables
+source ./config/aws_variable_names
 
 if [ -f .env ]; then
   source .env

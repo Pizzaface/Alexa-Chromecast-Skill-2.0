@@ -1,0 +1,14 @@
+############ Custom parameters #################
+# MovieDB API key, used to find trailer ids on youtube
+# Go to https://api.themoviedb.org/3 to request one
+export MOVIEDB_API_KEY=
+
+# PLEX Config - configure if you want to find and play items on plex
+# Plex server IP Address (not the hostname)
+export PLEX_HOST=
+export PLEX_PORT=32400
+# Refer here on steps to get your token
+# https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/
+export PLEX_TOKEN=
+export PLEX_SUBTITLE_LANG=eng
+################################################
