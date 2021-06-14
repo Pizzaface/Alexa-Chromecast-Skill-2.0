@@ -226,6 +226,26 @@ class ChromecastController:
         else:
             logger.info('The streaming application %s is not supported' % streaming_app)
 
+    def find(self, data, name):
+        cc = self.get_chromecast(name)
+        video_title = data['title']
+        streaming_app = data['app'] if 'app' in data.keys() else ''
+
+        if not streaming_app:
+            if cc.cast.app_id == pychromecast.APP_YOUTUBE:
+                streaming_app = 'youtube'
+            elif cc.cast.app_id == cc.plex_controller.app_id:
+                streaming_app = 'plex'
+
+        #if streaming_app == 'youtube':
+        #    cc.youtube_controller.find_youtube(video_title)
+        if streaming_app == 'plex':
+            cc.plex_controller.find_plex(video_title)
+            # TODO: Future support other apps - Not Implemented
+            logger.info('Asked chromecast to play title: %s on Plex' % video_title)
+        else:
+            logger.info('The streaming application %s is not supported' % streaming_app)
+
     def play_trailer(self, data, name):
         cc = self.get_chromecast(name)
         yt = cc.youtube_controller
