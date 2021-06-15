@@ -210,12 +210,30 @@ class SetVolumeIntentHandler(BaseIntentHandler):
         return {"volume": volume}
 
 
+class PreviousIntentHandler(BaseIntentHandler):
+    def match_other_intent_names(self):
+        return ['AMAZON.PreviousIntent']
+
+    def get_action(self):
+        return 'play-previous'
+
+    def get_data(self, handler_input):
+        return {
+            "action": utils.get_slot_value(handler_input, 'action', '')
+        }
+
+
 class NextIntentHandler(BaseIntentHandler):
     def match_other_intent_names(self):
         return ['AMAZON.NextIntent']
 
     def get_action(self):
         return 'play-next'
+
+    def get_data(self, handler_input):
+        return {
+            "action": utils.get_slot_value(handler_input, 'action', '')
+        }
 
 
 class RewindIntentHandler(BaseIntentHandler):
@@ -239,14 +257,6 @@ class UnMuteIntentHandler(BaseIntentHandler):
 
     def get_action(self):
         return 'unmute'
-
-
-class PreviousIntentHandler(BaseIntentHandler):
-    def match_other_intent_names(self):
-        return ['AMAZON.PreviousIntent']
-
-    def get_action(self):
-        return 'play-previous'
 
 
 class RestartIntentHandler(BaseIntentHandler):
@@ -279,34 +289,71 @@ class SeekIntentHandler(BaseIntentHandler):
         return 'Playing trailer for %s' % data['title']
 
 
-class PlayOnAppIntentHandler(BaseIntentHandler):
+class PlayEpisodeIntentHandler(BaseIntentHandler):
     def get_action(self):
-        return 'play-video'
+        return 'play-episode'
 
     def get_data(self, handler_input):
-        # TODO: Support other apps in the future
+        params = ['epnum', 'seasnum', 'title', 'tvshow']
         return {
-            "title": utils.get_slot_value(handler_input, 'title'),
-            "app": utils.get_slot_value(handler_input, 'app', ''),
-            "room": utils.get_slot_value(handler_input, 'room', '')
+            param: utils.get_slot_value(handler_input, param, '') for param in params
         }
 
     def get_response(self, data):
-        return 'Playing %s' % data['title']
+        if data['epnum']:
+            return f'Playing episode {data["epnum"]} of season {data["seasnum"]} of {data["tvshow"]}'
+        return f'Playing the episode {data["title"]} of {data["tvshow"]}'
 
 
-class FindIntentHandler(BaseIntentHandler):
+class PlayMediaIntentHandler(BaseIntentHandler):
     def get_action(self):
-        return 'find'
+        return 'play-media'
+
+    @staticmethod
+    def _get_action_response():
+        return 'Playing'
 
     def get_data(self, handler_input):
+        params = ['app', 'room', 'title', 'song', 'album', 'artist', 'playlist', 'tvshow', 'movie']
         return {
-            "title": utils.get_slot_value(handler_input, 'title'),
-            "app": utils.get_slot_value(handler_input, 'app', '')
-        }
+            param:
+                utils.get_slot_value(handler_input, param, '').lower().
+                replace('the playlist', '').
+                replace('the album', '').
+                replace('t. v. show', '').
+                replace('t. v. series', '')
+            for param in params}
+
+    @staticmethod
+    def __build_param(data, param, prompt='', prefix='the'):
+        if not prompt:
+            prompt = param
+        return f' {prefix} {prompt} {data[param]}' if data[param] else ''
 
     def get_response(self, data):
-        return 'Searching for %s' % data['title']
+        return (
+            self._get_action_response() +
+            f' {data["title"]} ' +
+            self.__build_param(data, 'playlist') +
+            self.__build_param(data, 'album') +
+            self.__build_param(data, 'song') +
+            self.__build_param(data, 'tvshow', prompt='tv show') +
+            self.__build_param(data, 'movie') +
+            self.__build_param(data, 'artist',
+                               prompt='by' if data['song'] or data['album'] else 'songs by',
+                               prefix='') +
+            self.__build_param(data, 'app', prompt='on', prefix='') +
+            self.__build_param(data, 'room', prompt='in', prefix='')
+        )
+
+
+class FindMediaIntentHandler(PlayMediaIntentHandler):
+    def get_action(self):
+        return 'find-media'
+
+    @staticmethod
+    def _get_action_response():
+        return 'Finding'
 
 
 class SubtitleOnIntentHandler(BaseIntentHandler):
@@ -449,13 +496,14 @@ try:
     sb.add_request_handler(UnMuteIntentHandler())
 
     # Plex specific
-    sb.add_request_handler(FindIntentHandler())
+    sb.add_request_handler(FindMediaIntentHandler())
     sb.add_request_handler(ChangeAudioIntentHandler())
     sb.add_request_handler(SubtitleOnIntentHandler())
     sb.add_request_handler(SubtitleOffIntentHandler())
 
     sb.add_request_handler(PlayTrailerIntentHandler())
-    sb.add_request_handler(PlayOnAppIntentHandler())
+    sb.add_request_handler(PlayMediaIntentHandler())
+    sb.add_request_handler(PlayEpisodeIntentHandler())
 
     sb.add_request_handler(HelpIntentHandler())
     sb.add_request_handler(CancelIntentHandler())

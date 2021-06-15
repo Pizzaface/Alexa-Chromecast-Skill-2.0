@@ -1,21 +1,15 @@
 import logging
+import os
+import sys
 import unittest
-from typing import List
-
-import plexapi
 import pychromecast
 from dotenv import load_dotenv
 from os.path import join, dirname
-import sys
-import os
 import time
 
-from pychromecast.controllers import plex
-
-from local.controllers.chromecast_controller import ChromecastController
 from local.controllers.plex_controller import MyPlexController
 
-sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../../src")
+#sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../../src")
 
 class TestFind(unittest.TestCase):
 
@@ -26,15 +20,10 @@ class TestFind(unittest.TestCase):
 
     def test_audio(self):
         pc = MyPlexController()
-        cc = ChromecastController().get_chromecast('Living Room TV')
-
-        cc.change_audio()
-
-        #items = pc.search('guardians of the galaxy', limit=5)
-        #subs = pc.get_subtitle_streams(items[0])
-        #auds = pc.get_audio_streams(items[0])
-        #pc.set_audio_stream(part_id='33423', audio_stream_id='6016')
-        #print(subs)
+        params = ['app', 'room', 'title', 'song', 'album', 'artist', 'playlist', 'tvshow', 'movie']
+        vals = {param: '' for param in params}
+        vals['album'] = 'bliss'
+        pc.play_item(vals)
 
 
 class TestLocal(unittest.TestCase):
@@ -63,7 +52,8 @@ class TestLocal(unittest.TestCase):
         cc = self.chromecast_controller.get_chromecast('Living Room TV')
         pc = cc.plex_controller
         #pc.mute(False)
-        self.chromecast_controller.handle_command('Living Room TV', 'subtitle_off', {})
+        self.chromecast_controller.handle_command('Living Room TV', 'find', {'title': 'rise of the guardians'})
+        self.chromecast_controller.handle_command('Living Room TV', 'play', {})
         #pc.mute(True)
 
 

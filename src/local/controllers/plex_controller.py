@@ -2,13 +2,14 @@ import logging
 import os
 import socket
 import ssl
-import time
 from typing import Optional
 
 import requests
 from plexapi.exceptions import Unauthorized
 from plexapi.server import PlexServer
 from pychromecast.controllers.plex import PlexController
+
+from local.controllers.media_controller import MediaExtensions
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -18,11 +19,7 @@ class PlexControllerError(Exception):
     pass
 
 
-class MyPlexController(PlexController):
-
-    @property
-    def play_list(self):
-        return self._play_list
+class MyPlexController(PlexController, MediaExtensions):
 
     @property
     def plex_server(self):
@@ -32,23 +29,49 @@ class MyPlexController(PlexController):
             self.__plex_server = self.__get_plex_server()
             return self.__plex_server
 
-    def get_playing_item(self):
-        if self.status.player_is_idle:
-            return None
-        # On occasion content_id is not found
-        content_id = None
-        for i in range(3):
-            content_id = self.status.content_id
-            if content_id:
-                break
-            time.sleep(1)
-        return self.plex_server.fetchItem(content_id)
-
     def __init__(self):
-        self._play_list = []
+        self.__play_list = []
+        self.__play_list_position = 0
         self.__plex_server = None
         self._subtitle_code = os.environ.get('PLEX_SUBTITLE_LANG', 'eng')
         super().__init__()
+
+    def get_playing_item(self):
+        if self.status.player_is_idle:
+            return None
+        return self.plex_server.fetchItem(self._get_content_id())
+
+    def previous(self):
+        if self.__play_list_position > 0:
+            self.__play_list_position -= 1
+        super().previous()
+
+    def next(self):
+        if self.__play_list_position < len(self.__play_list):
+            self.__play_list_position += 1
+        super().next()
+
+    def play_previous(self, chromecast, action=''):
+        if not action:
+            self.previous()
+        elif action == 'match':
+            if self.__play_list_position > 0:
+                self.__play_list_position -= 1
+                self.show_media(self.__play_list[self.__play_list_position])
+        elif action == 'episode':
+            # TODO go to the previous episode for the show
+            pass
+
+    def play_next(self, chromecast, action=''):
+        if not action:
+            self.next()
+        elif action == 'match':
+            if self.__play_list_position < len(self.__play_list):
+                self.__play_list_position += 1
+                self.show_media(self.__play_list[self.__play_list_position])
+        elif action == 'episode':
+            # TODO go to the next episode for the show
+            pass
 
     def get_media_index(self):
         return self.status.media_custom_data.get("mediaIndex", 0)
@@ -57,28 +80,33 @@ class MyPlexController(PlexController):
         return self.status.media_custom_data.get("partIndex", 0)
 
     def play(self):
-        if self.status.player_is_idle and self.status.content_id:
-            # Displaying item - so play it
-            item = self.plex_server.fetchItem(self.status.content_id)
-            self.resume_playing(item)
-        else:
-            super().play()
+        if self.status.player_is_idle:
+            content_id = self._get_content_id()
+            if content_id:
+                # Displaying item - so play it
+                item = self.plex_server.fetchItem(content_id)
+                self.resume_playing(item)
+                return
+        super().play()
 
     def stop(self):
-        if not self.status.player_is_idle and self.status.content_id:
-            item = self.plex_server.fetchItem(self.status.content_id)
-            self.show_media(item)
-        else:
-            super().stop()
+        if not self.status.player_is_idle:
+            content_id = self._get_content_id()
+            if content_id:
+                item = self.plex_server.fetchItem(content_id)
+                super().stop()
+                self.show_media(item)
+                return
+        super().stop()
 
-    def add_playlist_items(self, items):
-        self._play_list = items
+    def set_playlist_items(self, items):
+        self.__play_list = items
+        self.__play_list_position = 0
 
-    def clear_playlist(self):
-        self._play_list = []
-
-    def search(self, title, limit=None):
-        return self.plex_server.search(title, limit=limit)
+    def search(self, title, media_type='', limit=10):
+        items = self.plex_server.search(title, mediatype=media_type, limit=limit)
+        self.set_playlist_items(items)
+        return items
 
     def block_until_playing(self, media=None, timeout=None, **kwargs):
         return super().block_until_playing(media=media, timeout=timeout, **kwargs)
@@ -170,42 +198,56 @@ class MyPlexController(PlexController):
             logger.error(msg)
             raise PlexControllerError(msg)
 
-    def play_plex(self, video_title):
-        # Find best match
-        items = self.search(video_title)
-        media = False
-        for item in items:
-            if item.TYPE == 'show':
-                # Get last unwatched one
-                media = next((episode for episode in item.episodes() if not episode.isWatched), False)
-            if not media and item.TYPE == 'movie':
-                media = item
-            if not media and item.TYPE == 'episode':
-                media = item
-            if media:
-                break
-        self.resume_playing(media)
+    def play_item(self, options):
+        self._play_item(options)
 
-    def find_plex(self, video_title):
-        # Find best match
-        items = self.search(video_title)
-        self.add_playlist_items(items)
-        media = False
-        for item in items:
-            if item.TYPE == 'show':
+    def _play_item(self, options, find=False):
+        self.launch()
+
+        media_types = {
+            'artist': 'artist',
+            'song': 'track',
+            'album': 'album',
+            'playlist': 'playlist',
+            'tvshow': 'show',
+            'movie': 'movie'
+        }
+        title, media_type = next(((options[key], media_types[key]) for key in media_types.keys()
+                                  if options[key]), ('', ''))
+        if media_type:
+            items = self.search(title, media_type=media_type, limit=10)
+            media = items[0]
+            if media.TYPE == 'show':
+                media = next((episode for episode in media.episodes() if not episode.isWatched), media)
+            if options['artist'] and options['song']:
+                # TODO check artist is correct
+                pass
+        else:
+            # Ok just a title to work with
+            title = options['title']
+            items = self.search(title)
+            if len(items) == 0:
+                logger.info(f'Unable to find any item in Plex matching title: {title}')
+                return
+            media = items[0]
+            if media.TYPE == 'show':
                 # Get last unwatched one
-                media = next((episode for episode in item.episodes() if not episode.isWatched), False)
-            if not media and item.TYPE == 'movie':
-                media = item
-            if not media and item.TYPE == 'episode':
-                media = item
-            if media:
-                break
-        self.show_media(media)
+                media = next((episode for episode in media.episodes() if not episode.isWatched), media)
+
+        if find:
+            self.show_media(media)
+        else:
+            self.resume_playing(media)
+
+    def find_item(self, options):
+        self._play_item(options, True)
 
     def resume_playing(self, media):
-        offset = media.viewOffset / 1000
-        self.block_until_playing(media, offset=offset)
+        if 'viewOffset' in vars(media):
+            offset = media.viewOffset / 1000
+            self.block_until_playing(media, offset=offset)
+        else:
+            self.block_until_playing(media)
 
     def change_audio_track(self):
         audio_streams = self.get_audio_streams()

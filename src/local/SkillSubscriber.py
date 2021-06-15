@@ -4,6 +4,8 @@ import time
 import json
 import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
+from typing import Optional
+
 from requests import get
 import miniupnpc
 import boto3
@@ -23,7 +25,7 @@ class Subscriber(BaseHTTPRequestHandler):
     def __init__(self, skills, ip, port, topic_arn=os.getenv('AWS_SNS_TOPIC_ARN')):
         self.PING_SECS = 600
         self.last_ping_sent = False
-        self.last_ping_received = False
+        self.last_ping_received: Optional[datetime] = None
         self.ping_thread = threading.Thread(target=self.ping)
 
         self.token = ""
@@ -72,7 +74,7 @@ class Subscriber(BaseHTTPRequestHandler):
             def log_message(self, format, *args):
                 pass
 
-        self.server = HTTPServer(('', int(port) if port else 0), SNSRequestHandler)
+        self.server: HTTPServer = HTTPServer(('', int(port) if port else 0), SNSRequestHandler)
 
         port = self.server.server_port
         if not ip:

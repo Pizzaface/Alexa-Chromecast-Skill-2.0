@@ -15,4 +15,17 @@ Alexa ask Chromecast to play songs by macklemore
 Alexa ask Chromecast next
 Alexa ask Chromecast previous
 
-Alexa ask Chromecast to play the trailer for the matrix
+play the trailer for the matrix
+
+#Plex
+play the song the truth about love by pink
+play the playlist greatest hits
+play the album thriller
+play the song thriller by michael jackson
+play songs by pink
+play the movie split
+play the tv show mythic quest
+play the tv series mythic quest
+play the series mythic quest
+play mythic quest on plex
+play mythic quest in the living room

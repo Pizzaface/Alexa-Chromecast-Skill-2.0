@@ -2,12 +2,13 @@ import logging
 
 from pychromecast.controllers.youtube import YouTubeController
 import local.helpers.youtube as youtube_search
+from local.controllers.media_controller import MediaExtensions
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-class MyYouTubeController(YouTubeController):
+class MyYouTubeController(YouTubeController, MediaExtensions):
     """
     Youtube Controller extension
     """
@@ -23,9 +24,13 @@ class MyYouTubeController(YouTubeController):
     def init_playlist(self):
         self._play_list = {}
 
-    def play_previous(self, current_id):
+    def play_next(self, chromecast, action=''):
+        chromecast.media_controller.skip()
+
+    def play_previous(self, chromecast, action=''):
         # This is not pretty.... it rebuilds the playlist on a previous command to make it work
         # There should be a way to play from a position in the queue, but I couldn't find it
+        current_id = self._get_content_id()
         select_from_here = False
         if len(self._play_list) == 0:
             self._play_list = self._session.get_queue_videos()
@@ -46,11 +51,16 @@ class MyYouTubeController(YouTubeController):
 
             previous_id = video['data-video-id']
 
-    def play_youtube(self, video_title):
+    def find_item(self, options):
+        pass
+
+    def play_item(self, options):
         self.launch()
-        video_playlist = youtube_search.search(video_title)
+        # ['app', 'room', 'title', 'song', 'album', 'artist', 'playlist', 'tvshow', 'movie']
+        title = next(value for key, value in options.keys() if value and key not in ['app', 'room'])
+        video_playlist = youtube_search.search(title)
         if len(video_playlist) == 0:
-            logger.info('Unable to find youtube video for: %s' % video_title)
+            logger.info('Unable to find youtube media for: %s' % title)
             return
         playing = False
         self.init_playlist()
@@ -65,4 +75,4 @@ class MyYouTubeController(YouTubeController):
             else:
                 self.add_to_queue(video['id'])
         logger.info(
-            'Asked chromecast to play %i titles matching: %s on YouTube' % (len(video_playlist), video_title))
+            'Asked chromecast to play %i titles matching: %s on YouTube' % (len(video_playlist), title))

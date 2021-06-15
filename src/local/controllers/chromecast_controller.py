@@ -56,6 +56,23 @@ class ChromecastWrapper:
     def new_cast_status(self, status):
         pass
 
+    def get_controller(self, app=''):
+        if app == 'youtube':
+            return self.youtube_controller
+        if app == 'plex':
+            return self.plex_controller
+        if app:
+            logger.error(f'Unable to process command, the streaming application {app} is not supported')
+            return
+
+        # If no app is specified assume it's the active one
+        current_app_id = self.cast.app_id
+        if current_app_id == pychromecast.APP_YOUTUBE:
+            return self.youtube_controller
+        elif current_app_id == self.plex_controller.app_id:
+            return self.plex_controller
+        return self.media_controller
+
 
 class ChromecastCollector:
     """
@@ -146,7 +163,7 @@ class ChromecastController:
         self.play(data, name)
 
     def play(self, data, name):
-        self.get_chromecast(name).media_controller.play()
+        self.get_chromecast(name).get_controller().play()
 
     def pause(self, data, name):
         cc = self.get_chromecast(name)
@@ -157,7 +174,7 @@ class ChromecastController:
         self.chromecast_collector.stop()
 
     def stop(self, data, name):
-        self.get_chromecast(name).media_controller.stop()
+        self.get_chromecast(name).get_controller().stop()
 
     def open(self, data, name):
         app = data['app']
@@ -181,7 +198,12 @@ class ChromecastController:
 
     def play_next(self, data, name):
         # mc.queue_next() didn't work
-        self.get_chromecast(name).media_controller.skip()
+        cc = self.get_chromecast(name)
+        cc.get_controller().play_next(cc, data['action'])
+
+    def play_previous(self, data, name):
+        cc = self.get_chromecast(name)
+        self.get_chromecast(name).get_controller().play_previous(data['action'])
 
     def rewind(self, data, name):
         mc = self.get_chromecast(name).media_controller
@@ -201,50 +223,16 @@ class ChromecastController:
             seconds = -seconds
         mc.seek(mc.status.current_time + seconds)
 
-    def play_previous(self, data, name):
+    def play_media(self, data, name):
         cc = self.get_chromecast(name)
-        current_id = cc.media_controller.status.content_id
-        cc.youtube_controller.play_previous(current_id)
+        streaming_app = data['app'] if 'app' in data.keys() else ''
+        cc.get_controller(streaming_app).play_media(data)
 
-    def play_video(self, data, name):
+    def find_media(self, data, name):
         cc = self.get_chromecast(name)
         video_title = data['title']
         streaming_app = data['app'] if 'app' in data.keys() else ''
-
-        if not streaming_app:
-            if cc.cast.app_id == pychromecast.APP_YOUTUBE:
-                streaming_app = 'youtube'
-            elif cc.cast.app_id == cc.plex_controller.app_id:
-                streaming_app = 'plex'
-
-        if streaming_app == 'youtube':
-            cc.youtube_controller.play_youtube(video_title)
-        elif streaming_app == 'plex':
-            cc.plex_controller.play_plex(video_title)
-            # TODO: Future support other apps - Not Implemented
-            logger.info('Asked chromecast to play title: %s on Plex' % video_title)
-        else:
-            logger.info('The streaming application %s is not supported' % streaming_app)
-
-    def find(self, data, name):
-        cc = self.get_chromecast(name)
-        video_title = data['title']
-        streaming_app = data['app'] if 'app' in data.keys() else ''
-
-        if not streaming_app:
-            if cc.cast.app_id == pychromecast.APP_YOUTUBE:
-                streaming_app = 'youtube'
-            elif cc.cast.app_id == cc.plex_controller.app_id:
-                streaming_app = 'plex'
-
-        #if streaming_app == 'youtube':
-        #    cc.youtube_controller.find_youtube(video_title)
-        if streaming_app == 'plex':
-            cc.plex_controller.find_plex(video_title)
-            # TODO: Future support other apps - Not Implemented
-            logger.info('Asked chromecast to play title: %s on Plex' % video_title)
-        else:
-            logger.info('The streaming application %s is not supported' % streaming_app)
+        cc.get_controller(streaming_app).find_media(data)
 
     def play_trailer(self, data, name):
         cc = self.get_chromecast(name)
