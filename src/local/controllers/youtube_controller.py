@@ -24,6 +24,9 @@ class MyYouTubeController(YouTubeController, MediaExtensions):
     def init_playlist(self):
         self._play_list = {}
 
+    def shuffle(self, on):
+        pass
+
     def play_next(self, chromecast, action=''):
         chromecast.media_controller.skip()
 

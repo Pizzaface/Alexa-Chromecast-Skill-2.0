@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 
 from pychromecast.controllers.media import MediaController
 
+
 class MediaExtensions(ABC):
 
     @abstractmethod
@@ -21,6 +22,10 @@ class MediaExtensions(ABC):
     def find_item(self, options):
         raise NotImplementedError()
 
+    @abstractmethod
+    def shuffle(self, on):
+        raise NotImplementedError()
+
     def _get_content_id(self):
         # On occasion content_id is not found
         content_id = None
@@ -33,6 +38,15 @@ class MediaExtensions(ABC):
 
 
 class MyMediaController(MediaExtensions, MediaController):
+
+    def shuffle(self, on):
+        pass
+
+    def play_item(self, options):
+        pass
+
+    def find_item(self, options):
+        pass
 
     def play_previous(self, chromecast, action=''):
         super().queue_next()

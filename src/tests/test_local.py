@@ -25,6 +25,11 @@ class TestFind(unittest.TestCase):
         vals['album'] = 'bliss'
         pc.play_item(vals)
 
+    def test_find(self):
+        pc = MyPlexController()
+        items = pc.search('Mummy Music')
+        pc.shuffle()
+        print(items[0])
 
 class TestLocal(unittest.TestCase):
 
@@ -51,6 +56,10 @@ class TestLocal(unittest.TestCase):
     def test_play_plex(self):
         cc = self.chromecast_controller.get_chromecast('Living Room TV')
         pc = cc.plex_controller
+        self.chromecast_controller.handle_command('Living Room TV', 'play_media', {'play': 'play', 'playlist': 'mummy music'})
+        pc.shuffle()
+        pc.shuffle(False)
+
         #pc.mute(False)
         self.chromecast_controller.handle_command('Living Room TV', 'find', {'title': 'rise of the guardians'})
         self.chromecast_controller.handle_command('Living Room TV', 'play', {})

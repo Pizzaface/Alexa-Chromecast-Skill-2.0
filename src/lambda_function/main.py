@@ -86,7 +86,10 @@ class BaseIntentHandler(AbstractRequestHandler):
         return 'Ok'
 
     def handle(self, handler_input):
-        room = utils.get_slot_value(handler_input, 'room', False)
+        room = utils.get_slot_value(handler_input, 'room', '')
+        if room and room.lower().startswith('the '):
+            room = room[4:]
+
         device_id = handler_input.request_envelope.context.system.device.device_id
 
         if not room:
@@ -236,6 +239,34 @@ class NextIntentHandler(BaseIntentHandler):
         }
 
 
+class ShuffleIntentHandler(BaseIntentHandler):
+    def match_other_intent_names(self):
+        return ['AMAZON.ShuffleOnIntent', 'AMAZON.ShuffleOffIntent']
+
+    def get_action(self):
+        return 'shuffle'
+
+    def get_data(self, handler_input):
+        is_on = ask_utils.is_intent_name('AMAZON.ShuffleOnIntent')(handler_input)
+        return {
+            "on": is_on
+        }
+
+
+class LoopIntentHandler(BaseIntentHandler):
+    def match_other_intent_names(self):
+        return ['AMAZON.LoopOnIntent', 'AMAZON.LoopOffIntent']
+
+    def get_action(self):
+        return 'loop'
+
+    def get_data(self, handler_input):
+        is_on = ask_utils.is_intent_name('AMAZON.LoopOnIntent')(handler_input)
+        return {
+            "on": is_on
+        }
+
+
 class RewindIntentHandler(BaseIntentHandler):
 
     def get_action(self):
@@ -309,51 +340,64 @@ class PlayMediaIntentHandler(BaseIntentHandler):
     def get_action(self):
         return 'play-media'
 
-    @staticmethod
-    def _get_action_response():
-        return 'Playing'
-
     def get_data(self, handler_input):
-        params = ['app', 'room', 'title', 'song', 'album', 'artist', 'playlist', 'tvshow', 'movie']
-        return {
+        params = ['play', 'app', 'room', 'title', 'song', 'album', 'artist', 'playlist', 'tvshow', 'movie']
+        result = {
             param:
                 utils.get_slot_value(handler_input, param, '').lower().
                 replace('the playlist', '').
                 replace('the album', '').
-                replace('t. v. show', '').
-                replace('t. v. series', '')
-            for param in params}
+                replace('the tv show', '').
+                replace('the show', '').
+                replace('the t. v. show', '').
+                replace('the t. v. series', '')
+            for param in params
+            if utils.get_slot_value(handler_input, param, '')
+        }
+        return result
 
     @staticmethod
     def __build_param(data, param, prompt='', prefix='the'):
         if not prompt:
             prompt = param
-        return f' {prefix} {prompt} {data[param]}' if data[param] else ''
+        value = data[param] if param in data else ''
+        return f' {prefix} {prompt} {value}' if value else ''
 
     def get_response(self, data):
+        title = data["title"] if "title" in data else ""
+        song = data["song"] if "song" in data else ""
+        album = data["album"] if "album" in data else ""
+        play = data["play"] if "play" in data else ""
         return (
-            self._get_action_response() +
-            f' {data["title"]} ' +
+            ('Playing ' if play == 'play' else 'Finding ') +
+            f' {title} ' +
             self.__build_param(data, 'playlist') +
             self.__build_param(data, 'album') +
             self.__build_param(data, 'song') +
             self.__build_param(data, 'tvshow', prompt='tv show') +
             self.__build_param(data, 'movie') +
             self.__build_param(data, 'artist',
-                               prompt='by' if data['song'] or data['album'] else 'songs by',
+                               prompt='by' if song or album else 'songs by',
                                prefix='') +
             self.__build_param(data, 'app', prompt='on', prefix='') +
             self.__build_param(data, 'room', prompt='in', prefix='')
         )
 
 
-class FindMediaIntentHandler(PlayMediaIntentHandler):
-    def get_action(self):
-        return 'find-media'
+class PlayShowIntentHandler(PlayMediaIntentHandler):
+    pass
 
-    @staticmethod
-    def _get_action_response():
-        return 'Finding'
+
+class PlayMusicIntentHandler(PlayMediaIntentHandler):
+    pass
+
+
+class PlayMovieIntentHandler(PlayMediaIntentHandler):
+    pass
+
+
+class PlayPlaylistIntentHandler(PlayMediaIntentHandler):
+    pass
 
 
 class SubtitleOnIntentHandler(BaseIntentHandler):
@@ -494,9 +538,10 @@ try:
     sb.add_request_handler(RestartIntentHandler())
     sb.add_request_handler(MuteIntentHandler())
     sb.add_request_handler(UnMuteIntentHandler())
+    sb.add_request_handler(ShuffleIntentHandler())
+    sb.add_request_handler(LoopIntentHandler())
 
     # Plex specific
-    sb.add_request_handler(FindMediaIntentHandler())
     sb.add_request_handler(ChangeAudioIntentHandler())
     sb.add_request_handler(SubtitleOnIntentHandler())
     sb.add_request_handler(SubtitleOffIntentHandler())
@@ -504,6 +549,10 @@ try:
     sb.add_request_handler(PlayTrailerIntentHandler())
     sb.add_request_handler(PlayMediaIntentHandler())
     sb.add_request_handler(PlayEpisodeIntentHandler())
+    sb.add_request_handler(PlayShowIntentHandler())
+    sb.add_request_handler(PlayMusicIntentHandler())
+    sb.add_request_handler(PlayMovieIntentHandler())
+    sb.add_request_handler(PlayPlaylistIntentHandler())
 
     sb.add_request_handler(HelpIntentHandler())
     sb.add_request_handler(CancelIntentHandler())

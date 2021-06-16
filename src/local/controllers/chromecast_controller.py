@@ -196,6 +196,10 @@ class ChromecastController:
     def unmute(self, data, name):
         self.get_chromecast(name).cast.set_volume_muted(False)
 
+    def shuffle(self, data, name):
+        cc = self.get_chromecast(name)
+        cc.get_controller().shuffle(data['on'])
+
     def play_next(self, data, name):
         # mc.queue_next() didn't work
         cc = self.get_chromecast(name)
@@ -226,13 +230,10 @@ class ChromecastController:
     def play_media(self, data, name):
         cc = self.get_chromecast(name)
         streaming_app = data['app'] if 'app' in data.keys() else ''
-        cc.get_controller(streaming_app).play_media(data)
-
-    def find_media(self, data, name):
-        cc = self.get_chromecast(name)
-        video_title = data['title']
-        streaming_app = data['app'] if 'app' in data.keys() else ''
-        cc.get_controller(streaming_app).find_media(data)
+        if data['play'] == 'play':
+            cc.get_controller(streaming_app).play_item(data)
+        else:
+            cc.get_controller(streaming_app).find_item(data)
 
     def play_trailer(self, data, name):
         cc = self.get_chromecast(name)
@@ -243,7 +244,8 @@ class ChromecastController:
         logger.info('video sent to chromecast, id: %s' % video_id)
 
     def restart(self, data, name):
-        self.get_chromecast(name).cast.reboot()
+        # Reboot is no longer supported
+        pass
 
     def change_audio(self, data, name):
         plex_c = self.get_chromecast(name).plex_controller

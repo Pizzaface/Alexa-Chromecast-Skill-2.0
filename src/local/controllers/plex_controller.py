@@ -34,6 +34,8 @@ class MyPlexController(PlexController, MediaExtensions):
         self.__play_list_position = 0
         self.__plex_server = None
         self._subtitle_code = os.environ.get('PLEX_SUBTITLE_LANG', 'eng')
+        self.__shuffle = 0
+        self.__loop = 0
         super().__init__()
 
     def get_playing_item(self):
@@ -41,15 +43,26 @@ class MyPlexController(PlexController, MediaExtensions):
             return None
         return self.plex_server.fetchItem(self._get_content_id())
 
-    def previous(self):
-        if self.__play_list_position > 0:
-            self.__play_list_position -= 1
-        super().previous()
+    def __get_current_playlist_item(self):
+        return self.__play_list[self.__play_list_position] if len(self.__play_list) > 0 else None
 
-    def next(self):
-        if self.__play_list_position < len(self.__play_list):
-            self.__play_list_position += 1
-        super().next()
+    def shuffle(self, on=True):
+        self.__shuffle = 1 if on else 0
+        item = self.__get_current_playlist_item()
+        if item:
+            play_queue = self.plex_server.createPlayQueue(item, shuffle=self.__shuffle, repeat=self.__loop)
+            self.resume_playing(play_queue)
+        else:
+            logger.warning('No current item to shuffle.')
+
+    def loop(self, on=True):
+        self.__loop = 1 if on else 0
+        item = self.__get_current_playlist_item()
+        if item:
+            play_queue = self.plex_server.createPlayQueue(item, shuffle=self.__shuffle, repeat=self.__loop)
+            self.resume_playing(play_queue)
+        else:
+            logger.warning('No current item to shuffle.')
 
     def play_previous(self, chromecast, action=''):
         if not action:
@@ -102,6 +115,8 @@ class MyPlexController(PlexController, MediaExtensions):
     def set_playlist_items(self, items):
         self.__play_list = items
         self.__play_list_position = 0
+        self.__shuffle = 0
+        self.__loop = 0
 
     def search(self, title, media_type='', limit=10):
         items = self.plex_server.search(title, mediatype=media_type, limit=limit)
@@ -202,7 +217,7 @@ class MyPlexController(PlexController, MediaExtensions):
         self._play_item(options)
 
     def _play_item(self, options, find=False):
-        self.launch()
+        #self.launch()
 
         media_types = {
             'artist': 'artist',
@@ -213,15 +228,15 @@ class MyPlexController(PlexController, MediaExtensions):
             'movie': 'movie'
         }
         title, media_type = next(((options[key], media_types[key]) for key in media_types.keys()
-                                  if options[key]), ('', ''))
+                                  if key in options.keys() and options[key]), ('', ''))
         if media_type:
             items = self.search(title, media_type=media_type, limit=10)
             media = items[0]
             if media.TYPE == 'show':
                 media = next((episode for episode in media.episodes() if not episode.isWatched), media)
-            if options['artist'] and options['song']:
-                # TODO check artist is correct
-                pass
+            # if options['artist'] and options['song']:
+            #    # TODO check artist is correct
+            #    pass
         else:
             # Ok just a title to work with
             title = options['title']
@@ -242,12 +257,12 @@ class MyPlexController(PlexController, MediaExtensions):
     def find_item(self, options):
         self._play_item(options, True)
 
-    def resume_playing(self, media):
+    def resume_playing(self, media, **kwargs):
         if 'viewOffset' in vars(media):
             offset = media.viewOffset / 1000
-            self.block_until_playing(media, offset=offset)
+            self.block_until_playing(media, offset=offset, **kwargs)
         else:
-            self.block_until_playing(media)
+            self.block_until_playing(media, **kwargs)
 
     def change_audio_track(self):
         audio_streams = self.get_audio_streams()

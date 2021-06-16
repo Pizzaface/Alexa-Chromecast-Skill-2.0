@@ -68,7 +68,8 @@ class Subscriber(BaseHTTPRequestHandler):
 
                 elif type == 'Notification':
                     if data['Message']:
-                        logger.info('Received message: %s' % json.dumps(data['Message']))
+                        logger.info('Received message:')
+                        logger.info(json.dumps(json.loads(data['Message']), indent=4, sort_keys=True))
                         instance.dispatch_notification(json.loads(data['Message']))
 
             def log_message(self, format, *args):
