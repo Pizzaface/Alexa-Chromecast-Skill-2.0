@@ -27,15 +27,16 @@ The following media commands are available:
  set volume to 5       -> Change the volume between 0 and 10
  mute                  -> mute the volume
  unmute                -> unmute the volume
- rewind                -> Rewind back 15 seconds
+ rewind                -> Rewind back 15 seconds ("skip back" or "go back" also work)
  rewind 30 seconds     -> Rewind back 30 seconds
- fast forward          -> Fast forward 15 seconds 
+ fast forward          -> Fast forward 15 seconds ("skip forward" or "go forward" also work) 
  fast forward 1 minute -> Fast forward 1 minute
  restart               -> Restarts the media item from the beginning
  next                  -> Play or show the next item
  previous              -> Play or show the previous item
  open {app}            -> Opena specific app. Plex and YouTube are supported.
  ```
+NOTE: stop doesn't work as expected on the Netflix app and is disabled.
 
 ###YouTube app commands
 Play items on YouTube.

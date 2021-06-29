@@ -16,6 +16,9 @@ import os
 import sys
 import signal
 import logging
+
+import pychromecast
+
 from local.skill_subscriber import Subscriber
 from local.controllers.chromecast_controller import ChromecastController
 
@@ -33,6 +36,10 @@ handler = logging.handlers.TimedRotatingFileHandler(cwd + os.path.sep + 'alexa-c
                                                     backupCount=5)
 handler.setFormatter(formatter)
 root_logger.addHandler(handler)
+
+# Logger set to allow changing to DEBUG when required
+logger = logging.getLogger(pychromecast.__name__)
+logger.setLevel(logging.INFO)
 
 PORT = os.getenv('EXTERNAL_PORT')
 IP = os.getenv('EXTERNAL_IP')

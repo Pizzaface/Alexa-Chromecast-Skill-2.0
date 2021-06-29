@@ -44,7 +44,6 @@ class TestPlexCommands(unittest.TestCase):
         time.sleep(20)
         self.assertEqual(APP_YOUTUBE_ID, cast.app_id)
 
-
     def test_play_movie(self):
         cc = self.chromecast_controller.get_chromecast(self.cc_name)
         pc = cc.plex_controller
