@@ -16,7 +16,7 @@ To change the room a particular Alexa device controls you can say:
 > Alexa, ask the Chromecast to set the room
 
 
-###Standard commands
+### Standard commands
 The following media commands are available:
 ```
  VOICE COMMAND         ACTION
@@ -38,7 +38,7 @@ The following media commands are available:
  ```
 NOTE: stop doesn't work as expected on the Netflix app and is disabled.
 
-###YouTube app commands
+### YouTube app commands
 Play items on YouTube.
 ```
  VOICE COMMAND        ACTION
@@ -47,7 +47,7 @@ Play items on YouTube.
  play {title} trailer -> Searches and plays any matching trailer for the title
 ```
 
-###Plex app commands
+### Plex app commands
 Find and play items on your Plex server.
 * The Find command will display the item that was found.
 * The Play command will immediately play the item that was found.
@@ -73,7 +73,7 @@ Find and play items on your Plex server.
                         of {show}
 ```
 
-##Example Commands
+## Example Commands
 > Alexa, ask Chromecast to pause
 >
 > Alexa, ask Chromecast to resume
