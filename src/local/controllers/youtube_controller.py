@@ -24,7 +24,12 @@ class MyYouTubeController(YouTubeController, MediaExtensions):
     def init_playlist(self):
         self._play_list = {}
 
-    def shuffle(self, on):
+    def shuffle_on(self):
+        # TODO: Implement
+        pass
+
+    def shuffle_off(self):
+        # TODO: Implement
         pass
 
     def play_next(self, chromecast, action=''):

@@ -3,3 +3,4 @@ boto3==1.14.8
 ask-sdk-core==1.13.0
 botocore==1.17.8
 requests==2.24.0
+word2number==1.1

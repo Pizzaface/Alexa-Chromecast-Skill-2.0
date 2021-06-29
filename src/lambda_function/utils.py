@@ -1,22 +1,22 @@
 import logging
 import os
 import boto3
+from ask_sdk_model import Slot
 from botocore.exceptions import ClientError
 from ask_sdk_model.slu.entityresolution import StatusCode
-
 
 def get_slot_value(handler_input, name, default=None):
     # If it matched a canonical value return this
     slots = handler_input.request_envelope.request.intent.slots
-    if not slots or not name in slots:
+    if not slots or name not in slots:
         return default
     slot = slots[name]
     if slot.resolutions and slot.resolutions.resolutions_per_authority[0].status.code == StatusCode.ER_SUCCESS_MATCH:
-        return slot.resolutions.resolutions_per_authority[0].values[0].value.name
+       return slot.resolutions.resolutions_per_authority[0].values[0].value.name
 
     # Otherwise return the actual spoken value
     result = slot.value
-    if result == None:
+    if not result:
         return default
     return result
 

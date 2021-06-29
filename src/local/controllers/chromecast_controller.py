@@ -13,6 +13,13 @@ from local.helpers import moviedb_search
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+APP_YOUTUBE = 'youtube'
+APP_PLEX = 'plex'
+
+APP_PLEX_ID = '9AC194DC'  # Plex App Id in pychromecast seems to be wrong...
+APP_YOUTUBE_ID = pychromecast.APP_YOUTUBE
+APP_NETFLIX_ID = 'CA5E8412'
+
 
 class ChromecastWrapper:
     """
@@ -56,22 +63,25 @@ class ChromecastWrapper:
     def new_cast_status(self, status):
         pass
 
-    def get_controller(self, app=''):
-        if app == 'youtube':
+    def __get_controller(self, app=''):
+        if app == APP_YOUTUBE:
             return self.youtube_controller
-        if app == 'plex':
+        if app == APP_PLEX:
             return self.plex_controller
         if app:
             logger.error(f'Unable to process command, the streaming application {app} is not supported')
-            return
-
-        # If no app is specified assume it's the active one
-        current_app_id = self.cast.app_id
-        if current_app_id == pychromecast.APP_YOUTUBE:
-            return self.youtube_controller
-        elif current_app_id == self.plex_controller.app_id:
-            return self.plex_controller
+            return None
         return self.media_controller
+
+    def get_controller(self, app=''):
+        if not app:
+            # If no app is specified assume it's the active one
+            current_app_id = self.cast.app_id
+            if current_app_id == APP_YOUTUBE_ID:
+                app = APP_YOUTUBE
+            elif current_app_id == APP_PLEX_ID:
+                app = APP_PLEX
+        return self.__get_controller(app)
 
 
 class ChromecastCollector:
@@ -146,7 +156,7 @@ class ChromecastController:
     def get_chromecast(self, name) -> ChromecastWrapper:
         return self.chromecast_collector.get_chromecast(name)
 
-    def handle_command(self, room, command, data):
+    def handle_command(self, room, command, data={}):
         try:
             chromecast = self.chromecast_collector.match_chromecast(room)
             if not chromecast:
@@ -174,20 +184,28 @@ class ChromecastController:
         self.chromecast_collector.stop()
 
     def stop(self, data, name):
-        self.get_chromecast(name).get_controller().stop()
+        cc = self.get_chromecast(name)
+        if cc.cast.app_id == APP_NETFLIX_ID:
+            logger.warning('Ignoring Stop. Netflix Stop does not work as expected, it doesn\'t stop Netflix, ' +
+                           'and all subsequent commands stop working. Ignoring....')
+        else:
+            self.get_chromecast(name).get_controller().stop()
 
     def open(self, data, name):
         app = data['app']
-        if app == 'youtube':
-            self.get_chromecast(name).youtube_controller.launch()
-        elif app == 'plex':
-            self.get_chromecast(name).plex_controller.launch()
-        else:
-            pass
+        controller = self.get_chromecast(name).get_controller(app)
+        if controller:
+            controller.launch()
 
     def set_volume(self, data, name):
-        volume = data['volume']  # volume as 0-10
-        volume_normalized = float(volume) / 10.0  # volume as 0-1
+        if 'volume' in data:
+            volume = data['volume']  # volume as 0-10
+            volume_normalized = float(volume) / 10.0  # volume as 0-1
+        else:
+            jump = data['jump']
+            cast = self.get_chromecast(name).cast
+            vol = cast.status.volume_level
+            volume_normalized = vol + 0.1 if 'up' in jump else vol - 0.1
         self.get_chromecast(name).cast.set_volume(volume_normalized)
 
     def mute(self, data, name):
@@ -196,22 +214,26 @@ class ChromecastController:
     def unmute(self, data, name):
         self.get_chromecast(name).cast.set_volume_muted(False)
 
-    def shuffle(self, data, name):
+    def shuffle_on(self, data, name):
         cc = self.get_chromecast(name)
-        cc.get_controller().shuffle(data['on'])
+        cc.get_controller().shuffle_on()
+
+    def shuffle_off(self, data, name):
+        cc = self.get_chromecast(name)
+        cc.get_controller().shuffle_off()
 
     def play_next(self, data, name):
         # mc.queue_next() didn't work
         cc = self.get_chromecast(name)
-        cc.get_controller().play_next(cc, data['action'])
+        cc.get_controller().play_next(cc, data['action'] if 'action' in data else '')
 
     def play_previous(self, data, name):
         cc = self.get_chromecast(name)
-        self.get_chromecast(name).get_controller().play_previous(data['action'])
+        cc.get_controller().play_previous(cc, data['action'] if 'action' in data else '')
 
     def rewind(self, data, name):
         mc = self.get_chromecast(name).media_controller
-        duration = data['duration']
+        duration = utils.get_dict_val(data, 'duration', '')
         position = 0
         if duration:
             seconds = utils.parse_iso_duration(duration)
@@ -230,7 +252,7 @@ class ChromecastController:
     def play_media(self, data, name):
         cc = self.get_chromecast(name)
         streaming_app = data['app'] if 'app' in data.keys() else ''
-        if data['play'] == 'play':
+        if 'play' in data.keys() and data['play'] == 'play':
             cc.get_controller(streaming_app).play_item(data)
         else:
             cc.get_controller(streaming_app).find_item(data)

@@ -16,7 +16,7 @@ import os
 import sys
 import signal
 import logging
-from local.SkillSubscriber import Subscriber
+from local.skill_subscriber import Subscriber
 from local.controllers.chromecast_controller import ChromecastController
 
 cwd = os.getcwd()

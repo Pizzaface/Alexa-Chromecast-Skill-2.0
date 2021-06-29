@@ -71,6 +71,8 @@
                         }
                     ],
                     "samples": [
+                        "set the room",
+                        "change the room",
                         "set default room to the {room}",
                         "set devices room to {room}",
                         "set the room to {room}",
@@ -92,21 +94,46 @@
                     ]
                 },
                 {
-                    "name": "PlayOnAppIntent",
+                    "name": "PlayMediaIntent",
                     "slots": [
-                        {
-                            "name": "video",
-                            "type": "AMAZON.Movie"
-                        },
                         {
                             "name": "room",
                             "type": "AMAZON.Room"
+                        },
+                        {
+                            "name": "app",
+                            "type": "AppName"
+                        },
+                        {
+                            "name": "title",
+                            "type": "titleType"
+                        },
+                        {
+                            "name": "play",
+                            "type": "playType"
+                        },
+                        {
+                            "name": "type",
+                            "type": "mediaType"
+                        },
+                        {
+                            "name": "tvshow",
+                            "type": "titleType"
                         }
                     ],
                     "samples": [
-                        "play {video} in {room}",
-                        "play {video}",
-                        "in {room} play {video}"
+                        "{play} {title} of {tvshow} on {app}",
+                        "{play} {title} of {tvshow} in {room}",
+                        "{play} {title} of {tvshow}",
+                        "{play} {type} {title} of {tvshow} in {room}",
+                        "{play} {type} {title} of {tvshow} on {app}",
+                        "{play} {type} {title} of {tvshow}",
+                        "{play} {type} {title} on {app}",
+                        "{play} {type} {title} in {room}",
+                        "{play} {type} {title}",
+                        "{play} {title} in {room}",
+                        "{play} {title}",
+                        "{play} {title} on {app}"
                     ]
                 },
                 {
@@ -122,12 +149,9 @@
                         }
                     ],
                     "samples": [
-                        "play the {movie} trailer",
                         "play the trailer for {movie}",
-                        "in {room} play {movie} trailer",
                         "play {movie} trailer in {room}",
                         "play {movie} trailer",
-                        "in {room} play trailer for {movie}",
                         "play trailer for {movie} in {room}",
                         "play trailer for {movie} "
                     ]
@@ -136,9 +160,11 @@
                     "name": "RestartIntent",
                     "slots": [],
                     "samples": [
-                        "reboot",
+                        "restart song",
+                        "restart episode",
                         "restart",
-                        "to restart"
+                        "restart show",
+                        "restart movie"
                     ]
                 },
                 {
@@ -160,20 +186,227 @@
                 },
                 {
                     "name": "NextIntent",
-                    "slots": [],
+                    "slots": [
+                        {
+                            "name": "action",
+                            "type": "actionType"
+                        }
+                    ],
                     "samples": [
                         "next",
-                        "to play next",
-                        "play next"
+                        "for next",
+                        "for next {action}",
+                        "next {action}"
                     ]
                 },
                 {
                     "name": "PreviousIntent",
+                    "slots": [
+                        {
+                            "name": "action",
+                            "type": "actionType"
+                        }
+                    ],
+                    "samples": [
+                        "for previous",
+                        "for previous {action}",
+                        "previous {action}",
+                        "previous"
+                    ]
+                },
+                {
+                    "name": "OpenIntent",
+                    "slots": [
+                        {
+                            "name": "app",
+                            "type": "AppName"
+                        }
+                    ],
+                    "samples": [
+                        "open {app}"
+                    ]
+                },
+                {
+                    "name": "RewindIntent",
+                    "slots": [
+                        {
+                            "name": "duration",
+                            "type": "AMAZON.DURATION"
+                        }
+                    ],
+                    "samples": [
+                        "rewind back {duration}",
+                        "rewind {duration}",
+                        "rewind"
+                    ]
+                },
+                {
+                    "name": "ChangeAudioIntent",
                     "slots": [],
                     "samples": [
-                        "to play previous",
-                        "previous",
-                        "play previous"
+                        "switch the audio",
+                        "change the audio",
+                        "change audio stream",
+                        "switch audio stream",
+                        "switch audio",
+                        "change audio"
+                    ]
+                },
+                {
+                    "name": "SubtitlesOnIntent",
+                    "slots": [],
+                    "samples": [
+                        "show subtitles",
+                        "turn subtitles on"
+                    ]
+                },
+                {
+                    "name": "SubtitlesOffIntent",
+                    "slots": [],
+                    "samples": [
+                        "hide subtitles",
+                        "turn subtitles off"
+                    ]
+                },
+                {
+                    "name": "SeekIntent",
+                    "slots": [
+                        {
+                            "name": "direction",
+                            "type": "directionType"
+                        },
+                        {
+                            "name": "duration",
+                            "type": "AMAZON.DURATION"
+                        }
+                    ],
+                    "samples": [
+                        "go {direction} {duration}",
+                        "go {direction}",
+                        "fast {direction}",
+                        "fast {direction} {duration}",
+                        "seek {direction}",
+                        "skip {direction}",
+                        "seek {direction} {duration}",
+                        "skip {direction} {duration}"
+                    ]
+                },
+                {
+                    "name": "MuteIntent",
+                    "slots": [],
+                    "samples": [
+                        "mute",
+                        "mute sound",
+                        "mute volume"
+                    ]
+                },
+                {
+                    "name": "UnMuteIntent",
+                    "slots": [],
+                    "samples": [
+                        "unmute sound",
+                        "unmute volume",
+                        "unmute"
+                    ]
+                },
+                {
+                    "name": "PlayMusicIntent",
+                    "slots": [
+                        {
+                            "name": "song",
+                            "type": "AMAZON.MusicRecording"
+                        },
+                        {
+                            "name": "album",
+                            "type": "AMAZON.MusicAlbum"
+                        },
+                        {
+                            "name": "artist",
+                            "type": "AMAZON.Artist"
+                        },
+                        {
+                            "name": "play",
+                            "type": "playType"
+                        },
+                        {
+                            "name": "app",
+                            "type": "AppName"
+                        },
+                        {
+                            "name": "room",
+                            "type": "AMAZON.Room"
+                        }
+                    ],
+                    "samples": [
+                        "{play} the song {song} in {room}",
+                        "{play} the album {album} in {room}",
+                        "{play} the album {album} on {app}",
+                        "{play} the song {song} on {app}",
+                        "{play} songs by {artist} in {room}",
+                        "{play} songs by {artist} on {app}",
+                        "{play} song {song} by {artist}",
+                        "{play} album {album} by {artist}",
+                        "{play} the album {album} by {artist}",
+                        "{play} songs by {artist}",
+                        "{play} the song {song} by {artist}",
+                        "{play} album {album}",
+                        "{play} song {song}",
+                        "{play} the album {album}",
+                        "{play} the song {song}"
+                    ]
+                },
+                {
+                    "name": "AMAZON.ShuffleOnIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.ShuffleOffIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.LoopOffIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.LoopOnIntent",
+                    "samples": []
+                },
+                {
+                    "name": "PlayEpisodeIntent",
+                    "slots": [
+                        {
+                            "name": "play",
+                            "type": "playType"
+                        },
+                        {
+                            "name": "tvshow",
+                            "type": "titleType"
+                        },
+                        {
+                            "name": "app",
+                            "type": "AppName"
+                        },
+                        {
+                            "name": "room",
+                            "type": "AMAZON.Room"
+                        },
+                        {
+                            "name": "seasnum",
+                            "type": "AMAZON.NUMBER"
+                        },
+                        {
+                            "name": "epnum",
+                            "type": "AMAZON.NUMBER"
+                        }
+                    ],
+                    "samples": [
+                        "{play} season {seasnum} episode {epnum} of {tvshow} on {app}",
+                        "{play} season {seasnum} episode {epnum} of {tvshow} in {room}",
+                        "{play} episode {seasnum} of season {epnum} of {tvshow} on {app}",
+                        "{play} episode {seasnum} of season {epnum} of {tvshow} in {room}",
+                        "{play} episode {seasnum} of season {epnum} of {tvshow}",
+                        "{play} episode {seasnum} season {epnum} of {tvshow}",
+                        "{play} season {seasnum} episode {epnum} of {tvshow}"
                     ]
                 }
             ],
@@ -189,6 +422,318 @@
                         {
                             "name": {
                                 "value": "youtube"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "ToggleType",
+                    "values": [
+                        {
+                            "name": {
+                                "value": "off",
+                                "synonyms": [
+                                    "hide"
+                                ]
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "on",
+                                "synonyms": [
+                                    "show"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "playType",
+                    "values": [
+                        {
+                            "name": {
+                                "value": "find"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "play"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "mediaType",
+                    "values": [
+                        {
+                            "name": {
+                                "value": "episode",
+                                "synonyms": [
+                                    "the episode"
+                                ]
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "playlist",
+                                "synonyms": [
+                                    "the playlist"
+                                ]
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "movie",
+                                "synonyms": [
+                                    "the movie"
+                                ]
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "music video",
+                                "synonyms": [
+                                    "the music video"
+                                ]
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "show",
+                                "synonyms": [
+                                    "the t.v. show",
+                                    "t.v. show",
+                                    "the series",
+                                    "the show",
+                                    "series"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "directionType",
+                    "values": [
+                        {
+                            "name": {
+                                "value": "forward",
+                                "synonyms": [
+                                    "forwards",
+                                    "ahead"
+                                ]
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "back",
+                                "synonyms": [
+                                    "backwards"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "actionType",
+                    "values": [
+                        {
+                            "name": {
+                                "value": "episode"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "match"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "titleType",
+                    "values": [
+                        {
+                            "name": {
+                                "value": "izombie"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "firefly"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "the big bang theory"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "the one hundred"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "twelve monkeys"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "babylon five"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "the force awakens"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "return of the jedi"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "the empire strikes back"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "star ways"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "deep space nine"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "voyager"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "star trek"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "battlestar galactica"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "mythic quest"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "rise of the guardians"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "indiana jones and the last crusade"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "ninteen seventeen"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "up"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "mortal kombat"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "wolverine"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "deadpool"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "godzilla vs kong"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "I know what you did last summer"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "sherlock holmes"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "doctor who"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "friends"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "golden eye"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "back to the future"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "ant man"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "spider man"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "iron man"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "captain america"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "fantastic four"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "alien"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "guardians of the galaxy"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "the matrix"
                             }
                         }
                     ]
@@ -215,27 +760,53 @@
                 },
                 {
                     "name": "RestartIntent",
-                    "confirmationRequired": true,
-                    "prompts": {
-                        "confirmation": "Confirm.Intent.694744913486"
-                    },
+                    "confirmationRequired": false,
+                    "prompts": {},
                     "slots": []
                 },
                 {
-                    "name": "PlayOnAppIntent",
+                    "name": "PlayMediaIntent",
                     "confirmationRequired": false,
                     "prompts": {},
                     "slots": [
                         {
-                            "name": "video",
-                            "type": "AMAZON.Movie",
+                            "name": "room",
+                            "type": "AMAZON.Room",
                             "confirmationRequired": false,
                             "elicitationRequired": false,
                             "prompts": {}
                         },
                         {
-                            "name": "room",
-                            "type": "AMAZON.Room",
+                            "name": "app",
+                            "type": "AppName",
+                            "confirmationRequired": false,
+                            "elicitationRequired": false,
+                            "prompts": {}
+                        },
+                        {
+                            "name": "title",
+                            "type": "titleType",
+                            "confirmationRequired": false,
+                            "elicitationRequired": false,
+                            "prompts": {}
+                        },
+                        {
+                            "name": "play",
+                            "type": "playType",
+                            "confirmationRequired": false,
+                            "elicitationRequired": false,
+                            "prompts": {}
+                        },
+                        {
+                            "name": "type",
+                            "type": "mediaType",
+                            "confirmationRequired": false,
+                            "elicitationRequired": false,
+                            "prompts": {}
+                        },
+                        {
+                            "name": "tvshow",
+                            "type": "titleType",
                             "confirmationRequired": false,
                             "elicitationRequired": false,
                             "prompts": {}
@@ -257,6 +828,12 @@
                             }
                         }
                     ]
+                },
+                {
+                    "name": "SubtitlesOnIntent",
+                    "confirmationRequired": false,
+                    "prompts": {},
+                    "slots": []
                 }
             ],
             "delegationStrategy": "ALWAYS"
@@ -286,6 +863,24 @@
                     {
                         "type": "PlainText",
                         "value": "Please say a number between one and ten to set the volume to"
+                    }
+                ]
+            },
+            {
+                "id": "Elicit.Slot.112384560784.517706401128",
+                "variations": [
+                    {
+                        "type": "PlainText",
+                        "value": "What episode number"
+                    }
+                ]
+            },
+            {
+                "id": "Elicit.Slot.112384560784.571180358300",
+                "variations": [
+                    {
+                        "type": "PlainText",
+                        "value": "what season number"
                     }
                 ]
             }

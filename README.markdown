@@ -1,6 +1,6 @@
 # Alexa Chromecast Skill
 
-Allows Amazon Alexa to control Google Chromecast
+Allows Amazon Alexa to control your Google Chromecast
 
 This skill supports controlling a single Chromecast or multiple Chromecasts in different rooms.
 Each Alexa device can be set to control a different room. This is done by matching the room name to your Chromecast device's name.
@@ -19,66 +19,69 @@ To change the room a particular Alexa device controls you can say:
 ###Standard commands
 The following media commands are available:
 ```
+ VOICE COMMAND         ACTION
+ --------------------------------------------------------------------------------
  pause                 -> Pause a playing item
  play                  -> Play a paused item
- stop                  -> Stop the playing item (and application)
+ stop                  -> Stop the currently playing item
  set volume to 5       -> Change the volume between 0 and 10
  mute                  -> mute the volume
  unmute                -> unmute the volume
- rewind                -> Restart the playing item (restart does the same thing)
- rewind 30 seconds     -> Rewind back 30 seconds (skip back/seek back/go back do the same thing)
- fast forward          -> Fast forward 30 seconds (skip forward/seek forward/go forward do the same thing) 
+ rewind                -> Rewind back 15 seconds
+ rewind 30 seconds     -> Rewind back 30 seconds
+ fast forward          -> Fast forward 15 seconds 
  fast forward 1 minute -> Fast forward 1 minute
- restart device        -> Restarts the Chromecast (reboot does the same thing)
- open plex             -> Opens the Plex app
- open youtube          -> Opens the YouTube app
+ restart               -> Restarts the media item from the beginning
+ next                  -> Play or show the next item
+ previous              -> Play or show the previous item
+ open {app}            -> Opena specific app. Plex and YouTube are supported.
  ```
 
 ###YouTube app commands
-Find or play creates a list of 5 items.
-You can use "next match" and "previous match" to go through it.   
+Play items on YouTube.
 ```
+ VOICE COMMAND        ACTION
+ --------------------------------------------------------------------------------
  play {title}         -> Searches and queues 5 items matching the title
  play {title} trailer -> Searches and plays any matching trailer for the title
- next match     -> Play the next item in the queue
- previous match -> Play the previous item in the queue
 ```
 
 ###Plex app commands
-The find or play command creates a queue of 10 items.
-You can use "next match" and "previous match" to move through it.   
+Find and play items on your Plex server.
+* The Find command will display the item that was found.
+* The Play command will immediately play the item that was found.
 ```
- play                        -> Resumes from pause, or plays the displayed item
- stop                        -> Stops playing and displays the item details
- play/find {title}           -> Play/Find the title
- play/find the show {title}  -> Play/Find a show matching the title
- play/find the movie {title} -> Play/Find a movie matching the title
- play/find the song {title}  -> Play/Find a song matching the title
- play/find the album {title} -> Play/Find an album matching the title
- 
- play the playlist {title}   -> Play an album matching the title
- play songs by {artist}      -> Shuffle and play songs by the specified artist
- next match                  -> Play or show the next item in the queue
- previous match              -> Play or show the previous item in the queue
- turn on subtitles           -> Turns on subtitles in the configurged language
- turn off subtitles          -> Turns off subtitles
- switch audio                -> Switches to another audio track if available (e.g. to the directors commentry)
- 
- play {show} season {#}             -> Start playing the specified show and season
- play {show} season {#} episode {#} -> Start playing the specified show episode
- next episode                       -> Play or show the next TV show episode
- previous episode                   -> Play or show the previous TV show episode
-  
+ VOICE COMMAND                    ACTION
+ ---------------------------------------------------------------------------------
+ play                             -> Resumes from pause, or plays the displayed item
+ stop                             -> Stops playing and displays the item details
+ play/find {title}                -> Play/Find the title
+ play/find the tv show {title}    -> Play/Find a tv show matching the title
+ play/find the movie {title}      -> Play/Find a movie matching the title
+ play/find the song {title}       -> Play/Find a song matching the title
+ play/find the album {title}      -> Play/Find an album matching the title
+ play/find the playlist {title}   -> Play/Find a playlist matching the title
+ play/find songs by {artist}      -> Play/Find songs by the specified artist
+ turn on subtitles                -> Turns on subtitles in the configurged language
+ turn off subtitles               -> Turns off subtitles
+ switch audio                     -> Switches to another audio track if available
+                                     (e.g. to the directors commentry)
+ play/find the episode {title} of -> Play/Find the specified show episode
+                           {show}                     
+ play/find season {#} episode {#} -> Play/Find the specified show episode
+                        of {show}
 ```
 
 ##Example Commands
-> Alexa, ask Chromecast to play Mythic Quest on plex
-> 
-> Alexa, ask Chromecast to play The Matrix trailer
->
 > Alexa, ask Chromecast to pause
 >
 > Alexa, ask Chromecast to resume
+>
+> Alexa, ask Chromecast to rewind 2 minutes
+>
+> Alexa, ask Chromecast to play Mythic Quest on Plex
+> 
+> Alexa, ask Chromecast to play The Matrix trailer
 
 ## How it works
 

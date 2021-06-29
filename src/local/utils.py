@@ -23,3 +23,7 @@ def parse_iso_duration(s):
     # Convert all to seconds
     dt = datetime.timedelta(days=int(days), hours=int(hours), minutes=int(minutes), seconds=int(seconds))
     return int(dt.total_seconds())
+
+
+def get_dict_val(items: dict, key, default):
+    return items[key] if key in items.keys() else default

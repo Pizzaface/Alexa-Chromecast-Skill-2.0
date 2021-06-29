@@ -2,6 +2,7 @@ import os
 import logging
 import boto3
 import json
+from word2number import w2n
 import ask_sdk_core.utils as ask_utils
 
 from ask_sdk_core.dispatch_components import AbstractRequestHandler
@@ -14,6 +15,7 @@ from ask_sdk_core.skill_builder import CustomSkillBuilder
 from ask_sdk_model import Response
 from ask_sdk_model import ui
 import lambda_function.utils as utils
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -161,7 +163,7 @@ class SetRoomIntentHandler(BaseIntentHandler):
         room = utils.get_slot_value(handler_input, 'room')  # Must have a value enforced by Alexa dialog
         utils.set_persistent_session_attribute(handler_input, 'DEVICE_' + device_id, room)
         handler_input.attributes_manager.save_persistent_attributes()
-        speak_output = 'Ok, this Alexa device will control the Chromecast in the %s. To control another room you can say something like: Alexa, play in the media room.' % room
+        speak_output = 'Ok, this Alexa device will control the Chromecast in the %s.' % room
         return (
             handler_input.response_builder
                 .speak(speak_output)
@@ -213,6 +215,15 @@ class SetVolumeIntentHandler(BaseIntentHandler):
         return {"volume": volume}
 
 
+class VolumeJumpIntentHandler(BaseIntentHandler):
+    def get_action(self):
+        return 'set-volume'
+
+    def get_data(self, handler_input):
+        jump = utils.get_slot_value(handler_input, 'jump')
+        return {"jump": jump}
+
+
 class PreviousIntentHandler(BaseIntentHandler):
     def match_other_intent_names(self):
         return ['AMAZON.PreviousIntent']
@@ -239,18 +250,20 @@ class NextIntentHandler(BaseIntentHandler):
         }
 
 
-class ShuffleIntentHandler(BaseIntentHandler):
+class ShuffleOnIntentHandler(BaseIntentHandler):
     def match_other_intent_names(self):
-        return ['AMAZON.ShuffleOnIntent', 'AMAZON.ShuffleOffIntent']
+        return ['AMAZON.ShuffleOnIntent']
 
     def get_action(self):
-        return 'shuffle'
+        return 'shuffle-on'
 
-    def get_data(self, handler_input):
-        is_on = ask_utils.is_intent_name('AMAZON.ShuffleOnIntent')(handler_input)
-        return {
-            "on": is_on
-        }
+
+class ShuffleOffIntentHandler(BaseIntentHandler):
+    def match_other_intent_names(self):
+        return ['AMAZON.ShuffleOffIntent']
+
+    def get_action(self):
+        return 'shuffle-off'
 
 
 class LoopIntentHandler(BaseIntentHandler):
@@ -274,7 +287,7 @@ class RewindIntentHandler(BaseIntentHandler):
 
     def get_data(self, handler_input):
         return {
-            "duration": utils.get_slot_value(handler_input, 'duration', '')
+            "duration": utils.get_slot_value(handler_input, 'duration', 'PT15S')
         }
 
 
@@ -292,7 +305,12 @@ class UnMuteIntentHandler(BaseIntentHandler):
 
 class RestartIntentHandler(BaseIntentHandler):
     def get_action(self):
-        return 'restart'
+        return 'rewind'
+
+    def get_data(self, handler_input):
+        return {
+            "direction": utils.get_slot_value(handler_input, 'direction', '')
+        }
 
 
 class PlayTrailerIntentHandler(BaseIntentHandler):
@@ -312,28 +330,26 @@ class SeekIntentHandler(BaseIntentHandler):
 
     def get_data(self, handler_input):
         return {
-            "duration": utils.get_slot_value(handler_input, 'duration', 'PT30S'),  # 30 seconds
+            "duration": utils.get_slot_value(handler_input, 'duration', 'PT15S'),  # 15 seconds
             "direction": utils.get_slot_value(handler_input, 'direction', 'forward')
         }
-
-    def get_response(self, data):
-        return 'Playing trailer for %s' % data['title']
 
 
 class PlayEpisodeIntentHandler(BaseIntentHandler):
     def get_action(self):
-        return 'play-episode'
+        return 'play-media'
 
     def get_data(self, handler_input):
-        params = ['epnum', 'seasnum', 'title', 'tvshow']
-        return {
+        params = ['play', 'epnum', 'seasnum', 'tvshow', 'app', 'room']
+        results = {
             param: utils.get_slot_value(handler_input, param, '') for param in params
         }
+        results['type'] = 'show'
+        return {key: value for key, value in results.items() if value}
 
     def get_response(self, data):
-        if data['epnum']:
-            return f'Playing episode {data["epnum"]} of season {data["seasnum"]} of {data["tvshow"]}'
-        return f'Playing the episode {data["title"]} of {data["tvshow"]}'
+        play = ('Playing ' if data['play'] == 'play' else 'Finding ')
+        return f'{play} episode {data["epnum"]} of season {data["seasnum"]} of {data["tvshow"]}'
 
 
 class PlayMediaIntentHandler(BaseIntentHandler):
@@ -341,66 +357,69 @@ class PlayMediaIntentHandler(BaseIntentHandler):
         return 'play-media'
 
     def get_data(self, handler_input):
-        params = ['play', 'app', 'room', 'title', 'song', 'album', 'artist', 'playlist', 'tvshow', 'movie']
+        params = ['play', 'app', 'room', 'title', 'song', 'album', 'artist', 'type', 'tvshow', 'epnum', 'seasnum']
         result = {
             param:
-                utils.get_slot_value(handler_input, param, '').lower().
-                replace('the playlist', '').
-                replace('the album', '').
-                replace('the tv show', '').
-                replace('the show', '').
-                replace('the t. v. show', '').
-                replace('the t. v. series', '')
+                utils.get_slot_value(handler_input, param, '').lower()
             for param in params
-            if utils.get_slot_value(handler_input, param, '')
         }
-        return result
+        transform = ['song', 'album', 'artist']
+        for trans in transform:
+            if result[trans]:
+                result['title'] = result[trans]
+                result['type'] = trans
+        transform = ['show', 'movie', 'playlist', 'series', 'music video', 'episode']
+        for trans in transform:
+            if trans in result['type']:
+                result['type'] = 'show' if trans == 'series' else trans
 
-    @staticmethod
-    def __build_param(data, param, prompt='', prefix='the'):
-        if not prompt:
-            prompt = param
-        value = data[param] if param in data else ''
-        return f' {prefix} {prompt} {value}' if value else ''
+        if result['tvshow'] and 'season' in result['title'] and 'episode' in result['title']:
+            # season one episode one
+            # episode one season one
+            title = result['title']
+            result['type'] = 'show'
+            result['title'] = result['tvshow']
+            result['tvshow'] = ''
+            if title.startswith('season'):
+                title = title.replace('season', '')
+                title = title.split('episode')
+                result['seasnum'] = w2n.word_to_num(title[0])
+                result['epnum'] = w2n.word_to_num(title[1])
+            else:
+                title = title.replace('episode', '')
+                title = title.split('season')
+                result['epnum'] = w2n.word_to_num(title[0])
+                result['seasnum'] = w2n.word_to_num(title[1])
+
+        return {key: value for key, value in result.items() if value}
 
     def get_response(self, data):
-        title = data["title"] if "title" in data else ""
-        song = data["song"] if "song" in data else ""
-        album = data["album"] if "album" in data else ""
-        play = data["play"] if "play" in data else ""
-        return (
-            ('Playing ' if play == 'play' else 'Finding ') +
-            f' {title} ' +
-            self.__build_param(data, 'playlist') +
-            self.__build_param(data, 'album') +
-            self.__build_param(data, 'song') +
-            self.__build_param(data, 'tvshow', prompt='tv show') +
-            self.__build_param(data, 'movie') +
-            self.__build_param(data, 'artist',
-                               prompt='by' if song or album else 'songs by',
-                               prefix='') +
-            self.__build_param(data, 'app', prompt='on', prefix='') +
-            self.__build_param(data, 'room', prompt='in', prefix='')
-        )
+        title = data['title'] if 'title' in data.keys() else ''
+        play = data['play'] if 'play' in data.keys() else ''
+        media_type = data['type'] if 'type' in data.keys() else ''
+        tv_show = data['tvshow'] if 'tvshow' in data.keys() else ''
 
-
-class PlayShowIntentHandler(PlayMediaIntentHandler):
-    pass
+        msg = 'Playing ' if play == 'play' else 'Finding '
+        if media_type in ['song', 'album', 'artist', 'playlist', 'movie']:
+            msg += f'{media_type} {title}'
+        elif media_type == 'show':
+            msg += f'tv show {title}'
+        elif media_type == 'episode':
+            msg += f'{title} of {tv_show}'
+        else:
+            msg += f'{title}'
+        if 'app' in data.keys() and data['app']:
+            msg += f' on {data["app"]}'
+        if 'room' in data.keys() and data['room']:
+            msg += f' in {data["room"]}'
+        return msg
 
 
 class PlayMusicIntentHandler(PlayMediaIntentHandler):
     pass
 
 
-class PlayMovieIntentHandler(PlayMediaIntentHandler):
-    pass
-
-
-class PlayPlaylistIntentHandler(PlayMediaIntentHandler):
-    pass
-
-
-class SubtitleOnIntentHandler(BaseIntentHandler):
+class SubtitlesOnIntentHandler(BaseIntentHandler):
     def get_action(self):
         return 'subtitle-on'
 
@@ -408,7 +427,7 @@ class SubtitleOnIntentHandler(BaseIntentHandler):
         return 'Turning subtitles on'
 
 
-class SubtitleOffIntentHandler(BaseIntentHandler):
+class SubtitlesOffIntentHandler(BaseIntentHandler):
     def get_action(self):
         return 'subtitle-off'
 
@@ -439,7 +458,9 @@ class HelpIntentHandler(AbstractRequestHandler):
 
 
 class CancelIntentHandler(AbstractRequestHandler):
-    """Single handler for Cancel and Stop Intent."""
+    """
+    Single handler for Cancel and Stop Intent.
+    """
 
     def can_handle(self, handler_input):
         # type: (HandlerInput) -> bool
@@ -457,7 +478,9 @@ class CancelIntentHandler(AbstractRequestHandler):
 
 
 class SessionEndedRequestHandler(AbstractRequestHandler):
-    """Handler for Session End."""
+    """
+    Handler for Session End.
+    """
 
     def can_handle(self, handler_input):
         return ask_utils.is_request_type("SessionEndedRequest")(handler_input)
@@ -467,7 +490,8 @@ class SessionEndedRequestHandler(AbstractRequestHandler):
 
 
 class IntentReflectorHandler(AbstractRequestHandler):
-    """The intent reflector is used for interaction model testing and debugging.
+    """
+    The intent reflector is used for interaction model testing and debugging.
     It will simply repeat the intent the user said. You can create custom handlers
     for your intents by defining them above, then also adding them to the request
     handler chain below.
@@ -491,7 +515,8 @@ class IntentReflectorHandler(AbstractRequestHandler):
 
 
 class CatchAllExceptionHandler(AbstractExceptionHandler):
-    """Generic error handling to capture any syntax or routing errors. If you receive an error
+    """
+    Generic error handling to capture any syntax or routing errors. If you receive an error
     stating the request handler chain is not found, you have not implemented a handler for
     the intent being invoked or included it in the skill builder below.
     """
@@ -530,6 +555,7 @@ try:
     sb.add_request_handler(PlayIntentHandler())
     sb.add_request_handler(StopIntentHandler())
     sb.add_request_handler(SetVolumeIntentHandler())
+    sb.add_request_handler(VolumeJumpIntentHandler())
     sb.add_request_handler(PreviousIntentHandler())
     sb.add_request_handler(NextIntentHandler())
     sb.add_request_handler(OpenIntentHandler())
@@ -538,21 +564,19 @@ try:
     sb.add_request_handler(RestartIntentHandler())
     sb.add_request_handler(MuteIntentHandler())
     sb.add_request_handler(UnMuteIntentHandler())
-    sb.add_request_handler(ShuffleIntentHandler())
+    sb.add_request_handler(ShuffleOnIntentHandler())
+    sb.add_request_handler(ShuffleOffIntentHandler())
     sb.add_request_handler(LoopIntentHandler())
 
     # Plex specific
     sb.add_request_handler(ChangeAudioIntentHandler())
-    sb.add_request_handler(SubtitleOnIntentHandler())
-    sb.add_request_handler(SubtitleOffIntentHandler())
+    sb.add_request_handler(SubtitlesOnIntentHandler())
+    sb.add_request_handler(SubtitlesOffIntentHandler())
 
     sb.add_request_handler(PlayTrailerIntentHandler())
     sb.add_request_handler(PlayMediaIntentHandler())
     sb.add_request_handler(PlayEpisodeIntentHandler())
-    sb.add_request_handler(PlayShowIntentHandler())
     sb.add_request_handler(PlayMusicIntentHandler())
-    sb.add_request_handler(PlayMovieIntentHandler())
-    sb.add_request_handler(PlayPlaylistIntentHandler())
 
     sb.add_request_handler(HelpIntentHandler())
     sb.add_request_handler(CancelIntentHandler())
