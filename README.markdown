@@ -137,9 +137,15 @@ When run you should see something like the following:
 2020-07-12 11:10:47,344 - local.SkillSubscriber - INFO - Received subscription confirmation...
 2020-07-12 11:10:47,431 - local.SkillSubscriber - INFO - Subscribed.
 ```
-### Finally
+### Setup the Chromecast that Alexa will control
 12. Say "Alexa ask Chromecast to play"
 The skill will take you through any required room setup.
+
+### Setup connection to Plex
+After running the skill as below `.custom_env` file will be created.
+Fill out the required Plex variables to allow the skill to connect to Plex.
+
+## Running Alexa Chromecast Skill
 
 ### Shell example
 
@@ -163,23 +169,19 @@ The skill subscriber (local) uses these environment variables:
 
 If you have run `aws configure`, you will not need to set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, or AWS_DEFAULT_REGION.
 
-## Scripts
+## Supporting Scripts
 
 ### aws-setup.sh
-
 Sets up an AWS environment for the Alexa Skill:
-
 1. Creates an IAM role for Alexa (with permissions for SNS)
 2. Creates an SNS topic to communicate over
 3. Creates an S3 persistent store for persisting the room to Alexa device mapping 
 4. Creates a Lambda function
 
 ### build-lambda-bundle.sh
-
 Creates a lambda-bundle.zip, which can be uploaded to an AWS Lambda function.
 
 ### aws-update-lambda.sh
-
 Runs build-lambda-bundle and automatically uploads the bundle to AWS Lambda.
 
 
