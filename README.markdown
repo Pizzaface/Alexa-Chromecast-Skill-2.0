@@ -34,7 +34,7 @@ The following media commands are available:
  restart               -> Restarts the media item from the beginning
  next                  -> Play or show the next item
  previous              -> Play or show the previous item
- open {app}            -> Opena specific app. Plex and YouTube are supported.
+ open {app}            -> Open a specific app. Plex and YouTube are supported.
  ```
 NOTE: stop doesn't work as expected on the Netflix app and is disabled.
 
