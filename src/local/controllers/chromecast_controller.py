@@ -1,14 +1,12 @@
 import logging
+import os
 import threading
 import time
 from datetime import datetime, timedelta
-
 import pychromecast
-
-from local import utils
+from local import utils, constants
 from local.controllers.plex_controller import MyPlexController
 from local.controllers.youtube_controller import MyYouTubeController
-from local.helpers import moviedb_search
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -51,11 +49,20 @@ class ChromecastWrapper:
         cc.media_controller.register_status_listener(self)
         cc.register_status_listener(self)
 
-        self._youtube_controller = MyYouTubeController()
-        cc.register_handler(self._youtube_controller)
+        self._plex_controller = None
+        self._youtube_controller = None
 
-        self._plex_controller = MyPlexController()
-        cc.register_handler(self._plex_controller)
+        if os.environ.get(constants.ENV_YOUTUBE_API_KEY):
+            self._youtube_controller = MyYouTubeController(cc)
+            cc.register_handler(self._youtube_controller)
+        else:
+            logger.warning('Youtube controller not loaded. Please set your Youtube API Key.')
+
+        if os.environ.get(constants.ENV_PLEX_IP_ADDRESS):
+            self._plex_controller = MyPlexController()
+            cc.register_handler(self._plex_controller)
+        else:
+            logger.warning('Plex controller not loaded. Please set your Plex configuration.')
 
     def new_media_status(self, status):
         pass
@@ -64,9 +71,9 @@ class ChromecastWrapper:
         pass
 
     def __get_controller(self, app=''):
-        if app == APP_YOUTUBE:
+        if app == APP_YOUTUBE and self.youtube_controller:
             return self.youtube_controller
-        if app == APP_PLEX:
+        if app == APP_PLEX and self.plex_controller:
             return self.plex_controller
         if app:
             logger.error(f'Unable to process command, the streaming application {app} is not supported')
@@ -176,8 +183,7 @@ class ChromecastController:
         self.get_chromecast(name).get_controller().play()
 
     def pause(self, data, name):
-        cc = self.get_chromecast(name)
-        cc.media_controller.pause()
+        self.get_chromecast(name).get_controller().pause()
 
     def shutdown(self, signum, frame):
         logger.info('Shutting down periodic Chromecast scanning')
@@ -225,11 +231,11 @@ class ChromecastController:
     def play_next(self, data, name):
         # mc.queue_next() didn't work
         cc = self.get_chromecast(name)
-        cc.get_controller().play_next(cc, data['action'] if 'action' in data else '')
+        cc.get_controller().play_next(data['action'] if 'action' in data else '')
 
     def play_previous(self, data, name):
         cc = self.get_chromecast(name)
-        cc.get_controller().play_previous(cc, data['action'] if 'action' in data else '')
+        cc.get_controller().play_previous(data['action'] if 'action' in data else '')
 
     def rewind(self, data, name):
         mc = self.get_chromecast(name).media_controller
@@ -257,17 +263,9 @@ class ChromecastController:
         else:
             cc.get_controller(streaming_app).find_item(data)
 
-    def play_trailer(self, data, name):
-        cc = self.get_chromecast(name)
-        yt = cc.youtube_controller
-        moviedb_result = moviedb_search.get_movie_trailer_youtube_id(data['title'])
-        video_id = moviedb_result["youtube_id"]
-        yt.play_video(video_id)
-        logger.info('video sent to chromecast, id: %s' % video_id)
-
     def restart(self, data, name):
         # Reboot is no longer supported
-        pass
+        self.rewind(data, name)
 
     def change_audio(self, data, name):
         plex_c = self.get_chromecast(name).plex_controller

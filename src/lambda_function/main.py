@@ -315,10 +315,10 @@ class RestartIntentHandler(BaseIntentHandler):
 
 class PlayTrailerIntentHandler(BaseIntentHandler):
     def get_action(self):
-        return 'play-trailer'
+        return 'play-media'
 
     def get_data(self, handler_input):
-        return {"title": utils.get_slot_value(handler_input, 'movie')}
+        return {"title": utils.get_slot_value(handler_input, 'movie'), "type": "trailer", "app": "youtube"}
 
     def get_response(self, data):
         return 'Playing trailer for %s' % data['title']

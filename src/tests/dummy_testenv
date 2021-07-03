@@ -1,15 +1,13 @@
-# Populate the values and copy this file to .testenv
-############ Test Environment #################
-# MovieDB API key, used to find trailer ids on youtube
-# Go to https://api.themoviedb.org/3 to request one
-MOVIEDB_API_KEY=
-
+################################################
 # PLEX Config - configure if you want to find and play items on plex
-# Plex server IP Address (not the hostname)
-PLEX_HOST=
+PLEX_IP_ADDRESS=
 PLEX_PORT=32400
 # Refer here on steps to get your token
 # https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/
 PLEX_TOKEN=
 PLEX_SUBTITLE_LANG=eng
+
+# To get a key follow the instructions here: https://sns-sdks.lkhardy.cn/python-youtube/getting_started/
+YOUTUBE_API_KEY=
 ################################################
+

@@ -45,8 +45,15 @@ Play items on YouTube.
 ```
  VOICE COMMAND        ACTION
  --------------------------------------------------------------------------------
- play {title}         -> Searches and queues 5 items matching the title
- play {title} trailer -> Searches and plays any matching trailer for the title
+ play/find {title}                 -> Play/find videos matching the title
+ play/find videos of {title}       -> Play/find videos matching the title
+ play/find the trailer for {title} -> Play/find trailers matching title
+ play/find the show {title}        -> Play/Find a Youtube show matching the title
+ play/find the movie {title}       -> Play/Find a Youtube movie matching the title
+ play/find the song {title}        -> Play/Find a song matching the title
+ play/find the album {title}       -> Play/Find an album matching the title
+ play/find the playlist {title}    -> Play/Find a playlist matching the title
+ play/find songs by {artist}       -> Play/Find songs by the specified artist
 ```
 
 ### Plex app commands
@@ -59,6 +66,7 @@ Find and play items on your Plex server.
  play                             -> Resumes from pause, or plays the displayed item
  stop                             -> Stops playing and displays the item details
  play/find {title}                -> Play/Find the title
+ play/find the video {title}      -> Play/Find the title
  play/find the tv show {title}    -> Play/Find a tv show matching the title
  play/find the movie {title}      -> Play/Find a movie matching the title
  play/find the song {title}       -> Play/Find a song matching the title
@@ -143,9 +151,17 @@ When run you should see something like the following:
 12. Say "Alexa ask Chromecast to play"
 The skill will take you through any required room setup.
 
-### Setup connection to Plex
+### Setup connection to Youtube
 After running the skill as below `.custom_env` file will be created.
+
+Fill out the required Youtube API Key to allow the skill to connect to Youtube.
+
+To get a key follow the instructions here: https://sns-sdks.lkhardy.cn/python-youtube/getting_started/
+
+### Setup connection to Plex
 Fill out the required Plex variables to allow the skill to connect to Plex.
+
+To get the required token https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/
 
 ## Running Alexa Chromecast Skill
 

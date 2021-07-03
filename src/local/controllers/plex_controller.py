@@ -10,7 +10,7 @@ from plexapi.exceptions import Unauthorized, NotFound
 from plexapi.server import PlexServer
 from pychromecast.controllers.plex import PlexController, media_to_chromecast_command
 
-from local import utils
+from local import utils, constants
 from local.controllers.media_controller import MediaExtensions
 
 logger = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ class MyPlexController(PlexController, MediaExtensions):
     def __init__(self):
         self.__current_item = None
         self.__plex_server = None
-        self._subtitle_code = os.environ.get('PLEX_SUBTITLE_LANG', 'eng')
+        self._subtitle_code = os.environ.get(constants.ENV_PLEX_SUBTITLE_LANG, 'eng')
         self.__shuffle = 0
         self.__loop = 0
         super().__init__()
@@ -73,10 +73,12 @@ class MyPlexController(PlexController, MediaExtensions):
         else:
             logger.warning('No current item to shuffle.')
 
-    def play_previous(self, chromecast, action=''):
+    def play_previous(self, action=''):
+        if self.status.current_time >= 10:
+            self.rewind()
         self.previous()
 
-    def play_next(self, chromecast, action=''):
+    def play_next(self, action=''):
         self.next()
 
     def get_media_index(self):
@@ -170,19 +172,19 @@ class MyPlexController(PlexController, MediaExtensions):
 
     @classmethod
     def __get_plex_server(cls) -> Optional[PlexServer]:
-        hostname = os.environ.get('PLEX_HOST')
-        port = os.environ.get('PLEX_PORT')
+        ip_address = os.environ.get(constants.ENV_PLEX_IP_ADDRESS)
+        port = os.environ.get(constants.ENV_PLEX_PORT)
         port = int(port) if port else False
-        token = os.environ.get('PLEX_TOKEN')
-        if not hostname or not port or not token:
+        token = os.environ.get(constants.ENV_PLEX_TOKEN)
+        if not ip_address or not port or not token:
             msg = 'Plex config is not set, set these in .custom_env'
             logger.warning(msg)
             raise PlexControllerError(msg)
 
-        logger.info(f'Plex Host: {hostname}, Port: {port}')
+        logger.info(f'Plex IP: {ip_address}, Port: {port}')
         logger.info('Looking up Plex server certificate...')
-        cert_common_name = cls.__get_ssl_cert_name(hostname, port)
-        plex_address = f'https://{hostname.replace(".", "-")}{cert_common_name}:{port}'
+        cert_common_name = cls.__get_ssl_cert_name(ip_address, port)
+        plex_address = f'https://{ip_address.replace(".", "-")}{cert_common_name}:{port}'
         try:
             return PlexServer(plex_address, token)
         except Unauthorized:

@@ -5,11 +5,11 @@ from abc import ABC, abstractmethod
 class MediaExtensions(ABC):
 
     @abstractmethod
-    def play_previous(self, chromecast, action):
+    def play_previous(self, action):
         raise NotImplementedError()
 
     @abstractmethod
-    def play_next(self, chromecast, action):
+    def play_next(self, action):
         raise NotImplementedError()
 
     @abstractmethod
@@ -26,6 +26,18 @@ class MediaExtensions(ABC):
 
     @abstractmethod
     def shuffle_off(self):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def stop(self):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def play(self):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def pause(self):
         raise NotImplementedError()
 
     def _get_content_id(self):

@@ -408,6 +408,26 @@
                         "{play} episode {seasnum} season {epnum} of {tvshow}",
                         "{play} season {seasnum} episode {epnum} of {tvshow}"
                     ]
+                },
+                {
+                    "name": "VolumeJumpIntent",
+                    "slots": [
+                        {
+                            "name": "jump",
+                            "type": "jumpType",
+                            "samples": [
+                                "turn it down",
+                                "turn it up",
+                                "down",
+                                "up"
+                            ]
+                        }
+                    ],
+                    "samples": [
+                        "{jump} the volume",
+                        "turn {jump} the volume",
+                        "turn the volume {jump}"
+                    ]
                 }
             ],
             "types": [
@@ -465,6 +485,14 @@
                 {
                     "name": "mediaType",
                     "values": [
+                        {
+                            "name": {
+                                "value": "channel",
+                                "synonyms": [
+                                    "the channel"
+                                ]
+                            }
+                        },
                         {
                             "name": {
                                 "value": "episode",
@@ -737,6 +765,27 @@
                             }
                         }
                     ]
+                },
+                {
+                    "name": "jumpType",
+                    "values": [
+                        {
+                            "name": {
+                                "value": "down",
+                                "synonyms": [
+                                    "decrease"
+                                ]
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "up",
+                                "synonyms": [
+                                    "increase"
+                                ]
+                            }
+                        }
+                    ]
                 }
             ]
         },
@@ -834,6 +883,22 @@
                     "confirmationRequired": false,
                     "prompts": {},
                     "slots": []
+                },
+                {
+                    "name": "VolumeJumpIntent",
+                    "confirmationRequired": false,
+                    "prompts": {},
+                    "slots": [
+                        {
+                            "name": "jump",
+                            "type": "jumpType",
+                            "confirmationRequired": false,
+                            "elicitationRequired": true,
+                            "prompts": {
+                                "elicitation": "Elicit.Slot.1216431840580.531347833620"
+                            }
+                        }
+                    ]
                 }
             ],
             "delegationStrategy": "ALWAYS"
@@ -881,6 +946,15 @@
                     {
                         "type": "PlainText",
                         "value": "what season number"
+                    }
+                ]
+            },
+            {
+                "id": "Elicit.Slot.1216431840580.531347833620",
+                "variations": [
+                    {
+                        "type": "PlainText",
+                        "value": "do you want to turn the volume up, or down?"
                     }
                 ]
             }
