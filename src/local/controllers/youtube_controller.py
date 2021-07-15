@@ -1,5 +1,6 @@
 import logging
 import os
+import random
 
 from pychromecast import Chromecast
 from pychromecast.controllers.youtube import YouTubeController
@@ -31,28 +32,36 @@ class MyYouTubeController(YouTubeController, MediaExtensions):
     def __init__(self, chromecast: Chromecast):
         self.chromecast = chromecast
         self.__api = youtube_api.Api(api_key=os.environ.get(constants.ENV_YOUTUBE_API_KEY))
+        self.__current_results = None
         super().__init__()
 
     def receive_message(self, msg, data):
         logger.debug('Received: %s %s' % (msg, data))
         return YouTubeController.receive_message(self, msg, data)
 
-    def shuffle_on(self):
-        # TODO: Implement
+    def transcode(self, data):
+        # TODO: Change between HD and SD
         pass
+
+    def shuffle_on(self):
+        self.__play_videos(shuffle=True)
 
     def shuffle_off(self):
-        # TODO: Implement
+        self.__play_videos(shuffle=False)
+
+    def loop_on(self):
+        # TODO
         pass
 
-    def play_next(self, action=''):
+    def loop_off(self):
+        # TODO
+        pass
+
+    def next(self):
         self.chromecast.media_controller.queue_next()
 
-    def play_previous(self, action=''):
+    def previous(self):
         self.chromecast.media_controller.queue_prev()
-
-    def find_item(self, options):
-        self.play_item(options)
 
     def stop(self):
         self.chromecast.media_controller.stop()
@@ -85,11 +94,22 @@ class MyYouTubeController(YouTubeController, MediaExtensions):
                                            video_category_id=yt_category_id,
                                            limit=SEARCH_LIMIT)
 
+        self.__current_results = video_playlist
         if len(video_playlist.items) == 0:
             logger.info('Unable to find youtube media for: %s' % title)
             return
+        logger.info(
+            'Asked chromecast to play %i titles matching: %s on YouTube' % (len(video_playlist.items), title))
+        play_command = utils.get_dict_val(options, 'play', 'play')
+        self.__play_videos(shuffle=(play_command == 'shuffle'))
+
+    def __play_videos(self, shuffle=False, repeat=False):
         playing = False
-        for video in video_playlist.items:
+        items = self.__current_results.items
+        if shuffle:
+            items = items.copy()
+            random.shuffle(items)
+        for video in items:
             video_id = video.id.videoId
             video_playlist_id = video.id.playlistId
             if not playing:
@@ -99,5 +119,3 @@ class MyYouTubeController(YouTubeController, MediaExtensions):
                 playing = True
             else:
                 self.add_to_queue(video_id)
-        logger.info(
-            'Asked chromecast to play %i titles matching: %s on YouTube' % (len(video_playlist.items), title))

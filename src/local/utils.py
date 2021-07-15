@@ -25,7 +25,7 @@ def parse_iso_duration(s):
     return int(dt.total_seconds())
 
 
-def get_dict_val(items: dict, key, default):
+def get_dict_val(items: dict, key, default=None):
     if not items:
         return default
     return items[key] if key in items.keys() else default

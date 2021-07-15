@@ -4,6 +4,8 @@ from dotenv import load_dotenv
 
 def patch_path(func):
     class_name = str(func).replace('<function ', '').replace('<bound method ', '').split('.')[0]
+    if class_name.startswith(func.__name__):
+        return func.__module__ + '.' + func.__name__
     return func.__module__ + '.' + class_name + '.' + func.__name__
 
 

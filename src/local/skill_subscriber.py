@@ -15,6 +15,9 @@ from datetime import datetime
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+PING_SECS = 600
+UPNP_DISCOVERY_DELAY = 10
+
 
 class Subscriber(BaseHTTPRequestHandler):
     """
@@ -23,7 +26,6 @@ class Subscriber(BaseHTTPRequestHandler):
     """
 
     def __init__(self, skills, ip, port, topic_arn=os.getenv('AWS_SNS_TOPIC_ARN')):
-        self.PING_SECS = 600
         self.last_ping_sent = False
         self.last_ping_received: Optional[datetime] = None
         self.ping_thread = threading.Thread(target=self.ping)
@@ -58,21 +60,21 @@ class Subscriber(BaseHTTPRequestHandler):
                 raw_data = self.rfile.read(
                     int(self.headers['Content-Length']))
                 data = json.loads(raw_data)
-                topic_arn = self.headers.get('X-Amz-Sns-Topic-Arn')
-                type = data['Type']
+                header_topic_arn = self.headers.get('X-Amz-Sns-Topic-Arn')
+                msg_type = data['Type']
 
-                if type == 'SubscriptionConfirmation':
+                if msg_type == 'SubscriptionConfirmation':
                     logger.info('Received subscription confirmation...')
                     token = data['Token']
-                    instance.confirm_subscription(topic_arn, token)
+                    instance.confirm_subscription(header_topic_arn, token)
 
-                elif type == 'Notification':
-                    if data['Message']:
-                        logger.info('Received message:')
-                        logger.info(json.dumps(json.loads(data['Message']), indent=4, sort_keys=True))
-                        instance.dispatch_notification(json.loads(data['Message']))
+                elif msg_type == 'Notification' and data['Message']:
+                    logger.info('Received message:')
+                    logger.info(json.dumps(json.loads(data['Message']), indent=4, sort_keys=True))
+                    instance.dispatch_notification(json.loads(data['Message']))
 
             def log_message(self, format, *args):
+                # Left in case required for debugging
                 pass
 
         self.server: HTTPServer = HTTPServer(('', int(port) if port else 0), SNSRequestHandler)
@@ -97,7 +99,7 @@ class Subscriber(BaseHTTPRequestHandler):
         Sends a simple ping message to SNS
         """
         while not self.stopped:
-            if not self.last_ping_sent or (datetime.now() - self.last_ping_sent).total_seconds() > self.PING_SECS:
+            if not self.last_ping_sent or (datetime.now() - self.last_ping_sent).total_seconds() > PING_SECS:
                 sns_client = boto3.client("sns")
                 response = sns_client.list_subscriptions_by_topic(TopicArn=self.topic_arn)
                 subscriptions = response['Subscriptions']
@@ -106,9 +108,9 @@ class Subscriber(BaseHTTPRequestHandler):
                 else:
                     logger.info('%i clients are subscribed.' % len(subscriptions))
 
-                if self.last_ping_received and (
-                    datetime.now() - self.last_ping_received).total_seconds() > self.PING_SECS * 2:
-                    logger.error('No ping received for %i seconds. Restarting process...')
+                if (self.last_ping_received
+                    and (datetime.now() - self.last_ping_received).total_seconds() > PING_SECS * 2):
+                    logger.error(f'No ping received for {PING_SECS * 2} seconds. Restarting process...')
                     self.restart()
 
                 logger.info('Sending ping...')
@@ -117,7 +119,8 @@ class Subscriber(BaseHTTPRequestHandler):
             else:
                 time.sleep(1)
 
-    def restart(self):
+    @staticmethod
+    def restart():
         os.execl(sys.executable, sys.executable, *['-m', 'local.main'])
 
     def shutdown(self, signum, frame):
@@ -133,7 +136,7 @@ class Subscriber(BaseHTTPRequestHandler):
 
     def initialize_upnp(self):
         upnp = miniupnpc.UPnP()
-        upnp.discoverdelay = 10
+        upnp.discoverdelay = UPNP_DISCOVERY_DELAY
         upnp.discover()
         upnp.selectigd()
         self.upnp = upnp
@@ -141,12 +144,11 @@ class Subscriber(BaseHTTPRequestHandler):
     def get_external_ip(self):
         return get('https://api.ipify.org').text
 
-    """
-    Subscribes to receive message from SNS for the specified topic.
-    A subscription confirmation request should then be received from SNS.
-    """
-
     def subscribe(self):
+        """
+        Subscribes to receive message from SNS for the specified topic.
+        A subscription confirmation request should then be received from SNS.
+        """
         if not self.manual_port_forward:
             try:
                 self.upnp.addportmapping(

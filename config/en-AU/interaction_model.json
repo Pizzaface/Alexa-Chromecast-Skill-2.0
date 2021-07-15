@@ -106,7 +106,10 @@
                         },
                         {
                             "name": "title",
-                            "type": "titleType"
+                            "type": "titleType",
+                            "samples": [
+                                "{title}"
+                            ]
                         },
                         {
                             "name": "play",
@@ -134,26 +137,6 @@
                         "{play} {title} in {room}",
                         "{play} {title}",
                         "{play} {title} on {app}"
-                    ]
-                },
-                {
-                    "name": "PlayTrailerIntent",
-                    "slots": [
-                        {
-                            "name": "movie",
-                            "type": "AMAZON.Movie"
-                        },
-                        {
-                            "name": "room",
-                            "type": "AMAZON.Room"
-                        }
-                    ],
-                    "samples": [
-                        "play the trailer for {movie}",
-                        "play {movie} trailer in {room}",
-                        "play {movie} trailer",
-                        "play trailer for {movie} in {room}",
-                        "play trailer for {movie} "
                     ]
                 },
                 {
@@ -235,6 +218,8 @@
                         }
                     ],
                     "samples": [
+                        "go back {duration}",
+                        "go back",
                         "rewind back {duration}",
                         "rewind {duration}",
                         "rewind"
@@ -269,26 +254,20 @@
                     ]
                 },
                 {
-                    "name": "SeekIntent",
+                    "name": "FastForwardIntent",
                     "slots": [
-                        {
-                            "name": "direction",
-                            "type": "directionType"
-                        },
                         {
                             "name": "duration",
                             "type": "AMAZON.DURATION"
                         }
                     ],
                     "samples": [
-                        "go {direction} {duration}",
-                        "go {direction}",
-                        "fast {direction}",
-                        "fast {direction} {duration}",
-                        "seek {direction}",
-                        "skip {direction}",
-                        "seek {direction} {duration}",
-                        "skip {direction} {duration}"
+                        "go forward {duration}",
+                        "go forward",
+                        "fast forward",
+                        "fast forward {duration}",
+                        "seek forward",
+                        "seek forward {duration}"
                     ]
                 },
                 {
@@ -410,23 +389,71 @@
                     ]
                 },
                 {
-                    "name": "VolumeJumpIntent",
+                    "name": "VolumeChangeIntent",
                     "slots": [
                         {
-                            "name": "jump",
-                            "type": "jumpType",
-                            "samples": [
-                                "turn it down",
-                                "turn it up",
-                                "down",
-                                "up"
-                            ]
+                            "name": "raise_lower",
+                            "type": "volumeType"
                         }
                     ],
                     "samples": [
-                        "{jump} the volume",
-                        "turn {jump} the volume",
-                        "turn the volume {jump}"
+                        "{raise_lower} the volume",
+                        "turn {raise_lower} the volume",
+                        "turn the volume {raise_lower}"
+                    ]
+                },
+                {
+                    "name": "QualityIntent",
+                    "slots": [
+                        {
+                            "name": "raise_lower",
+                            "type": "volumeType"
+                        },
+                        {
+                            "name": "quality",
+                            "type": "qualityType"
+                        }
+                    ],
+                    "samples": [
+                        "set the quality to {quality}",
+                        "change the quality to {quality}",
+                        "{raise_lower} the quality",
+                        "{raise_lower} quality",
+                        "change quality to {quality}",
+                        "set quality to {quality}"
+                    ]
+                },
+                {
+                    "name": "PlayPhotosIntent",
+                    "slots": [
+                        {
+                            "name": "year",
+                            "type": "AMAZON.FOUR_DIGIT_NUMBER"
+                        },
+                        {
+                            "name": "play",
+                            "type": "playType"
+                        },
+                        {
+                            "name": "title",
+                            "type": "titleType"
+                        },
+                        {
+                            "name": "photo",
+                            "type": "photoType"
+                        },
+                        {
+                            "name": "month",
+                            "type": "AMAZON.Month"
+                        }
+                    ],
+                    "samples": [
+                        "{play} {photo} from {title} {year}",
+                        "{play} {photo} from {month} {year}",
+                        "{play} {photo} of {title}",
+                        "{play} {title} {photo}",
+                        "{play} {photo} from {title}",
+                        "{play} {photo} from {year}"
                     ]
                 }
             ],
@@ -472,6 +499,11 @@
                     "values": [
                         {
                             "name": {
+                                "value": "shuffle"
+                            }
+                        },
+                        {
+                            "name": {
                                 "value": "find"
                             }
                         },
@@ -485,6 +517,25 @@
                 {
                     "name": "mediaType",
                     "values": [
+                        {
+                            "name": {
+                                "value": "video",
+                                "synonyms": [
+                                    "videos of",
+                                    "the video",
+                                    "videos"
+                                ]
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "trailer",
+                                "synonyms": [
+                                    "the trailer for",
+                                    "the trailer"
+                                ]
+                            }
+                        },
                         {
                             "name": {
                                 "value": "channel",
@@ -540,28 +591,6 @@
                     ]
                 },
                 {
-                    "name": "directionType",
-                    "values": [
-                        {
-                            "name": {
-                                "value": "forward",
-                                "synonyms": [
-                                    "forwards",
-                                    "ahead"
-                                ]
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "back",
-                                "synonyms": [
-                                    "backwards"
-                                ]
-                            }
-                        }
-                    ]
-                },
-                {
                     "name": "actionType",
                     "values": [
                         {
@@ -579,6 +608,26 @@
                 {
                     "name": "titleType",
                     "values": [
+                        {
+                            "name": {
+                                "value": "goldeneye"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "dogs"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "cats"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "horses"
+                            }
+                        },
                         {
                             "name": {
                                 "value": "izombie"
@@ -626,7 +675,7 @@
                         },
                         {
                             "name": {
-                                "value": "star ways"
+                                "value": "star wars"
                             }
                         },
                         {
@@ -716,11 +765,6 @@
                         },
                         {
                             "name": {
-                                "value": "golden eye"
-                            }
-                        },
-                        {
-                            "name": {
                                 "value": "back to the future"
                             }
                         },
@@ -767,12 +811,14 @@
                     ]
                 },
                 {
-                    "name": "jumpType",
+                    "name": "volumeType",
                     "values": [
                         {
                             "name": {
                                 "value": "down",
                                 "synonyms": [
+                                    "reduce",
+                                    "lower",
                                     "decrease"
                                 ]
                             }
@@ -781,7 +827,69 @@
                             "name": {
                                 "value": "up",
                                 "synonyms": [
+                                    "raise",
                                     "increase"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "qualityType",
+                    "values": [
+                        {
+                            "name": {
+                                "value": "480p"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "1080p"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "720p"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "maximum",
+                                "synonyms": [
+                                    "max"
+                                ]
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "low"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "high"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "medium"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "photoType",
+                    "values": [
+                        {
+                            "name": {
+                                "value": "photo",
+                                "synonyms": [
+                                    "images",
+                                    "image",
+                                    "pictures",
+                                    "picture",
+                                    "photos",
+                                    "photograph"
                                 ]
                             }
                         }
@@ -836,8 +944,10 @@
                             "name": "title",
                             "type": "titleType",
                             "confirmationRequired": false,
-                            "elicitationRequired": false,
-                            "prompts": {}
+                            "elicitationRequired": true,
+                            "prompts": {
+                                "elicitation": "Elicit.Slot.1241238591241.1271902973253"
+                            }
                         },
                         {
                             "name": "play",
@@ -885,18 +995,16 @@
                     "slots": []
                 },
                 {
-                    "name": "VolumeJumpIntent",
+                    "name": "VolumeChangeIntent",
                     "confirmationRequired": false,
                     "prompts": {},
                     "slots": [
                         {
-                            "name": "jump",
-                            "type": "jumpType",
+                            "name": "raise_lower",
+                            "type": "volumeType",
                             "confirmationRequired": false,
-                            "elicitationRequired": true,
-                            "prompts": {
-                                "elicitation": "Elicit.Slot.1216431840580.531347833620"
-                            }
+                            "elicitationRequired": false,
+                            "prompts": {}
                         }
                     ]
                 }
@@ -950,11 +1058,11 @@
                 ]
             },
             {
-                "id": "Elicit.Slot.1216431840580.531347833620",
+                "id": "Elicit.Slot.1241238591241.1271902973253",
                 "variations": [
                     {
                         "type": "PlainText",
-                        "value": "do you want to turn the volume up, or down?"
+                        "value": "Please say a title?"
                     }
                 ]
             }

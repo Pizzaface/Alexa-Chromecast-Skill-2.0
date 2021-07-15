@@ -51,10 +51,7 @@ AWS_SECRET_ACCESS_KEY="$( /usr/bin/awk -F' = ' '$1 == "aws_secret_access_key" {p
 AWS_DEFAULT_REGION="$( /usr/bin/awk -F' = ' '$1 == "region" {print $2}' ~/.aws/config )"
 
 CONTAINER_NAME=alexa_chromecast
-if [ "$( docker container inspect -f '{{.State.Status}}' $CONTAINER_NAME )" == "running" ]; then
-  docker stop $CONTAINER_NAME
-fi
-
+docker stop $CONTAINER_NAME 2>/dev/null
 docker rm $CONTAINER_NAME 2>/dev/null
 
 docker build -t alexa-skill-chromecast .

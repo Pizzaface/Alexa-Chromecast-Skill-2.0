@@ -1,23 +1,22 @@
-import time
 from abc import ABC, abstractmethod
 
 
 class MediaExtensions(ABC):
 
     @abstractmethod
-    def play_previous(self, action):
+    def launch(self):
         raise NotImplementedError()
 
     @abstractmethod
-    def play_next(self, action):
+    def previous(self):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def next(self):
         raise NotImplementedError()
 
     @abstractmethod
     def play_item(self, options):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def find_item(self, options):
         raise NotImplementedError()
 
     @abstractmethod
@@ -29,7 +28,19 @@ class MediaExtensions(ABC):
         raise NotImplementedError()
 
     @abstractmethod
+    def loop_on(self):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def loop_off(self):
+        raise NotImplementedError()
+
+    @abstractmethod
     def stop(self):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def transcode(self, data):
         raise NotImplementedError()
 
     @abstractmethod
@@ -39,13 +50,3 @@ class MediaExtensions(ABC):
     @abstractmethod
     def pause(self):
         raise NotImplementedError()
-
-    def _get_content_id(self):
-        # On occasion content_id is not found
-        content_id = None
-        for _ in range(3):
-            content_id = self.status.content_id
-            if content_id:
-                break
-            time.sleep(1)
-        return content_id

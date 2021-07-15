@@ -1,5 +1,7 @@
 import os
 import logging
+from typing import Dict, List
+
 import boto3
 import json
 from word2number import w2n
@@ -15,21 +17,22 @@ from ask_sdk_core.skill_builder import CustomSkillBuilder
 from ask_sdk_model import Response
 from ask_sdk_model import ui
 import lambda_function.utils as utils
-
+from lambda_function.lang.language import Language, Key
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 AWS_SNS_ARN = os.getenv('AWS_SNS_ARN')
 AWS_S3_BUCKET = os.getenv('AWS_S3_BUCKET')
-CARD_TITLE = 'Alexa Chromecast Controller'
 
-HELP_TEXT = '''
-    Welcome to the Alexa Chromecast controller. This skill allows you to control your Chromecasts in different rooms.
-    An Alexa Device can be configured to control a Chromecast in a particular room.
-    Then you can say something like: Alexa, ask Chromecast to play, or: Alexa, ask Chromecast to pause.
-    Or you can control a specific room, by saying something like: Alexa, ask Chromecast to play in the media room.
-    '''
+
+def get_play_response(language, play_type):
+    result = language.get(Key.Playing)
+    if play_type == 'shuffle':
+        result = language.get(Key.Shuffling)
+    elif play_type == 'find':
+        result = language.get(Key.Finding)
+    return result
 
 
 class SNSPublishError(Exception):
@@ -48,11 +51,14 @@ class LaunchRequestHandler(AbstractRequestHandler):
             'AMAZON.NavigateHomeIntent')(handler_input)
 
     def handle(self, handler_input):
-        speak_output = HELP_TEXT
+        language = Language(handler_input.request_envelope.request.locale)
+        card_title = language.get(Key.CardTitle)
+        speak_output = language.get(Key.Help)
         return (
-            handler_input.response_builder
+            handler_input
+                .response_builder
                 .speak(speak_output)
-                .card(ui.SimpleCard(CARD_TITLE, speak_output))
+                .card(ui.SimpleCard(card_title, speak_output))
                 .response
         )
 
@@ -61,9 +67,15 @@ class BaseIntentHandler(AbstractRequestHandler):
     """
     Base handler for all intents
     """
-
     def get_action(self):
         raise NotImplementedError
+
+    @staticmethod
+    def get_slot_values(params: List[str], handler_input: HandlerInput):
+        results = {
+            param: utils.get_slot_value(handler_input, param, '') for param in params
+        }
+        return {key: value for key, value in results.items() if value}
 
     def get_intent_name(self):
         return self.__class__.__name__.replace('Handler', '')
@@ -71,7 +83,7 @@ class BaseIntentHandler(AbstractRequestHandler):
     def match_other_intent_names(self):
         return []
 
-    def can_handle(self, handler_input):
+    def can_handle(self, handler_input: HandlerInput):
         intents = [self.get_intent_name()]
         other_intents = self.match_other_intent_names()
         if other_intents:
@@ -81,13 +93,18 @@ class BaseIntentHandler(AbstractRequestHandler):
                 return True
         return False
 
-    def get_data(self, handler_input):
+    def get_data(self, handler_input: HandlerInput):
         return {}
 
-    def get_response(self, data):
-        return 'Ok'
+    def get_response(self, language: Language, data: Dict):
+        return language.get(Key.Ok)
 
-    def handle(self, handler_input):
+    def get_card_response(self, language: Language, data: Dict):
+        return self.get_response(language, data)
+
+    def handle(self, handler_input: HandlerInput):
+        language = Language(handler_input.request_envelope.request.locale)
+        card_title = language.get(Key.CardTitle)
         room = utils.get_slot_value(handler_input, 'room', '')
         if room and room.lower().startswith('the '):
             room = room[4:]
@@ -97,36 +114,41 @@ class BaseIntentHandler(AbstractRequestHandler):
         if not room:
             room = utils.get_persistent_session_attribute(handler_input, 'DEVICE_' + device_id, False)
             if not room:
-                speak_output = 'I need to set the room of the Chromecast that this Alexa device will control. Please say something like: set room to media room.'
+                speak_output = language.get(Key.SetTheRoom)
                 return (
-                    handler_input.response_builder
+                    handler_input
+                        .response_builder
                         .speak(speak_output)
-                        .ask('Please set the Chromecasts room, by saying something like: set room to media room.')
-                        .set_card(ui.SimpleCard(CARD_TITLE, speak_output))
+                        .ask(language.get(Key.ShortSetTheRoom))
+                        .set_card(ui.SimpleCard(card_title, speak_output))
                         .response
                 )
 
         try:
             data = self.get_data(handler_input)
             self.publish_command_to_sns(room, self.get_action(), data)
-            speak_output = self.get_response(data)
+            speak_output = self.get_response(language, data)
+            card_output = self.get_card_response(language, data)
             return (
-                handler_input.response_builder
+                handler_input
+                    .response_builder
                     .speak(speak_output)
-                    .set_card(ui.SimpleCard(CARD_TITLE, speak_output))
+                    .set_card(ui.SimpleCard(card_title, card_output))
                     .response
             )
         except SNSPublishError as error:
-            logger.error('Sending command to the Chromecast failed', exc_info=error)
-            speak_output = 'There was an error sending the command to the Chromecast. ' + error.message
+            logger.error(language.get(Key.LogErrorSnsPublish), exc_info=error)
+            speak_output = language.get(Key.ErrorSnsPublish) + error.message
             return (
-                handler_input.response_builder
+                handler_input
+                    .response_builder
                     .speak(speak_output)
-                    .set_card(ui.SimpleCard(CARD_TITLE, speak_output))
+                    .set_card(ui.SimpleCard(card_title, speak_output))
                     .response
             )
 
-    def publish_command_to_sns(self, room, command, data):
+    @staticmethod
+    def publish_command_to_sns(room: str, command: str, data: Dict):
         message = {
             "handler_name": "chromecast",
             "room": room,
@@ -134,11 +156,6 @@ class BaseIntentHandler(AbstractRequestHandler):
             "data": data
         }
         sns_client = boto3.client("sns")
-        # Disable check subscriptions - failed with a valid subscription
-        # response = sns_client.list_subscriptions()
-        # subscriptions = response['Subscriptions']
-        # if len(subscriptions) == 0:
-        #     raise SNSPublishError('No clients are subscribed.')
         response = sns_client.publish(
             TargetArn=AWS_SNS_ARN,
             Message=json.dumps({"default": json.dumps(message)}),
@@ -156,6 +173,7 @@ class BaseIntentHandler(AbstractRequestHandler):
 class SetRoomIntentHandler(BaseIntentHandler):
 
     def get_action(self):
+        # Nothing to do
         pass
 
     def handle(self, handler_input):
@@ -163,11 +181,14 @@ class SetRoomIntentHandler(BaseIntentHandler):
         room = utils.get_slot_value(handler_input, 'room')  # Must have a value enforced by Alexa dialog
         utils.set_persistent_session_attribute(handler_input, 'DEVICE_' + device_id, room)
         handler_input.attributes_manager.save_persistent_attributes()
-        speak_output = 'Ok, this Alexa device will control the Chromecast in the %s.' % room
+
+        language = Language(handler_input.request_envelope.request.locale)
+        speak_output = language.get(Key.ControlRoom, room=room)
+        card_title = language.get(Key.CardTitle)
         return (
             handler_input.response_builder
                 .speak(speak_output)
-                .set_card(ui.SimpleCard(CARD_TITLE, speak_output))
+                .set_card(ui.SimpleCard(card_title, speak_output))
                 .response
         )
 
@@ -177,7 +198,7 @@ class OpenIntentHandler(BaseIntentHandler):
         return 'open'
 
     def get_data(self, handler_input):
-        return {"app": utils.get_slot_value(handler_input, 'app')}
+        return self.get_slot_values(['app'], handler_input)
 
 
 class PlayIntentHandler(BaseIntentHandler):
@@ -210,18 +231,21 @@ class SetVolumeIntentHandler(BaseIntentHandler):
 
     def get_data(self, handler_input):
         volume = int(utils.get_slot_value(handler_input, 'volume'))
-        if volume > 10 or volume < 0:
-            return "Sorry, you can only set the volume between 0 and 10."
         return {"volume": volume}
 
+    def get_response(self, language: Language, data: Dict):
+        volume = data['volume']
+        if volume > 10 or volume < 0:
+            return language.get(Key.ErrorSetVolumeRange)
+        return super().get_response(language, data)
 
-class VolumeJumpIntentHandler(BaseIntentHandler):
+
+class VolumeChangeIntentHandler(BaseIntentHandler):
     def get_action(self):
         return 'set-volume'
 
     def get_data(self, handler_input):
-        jump = utils.get_slot_value(handler_input, 'jump')
-        return {"jump": jump}
+        return self.get_slot_values(['raise_lower'], handler_input)
 
 
 class PreviousIntentHandler(BaseIntentHandler):
@@ -232,9 +256,7 @@ class PreviousIntentHandler(BaseIntentHandler):
         return 'play-previous'
 
     def get_data(self, handler_input):
-        return {
-            "action": utils.get_slot_value(handler_input, 'action', '')
-        }
+        return self.get_slot_values(['action'], handler_input)
 
 
 class NextIntentHandler(BaseIntentHandler):
@@ -245,9 +267,7 @@ class NextIntentHandler(BaseIntentHandler):
         return 'play-next'
 
     def get_data(self, handler_input):
-        return {
-            "action": utils.get_slot_value(handler_input, 'action', '')
-        }
+        return self.get_slot_values(['action'], handler_input)
 
 
 class ShuffleOnIntentHandler(BaseIntentHandler):
@@ -266,18 +286,20 @@ class ShuffleOffIntentHandler(BaseIntentHandler):
         return 'shuffle-off'
 
 
-class LoopIntentHandler(BaseIntentHandler):
+class LoopOnIntentHandler(BaseIntentHandler):
     def match_other_intent_names(self):
-        return ['AMAZON.LoopOnIntent', 'AMAZON.LoopOffIntent']
+        return ['AMAZON.LoopOnIntent']
 
     def get_action(self):
-        return 'loop'
+        return 'loop-on'
 
-    def get_data(self, handler_input):
-        is_on = ask_utils.is_intent_name('AMAZON.LoopOnIntent')(handler_input)
-        return {
-            "on": is_on
-        }
+
+class LoopOffIntentHandler(BaseIntentHandler):
+    def match_other_intent_names(self):
+        return ['AMAZON.LoopOffIntent']
+
+    def get_action(self):
+        return 'loop-off'
 
 
 class RewindIntentHandler(BaseIntentHandler):
@@ -313,25 +335,13 @@ class RestartIntentHandler(BaseIntentHandler):
         }
 
 
-class PlayTrailerIntentHandler(BaseIntentHandler):
+class FastForwardIntentHandler(BaseIntentHandler):
     def get_action(self):
-        return 'play-media'
-
-    def get_data(self, handler_input):
-        return {"title": utils.get_slot_value(handler_input, 'movie'), "type": "trailer", "app": "youtube"}
-
-    def get_response(self, data):
-        return 'Playing trailer for %s' % data['title']
-
-
-class SeekIntentHandler(BaseIntentHandler):
-    def get_action(self):
-        return 'seek'
+        return 'fast-forward'
 
     def get_data(self, handler_input):
         return {
             "duration": utils.get_slot_value(handler_input, 'duration', 'PT15S'),  # 15 seconds
-            "direction": utils.get_slot_value(handler_input, 'direction', 'forward')
         }
 
 
@@ -341,15 +351,57 @@ class PlayEpisodeIntentHandler(BaseIntentHandler):
 
     def get_data(self, handler_input):
         params = ['play', 'epnum', 'seasnum', 'tvshow', 'app', 'room']
-        results = {
-            param: utils.get_slot_value(handler_input, param, '') for param in params
-        }
-        results['type'] = 'show'
-        return {key: value for key, value in results.items() if value}
+        result = self.get_slot_values(params, handler_input)
+        result['type'] = 'episode'
+        return result
 
-    def get_response(self, data):
-        play = ('Playing ' if data['play'] == 'play' else 'Finding ')
-        return f'{play} episode {data["epnum"]} of season {data["seasnum"]} of {data["tvshow"]}'
+    def get_response(self, language, data):
+        if 'epnum' not in data and 'seasnum' not in data:
+            return language.get(Key.ErrorEpisodeParams)
+        play = get_play_response(language, data['play'])
+        epnum = data['epnum'] if 'epnum' in data else ''
+        seasnum = data['seasnum'] if 'seasnum' in data else ''
+        tvshow = data["tvshow"]
+        if epnum and seasnum:
+            msg = language.get(Key.PlayEpisodeNumber, play=play, episode=epnum, season=seasnum, show=tvshow)
+        elif seasnum:
+            msg = language.get(Key.PlaySeason, play=play, season=seasnum, show=tvshow)
+        else:
+            msg = language.get(Key.PlayShow, play=play, show=tvshow)
+        if 'app' in data.keys() and data['app']:
+            msg += language.get(Key.OnApp, app=data['app'])
+        if 'room' in data.keys() and data['room']:
+            msg += language.get(Key.InRoom, room=data['room'])
+        return msg
+
+
+class PlayPhotosIntentHandler(BaseIntentHandler):
+    def get_action(self):
+        return 'play-photos'
+
+    def get_data(self, handler_input):
+        language = Language(handler_input.request_envelope.request.locale)
+        params = ['play', 'month', 'year', 'title']
+        result = self.get_slot_values(params, handler_input)
+        month = result['month'] if 'month' in result else ''
+        title = result['title'] if 'title' in result else ''
+        if month and month.lower() not in language.get(Key.ListMonths):
+            title = month + (' ' + title if title else '')
+            del result['month']
+            result['title'] = title
+        return result
+
+    def get_response(self, language, data):
+        play = get_play_response(language, data['play'])
+        year = data['year'] if 'year' in data else ''
+        title = data['title'] if 'title' in data else ''
+        month = data['month'] if 'month' in data else ''
+        if month and year:
+            return language.get(Key.PlayPhotosByDate, play=play, month=month, year=year)
+        elif title and year:
+            return language.get(Key.PlayPhotosByEvent, play=play, title=title, year=year)
+        elif title:
+            return language.get(Key.PlayPhotosByTitle, play=play, title=title)
 
 
 class PlayMediaIntentHandler(BaseIntentHandler):
@@ -357,7 +409,65 @@ class PlayMediaIntentHandler(BaseIntentHandler):
         return 'play-media'
 
     def get_data(self, handler_input):
-        params = ['play', 'app', 'room', 'title', 'song', 'album', 'artist', 'type', 'tvshow', 'epnum', 'seasnum']
+        params = ['play', 'app', 'room', 'title', 'type', 'tvshow']
+        result = {
+            param:
+                utils.get_slot_value(handler_input, param, '').lower()
+            for param in params
+        }
+
+        if result['tvshow'] and 'season' in result['title'] and 'episode' in result['title']:
+            self.set_episode_and_season(result)
+        return {key: value for key, value in result.items() if value}
+
+    def get_response(self, language, data):
+        if 'epnum' in data or 'seasnum' in data:
+            return PlayEpisodeIntentHandler().get_response(language, data)
+
+        title = data['title'] if 'title' in data.keys() else ''
+        media_type = data['type'] if 'type' in data.keys() else ''
+        tv_show = data['tvshow'] if 'tvshow' in data.keys() else ''
+
+        play = get_play_response(language, data['play'])
+        if media_type == 'playlist':
+            msg = language.get(Key.PlayPlaylist, play=play, title=title)
+        elif media_type == 'movie':
+            msg = language.get(Key.PlayMovie, play=play, title=title)
+        elif media_type == 'show':
+            msg = language.get(Key.PlayShow, play=play, show=title)
+        elif media_type == 'episode':
+            msg = language.get(Key.PlayEpisode, play=play, title=title, show=tv_show)
+        else:
+            msg = language.get(Key.PlayTitle, play=play, title=title)
+        if 'app' in data.keys() and data['app']:
+            msg += language.get(Key.OnApp, app=data['app'])
+        if 'room' in data.keys() and data['room']:
+            msg += language.get(Key.InRoom, room=data['room'])
+        return msg
+
+    @staticmethod
+    def set_episode_and_season(result):
+        title = result['title']
+        del result['title']
+        result['type'] = 'episode'
+        if title.startswith('season'):
+            title = title.replace('season', '')
+            title = title.split('episode')
+            result['seasnum'] = str(w2n.word_to_num(title[0]))
+            result['epnum'] = str(w2n.word_to_num(title[1]))
+        else:
+            title = title.replace('episode', '')
+            title = title.split('season')
+            result['epnum'] = str(w2n.word_to_num(title[0]))
+            result['seasnum'] = str(w2n.word_to_num(title[1]))
+
+
+class PlayMusicIntentHandler(BaseIntentHandler):
+    def get_action(self):
+        return 'play-media'
+
+    def get_data(self, handler_input):
+        params = ['play', 'app', 'room', 'title', 'song', 'album', 'artist', 'type']
         result = {
             param:
                 utils.get_slot_value(handler_input, param, '').lower()
@@ -368,79 +478,77 @@ class PlayMediaIntentHandler(BaseIntentHandler):
             if result[trans]:
                 result['title'] = result[trans]
                 result['type'] = trans
-        transform = ['show', 'movie', 'playlist', 'series', 'music video', 'episode']
-        for trans in transform:
-            if trans in result['type']:
-                result['type'] = 'show' if trans == 'series' else trans
-
-        if result['tvshow'] and 'season' in result['title'] and 'episode' in result['title']:
-            # season one episode one
-            # episode one season one
-            title = result['title']
-            result['type'] = 'show'
-            result['title'] = result['tvshow']
-            result['tvshow'] = ''
-            if title.startswith('season'):
-                title = title.replace('season', '')
-                title = title.split('episode')
-                result['seasnum'] = w2n.word_to_num(title[0])
-                result['epnum'] = w2n.word_to_num(title[1])
-            else:
-                title = title.replace('episode', '')
-                title = title.split('season')
-                result['epnum'] = w2n.word_to_num(title[0])
-                result['seasnum'] = w2n.word_to_num(title[1])
-
         return {key: value for key, value in result.items() if value}
 
-    def get_response(self, data):
+    def get_response(self, language, data):
         title = data['title'] if 'title' in data.keys() else ''
-        play = data['play'] if 'play' in data.keys() else ''
         media_type = data['type'] if 'type' in data.keys() else ''
-        tv_show = data['tvshow'] if 'tvshow' in data.keys() else ''
 
-        msg = 'Playing ' if play == 'play' else 'Finding '
-        if media_type in ['song', 'album', 'artist', 'playlist', 'movie']:
-            msg += f'{media_type} {title}'
-        elif media_type == 'show':
-            msg += f'tv show {title}'
-        elif media_type == 'episode':
-            msg += f'{title} of {tv_show}'
+        play = get_play_response(language, data['play'])
+        if media_type == 'song':
+            msg = language.get(Key.PlaySong, play=play, title=title)
+        elif media_type == 'album':
+            msg = language.get(Key.PlaySongsByAlbum, play=play, album=title)
+        elif media_type == 'artist':
+            msg = language.get(Key.PlaySongsByArtist, play=play, artist=title)
         else:
-            msg += f'{title}'
+            msg = language.get(Key.PlayTitle, play=play, title=title)
         if 'app' in data.keys() and data['app']:
-            msg += f' on {data["app"]}'
+            msg += language.get(Key.OnApp, app=data['app'])
         if 'room' in data.keys() and data['room']:
-            msg += f' in {data["room"]}'
+            msg += language.get(Key.InRoom, room=data['room'])
         return msg
-
-
-class PlayMusicIntentHandler(PlayMediaIntentHandler):
-    pass
 
 
 class SubtitlesOnIntentHandler(BaseIntentHandler):
     def get_action(self):
         return 'subtitle-on'
 
-    def get_response(self, data):
-        return 'Turning subtitles on'
+    def get_response(self, language, data):
+        return language.get(Key.SubtitlesOn)
 
 
 class SubtitlesOffIntentHandler(BaseIntentHandler):
     def get_action(self):
         return 'subtitle-off'
 
-    def get_response(self, data):
-        return 'Turning subtitles off'
+    def get_response(self, language, data):
+        return language.get(Key.SubtitlesOff)
 
 
 class ChangeAudioIntentHandler(BaseIntentHandler):
     def get_action(self):
         return 'change-audio'
 
-    def get_response(self, data):
-        return 'Changing audio stream'
+    def get_response(self, language, data):
+        return language.get(Key.SwitchAudio)
+
+
+class QualityIntentHandler(BaseIntentHandler):
+    def get_action(self):
+        return 'transcode'
+
+    def get_data(self, handler_input):
+        return self.get_slot_values(['raise_lower', 'quality'], handler_input)
+
+    def get_card_response(self, language, data):
+        if 'quality' in data:
+            return language.get(Key.ChangeQuality, quality=data["quality"])
+        return self.get_response(language, data)
+
+    def get_response(self, language, data):
+        if 'raise_lower' in data:
+            if data['raise_lower'] == 'up':
+                return language.get(Key.IncreaseQuality)
+            else:
+                return language.get(Key.DecreaseQuality)
+
+        if 'quality' in data:
+            quality = data['quality']
+            if quality in ['1080p', '720p', '280p']:
+                quality = language.get(Key['Speak' + quality])
+            return language.get(Key.ChangeQuality, quality=quality)
+        return language.get(Key.ErrorChangeQuality)
 
 
 class HelpIntentHandler(AbstractRequestHandler):
@@ -448,11 +556,13 @@ class HelpIntentHandler(AbstractRequestHandler):
         return ask_utils.is_intent_name("AMAZON.HelpIntent")(handler_input)
 
     def handle(self, handler_input):
-        speak_output = HELP_TEXT
+        language = Language(handler_input.request_envelope.request.locale)
+        speak_output = language.get(Key.Help)
+        card_title = language.get(Key.CardTitle)
         return (
             handler_input.response_builder
                 .speak(speak_output)
-                .card(ui.SimpleCard(CARD_TITLE, speak_output))
+                .card(ui.SimpleCard(card_title, speak_output))
                 .response
         )
 
@@ -462,13 +572,12 @@ class CancelIntentHandler(AbstractRequestHandler):
     Single handler for Cancel and Stop Intent.
     """
 
-    def can_handle(self, handler_input):
-        # type: (HandlerInput) -> bool
+    def can_handle(self, handler_input: HandlerInput) -> bool:
         return ask_utils.is_intent_name("AMAZON.CancelIntent")(handler_input)
 
-    def handle(self, handler_input):
-        # type: (HandlerInput) -> Response
-        speak_output = "Goodbye!"
+    def handle(self, handler_input: HandlerInput) -> Response:
+        language = Language(handler_input.request_envelope.request.locale)
+        speak_output = language.get(Key.Goodbye)
 
         return (
             handler_input.response_builder
@@ -497,12 +606,10 @@ class IntentReflectorHandler(AbstractRequestHandler):
     handler chain below.
     """
 
-    def can_handle(self, handler_input):
-        # type: (HandlerInput) -> bool
+    def can_handle(self, handler_input: HandlerInput) -> bool:
         return ask_utils.is_request_type("IntentRequest")(handler_input)
 
-    def handle(self, handler_input):
-        # type: (HandlerInput) -> Response
+    def handle(self, handler_input: HandlerInput) -> Response:
         intent_name = ask_utils.get_intent_name(handler_input)
         speak_output = "You just triggered " + intent_name + "."
 
@@ -521,15 +628,13 @@ class CatchAllExceptionHandler(AbstractExceptionHandler):
     the intent being invoked or included it in the skill builder below.
     """
 
-    def can_handle(self, handler_input, exception):
-        # type: (HandlerInput, Exception) -> bool
+    def can_handle(self, handler_input: HandlerInput, exception: Exception) -> bool:
         return True
 
-    def handle(self, handler_input, exception):
-        # type: (HandlerInput, Exception) -> Response
+    def handle(self, handler_input: HandlerInput, exception: Exception) -> Response:
         logger.error(exception, exc_info=True)
-
-        speak_output = "Sorry, I had trouble doing what you asked. Please try again."
+        language = Language(handler_input.request_envelope.request.locale)
+        speak_output = language.get(Key.GeneralError)
 
         return (
             handler_input.response_builder
@@ -555,35 +660,35 @@ try:
     sb.add_request_handler(PlayIntentHandler())
     sb.add_request_handler(StopIntentHandler())
     sb.add_request_handler(SetVolumeIntentHandler())
-    sb.add_request_handler(VolumeJumpIntentHandler())
+    sb.add_request_handler(VolumeChangeIntentHandler())
     sb.add_request_handler(PreviousIntentHandler())
     sb.add_request_handler(NextIntentHandler())
     sb.add_request_handler(OpenIntentHandler())
     sb.add_request_handler(RewindIntentHandler())
-    sb.add_request_handler(SeekIntentHandler())
+    sb.add_request_handler(FastForwardIntentHandler())
     sb.add_request_handler(RestartIntentHandler())
     sb.add_request_handler(MuteIntentHandler())
     sb.add_request_handler(UnMuteIntentHandler())
     sb.add_request_handler(ShuffleOnIntentHandler())
     sb.add_request_handler(ShuffleOffIntentHandler())
-    sb.add_request_handler(LoopIntentHandler())
+    sb.add_request_handler(LoopOnIntentHandler())
+    sb.add_request_handler(LoopOffIntentHandler())
 
     # Plex specific
+    sb.add_request_handler(QualityIntentHandler())
     sb.add_request_handler(ChangeAudioIntentHandler())
     sb.add_request_handler(SubtitlesOnIntentHandler())
     sb.add_request_handler(SubtitlesOffIntentHandler())
-
-    sb.add_request_handler(PlayTrailerIntentHandler())
     sb.add_request_handler(PlayMediaIntentHandler())
     sb.add_request_handler(PlayEpisodeIntentHandler())
     sb.add_request_handler(PlayMusicIntentHandler())
+    sb.add_request_handler(PlayPhotosIntentHandler())
 
     sb.add_request_handler(HelpIntentHandler())
     sb.add_request_handler(CancelIntentHandler())
     sb.add_request_handler(SessionEndedRequestHandler())
 
-    sb.add_request_handler(
-        IntentReflectorHandler())  # make sure IntentReflectorHandler is last so it doesn't override your custom intent handlers
+    sb.add_request_handler(IntentReflectorHandler())
     sb.add_exception_handler(CatchAllExceptionHandler())
 
     lambda_handler = sb.lambda_handler()

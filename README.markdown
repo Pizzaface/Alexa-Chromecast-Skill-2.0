@@ -38,28 +38,26 @@ The following media commands are available:
  previous              -> Play or show the previous item
  open {app}            -> Open a specific app. Plex and YouTube are supported.
  ```
-NOTE: stop doesn't work as expected on the Netflix app and is disabled.
+NOTE: Stop doesn't work as expected on the Netflix app and will quit the app instead.
 
 ### YouTube app commands
 Play items on YouTube.
 ```
  VOICE COMMAND        ACTION
  --------------------------------------------------------------------------------
- play/find {title}                 -> Play/find videos matching the title
- play/find videos of {title}       -> Play/find videos matching the title
- play/find the trailer for {title} -> Play/find trailers matching title
- play/find the show {title}        -> Play/Find a Youtube show matching the title
- play/find the movie {title}       -> Play/Find a Youtube movie matching the title
- play/find the song {title}        -> Play/Find a song matching the title
- play/find the album {title}       -> Play/Find an album matching the title
- play/find the playlist {title}    -> Play/Find a playlist matching the title
- play/find songs by {artist}       -> Play/Find songs by the specified artist
+ play/find {title}                 -> Play videos matching the title
+ play/find videos of {title}       -> Play videos matching the title
+ play/find the trailer for {title} -> Play trailers matching title
+ play/find the show {title}        -> Play a Youtube show matching the title
+ play/find the movie {title}       -> Play a Youtube movie matching the title
+ play/find the song {title}        -> Play a song matching the title
+ play/find the album {title}       -> Play an album matching the title
+ play/find the playlist {title}    -> Play a playlist matching the title
+ play/find songs by {artist}       -> Play songs by the specified artist
 ```
 
 ### Plex app commands
 Find and play items on your Plex server.
-* The Find command will display the item that was found.
-* The Play command will immediately play the item that was found.
 ```
  VOICE COMMAND                    ACTION
  ---------------------------------------------------------------------------------
@@ -69,19 +67,27 @@ Find and play items on your Plex server.
  play/find the video {title}      -> Play/Find the title
  play/find the tv show {title}    -> Play/Find a tv show matching the title
  play/find the movie {title}      -> Play/Find a movie matching the title
- play/find the song {title}       -> Play/Find a song matching the title
+ 
+ play the song {title}            -> Play a song matching the title
  play/find the album {title}      -> Play/Find an album matching the title
- play/find the playlist {title}   -> Play/Find a playlist matching the title
+ shuffle the album {title}        -> Play an album matching the title in shuffled order
  play/find songs by {artist}      -> Play/Find songs by the specified artist
+ shuffle songs by {artist}        -> Play songs by the specified artist in shuffled order
+ play/find the playlist {title}   -> Play/Find a playlist matching the title
+ 
+ play/shuffle photos from {year}          -> Play/Shuffle photos from the specified year
+ play/shuffle photos from {month} {year}  -> Play/Shuffle photos from the specified month and year
+ play/shuffle photos from {title}         -> Play/Shuffle photos from albums matching the title
+ 
+ set/change quality to {level}    -> Transcode the media to "low" (480p), "medium" (720p), "high" (1080p) or "maximum".
+ raise/lower the quality          -> Increase or lower the video quality from the current setting
  turn on subtitles                -> Turns on subtitles in the configurged language
  turn off subtitles               -> Turns off subtitles
- switch audio                     -> Switches to another audio track if available
-                                     (e.g. to the directors commentry)
- play/find the episode {title} of -> Play/Find the specified show episode
-                           {show}                     
- play/find season {#} episode {#} -> Play/Find the specified show episode
-                        of {show}
-```
+ switch audio                     -> Switches to another audio track if available (e.g. to the directors commentry)
+ 
+ play/find the episode {title} of {show}    -> Play/Find the specified show episode by the title
+ play/find season {#} episode {#} of {show} -> Play/Find the specified show episode by the season and episode number
+ ``
 
 ## Example Commands
 > Alexa, ask Chromecast to pause
@@ -122,7 +128,7 @@ Installation requires a UNIX environment with:
 3. Go to [ASK Console](https://developer.amazon.com/alexa/console/ask) and choose "Create Skill"
 4. Select "Custom" and "Provision your own", then click "Create skill". On the template screen just use the "Hello World Skill" template
 5. Click on "Interaction Model" in the left menu, then "JSON Editor"
-6. Copy and paste the content from `config/interaction_model.json` into the editor, then click "Save Model"
+6. Copy and paste the content from `config/eng/interaction_model.json` into the editor, then click "Save Model"
 7. Click on "Endpoint" in the left menu. Enter the Lambda function ARN by the aws-setup.sh. Click "Save Endpoints"
 8. Click on "Invocation" in the left menu. Click on "Build Model"
 9. Click on the "Test" tab. Enter 

@@ -1,3 +1,5 @@
+from datetime import datetime
+import json
 import logging
 import os
 import socket
@@ -6,8 +8,12 @@ import time
 from typing import Optional, List
 
 import requests
+from dateutil.relativedelta import relativedelta
 from plexapi.exceptions import Unauthorized, NotFound
+from plexapi.playqueue import PlayQueue
 from plexapi.server import PlexServer
+from plexapi.video import Show, Episode
+from pychromecast import Chromecast
 from pychromecast.controllers.plex import PlexController, media_to_chromecast_command
 
 from local import utils, constants
@@ -16,28 +22,56 @@ from local.controllers.media_controller import MediaExtensions
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+# Transcode qualities
+QUALITY_LIST = {
+    '240p': 320,
+    '320p': 720,
+    '480p': 1500,
+    '720p_low': 2000,
+    '720p_med': 3000,
+    '720p': 4000,
+    '1080p': 8000
+}
+
 
 class PlexControllerError(Exception):
+    # Nothing more to do
     pass
 
 
 class MyPlexController(PlexController, MediaExtensions):
 
     @property
-    def plex_server(self):
+    def plex_server(self) -> PlexServer:
         if self.__plex_server:
             return self.__plex_server
         else:
             self.__plex_server = self.__get_plex_server()
             return self.__plex_server
 
-    def __init__(self):
+    @property
+    def bitrate(self):
+        return self.__bitrate
+
+    def __init__(self, cc: Chromecast):
         self.__current_item = None
+        self.__playlist: Optional[PlayQueue] = None
         self.__plex_server = None
         self._subtitle_code = os.environ.get(constants.ENV_PLEX_SUBTITLE_LANG, 'eng')
-        self.__shuffle = 0
-        self.__loop = 0
+        self.__bitrate = 0
+        self.cast_id = cc.uuid
+        self._load_settings()
         super().__init__()
+
+    def _get_content_id(self):
+        # On occasion content_id is not found
+        content_id = None
+        for _ in range(3):
+            content_id = self.status.content_id
+            if content_id:
+                break
+            time.sleep(1)
+        return content_id
 
     def get_playing_item(self):
         content_id = self._get_content_id()
@@ -45,41 +79,87 @@ class MyPlexController(PlexController, MediaExtensions):
             return self.plex_server.fetchItem(content_id)
         return None
 
-    def get_current_item(self):
-        return self.__current_item
+    def transcode(self, data):
+        raise_lower = utils.get_dict_val(data, 'raise_lower', '')
+        bitrate = 0
+        max_bitrate = 20000 if self.__bitrate == 0 else self.__bitrate
+        if raise_lower == 'up':
+            bitrate = next((value for key, value in QUALITY_LIST.items() if value > max_bitrate), 0)
+        elif raise_lower == 'down':
+            keys = list(QUALITY_LIST.keys())
+            keys.reverse()
+            bitrate = next((QUALITY_LIST[key] for key in keys if QUALITY_LIST[key] < max_bitrate), QUALITY_LIST['240p'])
 
-    def __shuffle_it(self):
-        item = self.get_current_item()
-        if item:
-            play_queue = self.plex_server.createPlayQueue(item, shuffle=self.__shuffle, repeat=self.__loop)
-            self.resume_playing(play_queue)
         else:
-            logger.warning('No current item to shuffle.')
+            quality = utils.get_dict_val(data, 'quality', '')
+            if quality == 'maximum':
+                bitrate = 0
+            elif quality.lower() in ['high', '1080p']:
+                bitrate = QUALITY_LIST['1080p']
+            elif quality.lower() in ['medium', '720p']:
+                bitrate = QUALITY_LIST['720p']
+            elif quality.lower() in ['low', '480p']:
+                bitrate = QUALITY_LIST['480p']
+
+        if bitrate != self.__bitrate:
+            self.__bitrate = bitrate
+            self._save_settings()
+            self._resume_playing()
+
+    def __shuffle(self, turn_on: bool):
+        self._start_playing(shuffle=turn_on)
 
     def shuffle_on(self):
-        self.__shuffle = 1
-        self.__shuffle_it()
+        self.__shuffle(True)
 
     def shuffle_off(self):
-        self.__shuffle = 0
-        self.__shuffle_it()
+        self.__shuffle(False)
 
-    def loop(self, on=True):
-        self.__loop = 1 if on else 0
-        item = self.get_current_item()
-        if item:
-            play_queue = self.plex_server.createPlayQueue(item, shuffle=self.__shuffle, repeat=self.__loop)
-            self.resume_playing(play_queue)
+    def is_shuffle_on(self):
+        return self.__playlist.playQueueShuffled if self.__playlist else False
+
+    def __loop(self, turn_on: bool):
+        playlist = self.__playlist
+        if playlist:
+            self._start_playing(shuffle=playlist.playQueueShuffled, repeat=turn_on)
         else:
-            logger.warning('No current item to shuffle.')
+            logger.warning('No current item to repeat.')
 
-    def play_previous(self, action=''):
-        if self.status.current_time >= 10:
-            self.rewind()
-        self.previous()
+    def loop_on(self):
+        self.__loop(True)
 
-    def play_next(self, action=''):
-        self.next()
+    def loop_off(self):
+        self.__loop(False)
+
+    def previous(self):
+        # Previous doesn't go to the previous episode when it's part way through
+        self.rewind()
+        for _i in range(10):
+            if self.status.current_time < 10:
+                break
+            time.sleep(1)
+        super().previous()
+
+    def play_photos(self, data):
+        title = utils.get_dict_val(data, 'title')
+        month: str = utils.get_dict_val(data, 'month')
+        year = utils.get_dict_val(data, 'year')
+
+        photos = []
+        if title:
+            photos = self.__get_photos_by_title(title, year)
+        elif year:
+            photos = self.__get_photos_by_date(month, year)
+        if not photos:
+            logger.info(f'Unable to find photos matching: {data}')
+            return
+
+        self.__current_item = photos
+        play_type = utils.get_dict_val(data, 'play')
+        if play_type == 'find':
+            self.show_media()
+        else:
+            self._start_playing(shuffle=(play_type == 'shuffle'))
 
     def get_media_index(self):
         return self.status.media_custom_data.get("mediaIndex", 0)
@@ -88,19 +168,22 @@ class MyPlexController(PlexController, MediaExtensions):
         return self.status.media_custom_data.get("partIndex", 0)
 
     def play(self):
-        if not self.status.player_is_playing or not self.status.player_is_paused:
-            self.resume_playing(self.build_play_list())
-            return
-        super().play()
+        if self.__current_item and not self.status.player_is_paused:
+            self._resume_playing()
+        else:
+            super().play()
 
     def stop(self):
         super().stop()
-        self.show_media(self.get_current_item())
+        self.show_media()
+
+    @property
+    def current_item(self):
+        return self.__current_item
 
     def _set_current_item(self, item):
         self.__current_item = item
-        self.__shuffle = 0
-        self.__loop = 0
+        self.__playlist = None
 
     def search(self, title, media_type='', limit=10):
         items = self.plex_server.search(title, mediatype=media_type, limit=limit)
@@ -108,6 +191,23 @@ class MyPlexController(PlexController, MediaExtensions):
 
     def block_until_playing(self, media=None, timeout=None, **kwargs):
         return super().block_until_playing(media=media, timeout=timeout, **kwargs)
+
+    def _save_settings(self):
+        file_name = f'.plex_config_{self.cast_id}'
+        with open(file_name, "w") as write_file:
+            write_file.write(json.dumps({
+                'bitrate': self.__bitrate
+            }))
+
+    def _load_settings(self):
+        file_name = f'.plex_config_{self.cast_id}'
+        if not os.path.exists(file_name):
+            return
+        with open(file_name, "r") as read_file:
+            content = json.loads(read_file.read())
+        logger.info('Loaded settings:')
+        logger.info(json.dumps(content, indent=4, sort_keys=True))
+        self.__bitrate = content['bitrate']
 
     def get_audio_streams(self):
         item = self.get_playing_item().reload()
@@ -147,7 +247,31 @@ class MyPlexController(PlexController, MediaExtensions):
         media_index = self.get_media_index()
         part = item.media[media_index].parts[part_index]
         self.plex_server.query(f'/library/parts/{part.id}?subtitleStreamID=0&allParts=1', requests.put)
-        self.resume_playing(self.get_playing_item())
+        self._resume_playing()
+
+    def _send_start_play(self, media=None, bitrate=None, **kwargs):
+        """
+        Override to allow more
+        """
+        msg = media_to_chromecast_command(
+            media, requestiId=self._inc_request(), **kwargs
+        )
+        if bitrate:
+            data = msg["media"]["customData"]
+            data['directStream'] = False
+            data['directPlay'] = False
+            data['bitrate'] = bitrate
+            quality = next((key for key, item in QUALITY_LIST.items() if item == bitrate), 'UNKNOWN')
+            logger.info(f'Transcoding media to {quality}, bitrate: {bitrate}')
+
+        self.logger.debug("Create command: \n%r\n", json.dumps(msg, indent=4))
+        self._last_play_msg = msg
+        self._send_cmd(
+            msg,
+            namespace="urn:x-cast:com.google.cast.media",
+            inc_session_id=True,
+            inc=False,
+        )
 
     @classmethod
     def __get_ssl_cert_name(cls, hostname, port):
@@ -196,53 +320,67 @@ class MyPlexController(PlexController, MediaExtensions):
             logger.error(msg)
             raise PlexControllerError(msg)
 
-    def play_item(self, options):
-        self._play_item(options, find=False)
-
     @staticmethod
     def get_next_episode_to_watch(show):
-        # Get the last episode that was being watched, or the next unwatched one
-        # Otherwise just return the last one
+        """
+        Get the last episode that was being watched, or the next unwatched one
+        Otherwise just return the last one
+        """
         episodes: List = show.episodes()
         episodes.reverse()
         pos = next((i for i, episode in enumerate(episodes) if episode.isWatched), 0)
-        if pos == 0 or episodes[pos].viewOffset != 0:
-            # Return currently watching episode, or the last episode
+        if pos == 0:
+            # Return the last episode
             return episodes[pos]
         # Return the next episode, if there is one
         pos = pos - 1 if pos > 0 else 0
         return episodes[pos]
 
-    def _play_item(self, options, find=False):
+    def play_item(self, options):
         title = utils.get_dict_val(options, 'title', '')
         tv_show = utils.get_dict_val(options, 'tv_show', '')
-        media_type = utils.get_dict_val(options, 'type', '')
+        media_type = utils.get_dict_val(options, 'type')
 
-        if media_type == 'song':
-            media_type = 'track'
-        if media_type in ['show', 'episode']:
-            show, episode = self.__get_show_episode(media_type, options)
+        media_type = self._map_plex_type(media_type)
+
+        if media_type == 'show':
+            show = self.__get_show_by_title(tv_show if tv_show else title)
             if not show:
-                logger.info(f'Unable to find a matching show for: {tv_show if tv_show else title}')
+                logger.warning(f'Unable to find a matching show for: {tv_show if tv_show else title}')
                 return
-            play_media = episode if episode else show
+            play_media = show
+            logger.info(f'Selected show: {show}')
+
+        elif media_type == 'episode':
+            ep_season = self.__get_episode_or_season(options)
+            if not ep_season:
+                logger.warning(f'Unable to find a matching episode/season for: {options}')
+                return
+            play_media = ep_season
+            logger.info(f'Selected episode/season: {ep_season} for show: {ep_season.show()}')
+
         else:
             items = self.search(title, media_type=media_type, limit=10)
             if len(items) == 0:
                 logger.info(f'Unable to find any item in Plex matching title: {title}')
                 return
             play_media = items[0]
-        self._set_current_item(play_media)
-        if find:
-            super().stop()
-            self.show_media(play_media)
-        else:
-            self.resume_playing(self.build_play_list())
 
-    def show_media(self, item=None, **kwargs):
+        self._set_current_item(play_media)
+        play_command = utils.get_dict_val(options, 'play')
+        if play_command == 'find':
+            super().stop()
+            self.show_media()
+        else:
+            self._start_playing(shuffle=(play_command == 'shuffle'))
+
+    def show_media(self, **kwargs):
         # Tracks don't display in show details, fudge this by playing the track, then pausing it
-        if item.TYPE == 'track':
-            self.resume_playing(item)
+        item = self.__current_item
+        if type(item) == list:
+            item = item[0]
+        if item.TYPE in ['track']:
+            self._start_playing()
             for _ in range(10):
                 self.pause()
                 if self.status.player_is_paused:
@@ -260,15 +398,27 @@ class MyPlexController(PlexController, MediaExtensions):
 
         self.launch(callback)
 
-    def find_item(self, options):
-        self._play_item(options, True)
+    def _resume_playing(self):
+        self._start_playing(resume=True)
 
-    def resume_playing(self, media, **kwargs):
-        if 'viewOffset' in vars(media):
-            offset = media.viewOffset / 1000
-            self.block_until_playing(media, offset=offset, **kwargs)
+    def _start_playing(self, shuffle=False, repeat=False, resume=False):
+        if not self.current_item:
+            # Nothing to play
+            return
+
+        if not resume or not self.__playlist:
+            self.__playlist = self.build_play_list(shuffle, repeat)
+
+        media = self.__playlist
+        if type(media) == PlayQueue:
+            play_item = media.selectedItem
         else:
-            self.block_until_playing(media, **kwargs)
+            play_item = media
+        if 'viewOffset' in vars(play_item):
+            offset = play_item.viewOffset / 1000
+            self.block_until_playing(media, offset=offset, bitrate=self.__bitrate)
+        else:
+            self.block_until_playing(media, bitrate=self.__bitrate)
 
     def change_audio_track(self):
         audio_streams = self.get_audio_streams()
@@ -281,7 +431,7 @@ class MyPlexController(PlexController, MediaExtensions):
         if pos >= len(audio_streams):
             pos = 0
         self.set_audio_stream(audio_streams[pos].id)
-        self.resume_playing(self.get_playing_item())
+        self._resume_playing()
 
     def change_subtitle_track(self):
         subtitle_streams = self.get_subtitle_streams()
@@ -289,51 +439,64 @@ class MyPlexController(PlexController, MediaExtensions):
         if pos >= len(subtitle_streams):
             pos = 0
         self.set_subtitle_stream(subtitle_streams[pos].id)
-        self.resume_playing(self.get_playing_item())
+        self._resume_playing()
 
-    def __get_show_episode(self, media_type, options):
-
+    def __get_episode_or_season(self, options) -> Episode:
         ep_num = utils.get_dict_val(options, 'epnum', '')
         seas_num = utils.get_dict_val(options, 'seasnum', '')
         tv_show = utils.get_dict_val(options, 'tvshow', '')
         title = utils.get_dict_val(options, 'title', '')
+        result = None
+        if ep_num:
+            result = self.__get_episode_by_number(tv_show, ep_num, seas_num)
+        elif seas_num:
+            result = self.__get_season(tv_show, seas_num)
+        elif title:
+            result = self.__get_episode_by_title(tv_show, title)
+        return result
 
-        show = None
-        episode = None
-        found_episodes = []
-        if media_type == 'episode' and not (ep_num and seas_num):
-            found_episodes = self.search(title, media_type='episode', limit=10)
-        show_title = title if media_type == 'show' else tv_show
-        found_shows = self.search(show_title, media_type='show', limit=10)
-        if len(found_shows) == 0:
+    def __get_show_by_title(self, title) -> Optional[Show]:
+        found_shows = self.search(title, media_type='show', limit=10)
+        if not found_shows:
             # Try a broader search
-            items = self.search(show_title, limit=10)
+            items = self.search(title, limit=10)
             for item in items:
                 if item.TYPE == 'episode':
                     found_shows = [item.show()]
                     break
-        if found_shows:
-            show = found_shows[0]
-            if ep_num and seas_num:
-                try:
-                    episode = show.get(season=seas_num, episode=ep_num)
-                except NotFound:
-                    logger.warning(f'Unable to find Season {seas_num}, Episode {ep_num} for show: {show}')
-            elif found_episodes:
-                for ep in found_episodes:
-                    if ep.grandparentKey == show.key:
-                        episode = ep
-                        break
-            else:
-                episode = None
-        elif found_episodes:
-            episode = found_episodes[0]
-            show = episode.show()
+        return found_shows[0] if found_shows else None
 
-        logger.info(f"Selected show: {show}, episode: {episode}")
-        return show, episode
+    def __get_episode_by_number(self, tv_show, ep_num, seas_num) -> Optional[Episode]:
+        show = self.__get_show_by_title(tv_show)
+        try:
+            if show:
+                return show.get(season=seas_num, episode=ep_num)
+        except NotFound:
+            logger.warning(f'Unable to find Season {seas_num}, Episode {ep_num} for show: {show}')
+        return None
 
-    def build_play_list(self):
+    def __get_season(self, tv_show, seas_num) -> Optional[Episode]:
+        show = self.__get_show_by_title(tv_show)
+        try:
+            if show:
+                return show.season(season=seas_num)
+        except NotFound:
+            logger.warning(f'Unable to find Season {seas_num} for show: {show}')
+        return None
+
+    def __get_episode_by_title(self, tv_show, title) -> Optional[Episode]:
+        episode = None
+        found_episodes = self.search(title, media_type='episode', limit=10)
+        show = self.__get_show_by_title(tv_show)
+        for ep in found_episodes:
+            if ep.grandparentKey == show.key:
+                episode = ep
+                break
+        if not episode and found_episodes:
+            return found_episodes[0]
+        return episode
+
+    def build_play_list(self, shuffle=False, repeat=False) -> PlayQueue:
         item = self.__current_item
         if item.TYPE == 'episode':
             episodes = self.__get_episodes(item.show(), item, count=20)
@@ -342,18 +505,60 @@ class MyPlexController(PlexController, MediaExtensions):
             episode = self.get_next_episode_to_watch(item)
             episodes = self.__get_episodes(item, episode, count=20)
             play_list = self.plex_server.createPlayQueue(episodes, startItem=episode)
-        elif item.TYPE in ['artist', 'album']:
-            play_list = self.plex_server.createPlayQueue(item, shuffle=1)
+        elif type(item) == list or item.TYPE in ['artist', 'album', 'photo']:
+            # noinspection PyTypeChecker
+            play_list = self.plex_server.createPlayQueue(item,
+                                                         shuffle=1 if shuffle else 0,
+                                                         repeat=1 if repeat else 0)
+            play_list.playQueueShuffled = shuffle
         else:
             play_list = self.plex_server.createPlayQueue(item)
         return play_list
 
-    def __get_episodes(self, show, episode, count):
+    @staticmethod
+    def __get_episodes(show: Show, episode: Episode, count) -> List:
         eps = show.episodes()
         if len(eps) <= count:
             return eps
         pos = eps.index(episode)
         length = len(eps)
-        end_pos = min(max(pos + count//2 + 1, count + 1), length)
-        start_pos = max(pos - count//2 - (count//2 - min(length - end_pos, 0)), 0)
+        end_pos = min(max(pos + count // 2 + 1, count + 1), length)
+        start_pos = max(pos - count // 2 - (count // 2 - min(length - end_pos, 0)), 0)
         return eps[start_pos:end_pos]
+
+    def __get_photos_by_title(self, title, year):
+        photos = []
+        photo_library = self.plex_server.library.section('Photos')
+        title = f'{title} {year}' if year else title
+        albums = photo_library.searchAlbums(title=title)
+        if len(albums) == 0:
+            albums = photo_library.searchAlbums(title=title)
+        for album in albums:
+            photos.extend(album.photos())
+        return photos
+
+    def __get_photos_by_date(self, month, year):
+        # Default to entire year
+        day_from = '01'
+        month_from = '01'
+        day_to = '31'
+        month_to = '12'
+
+        if month:
+            dte = datetime.strptime(f'1 {month} {year}', '%d %B %Y')
+            month_to = dte.month
+            month_from = dte.month
+            dte = dte + relativedelta(months=1) - relativedelta(days=1)
+            day_to = dte.day
+
+        photo_library = self.plex_server.library.section('Photos')
+        return photo_library.search(filters={'originallyAvailableAt>>=': f'{year}-{month_from}-{day_from}',
+                                             'originallyAvailableAt<<=': f'{year}-{month_to}-{day_to}'})
+
+    @staticmethod
+    def _map_plex_type(media_type):
+        if media_type == 'song':
+            return 'track'
+        if media_type == 'video':
+            return 'movie'
+        return media_type

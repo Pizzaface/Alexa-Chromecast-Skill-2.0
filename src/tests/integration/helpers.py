@@ -6,6 +6,7 @@ from tests import utils
 import unittest
 
 # Test values
+# TST_CHROMECAST_NAME = 'Media Room TV'
 TST_CHROMECAST_NAME = 'Living Room TV'
 TST_COMMAND_TIMEOUT = 60
 
