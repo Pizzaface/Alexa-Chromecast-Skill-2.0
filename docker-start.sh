@@ -57,35 +57,23 @@ docker rm $CONTAINER_NAME 2>/dev/null
 docker build -t alexa-skill-chromecast .
 
 if [ $SERVICE -eq 1 ]; then
-  docker run -d --network="host" \
-   --name alexa_chromecast \
-   --restart always \
-   -e "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID"\
-   -e "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY"\
-   -e "AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION"\
-   -e "AWS_SNS_TOPIC_ARN=$AWS_SNS_TOPIC_ARN"\
-   -e "EXTERNAL_IP=$EXTERNAL_IP"\
-   -e "EXTERNAL_PORT=$EXTERNAL_PORT"\
-   -e "PLEX_IP_ADDRESS=$PLEX_IP_ADDRESS"\
-   -e "PLEX_PORT=$PLEX_PORT"\
-   -e "PLEX_TOKEN=$PLEX_TOKEN"\
-   -e "PLEX_SUBTITLE_LANG=$PLEX_SUBTITLE_LANG"\
-   -e "YOUTUBE_API_KEY=$YOUTUBE_API_KEY"\
-   alexa-skill-chromecast
+  OPTIONS='-d --restart always'
 else
-  docker run --network="host" -it\
-   --name alexa_chromecast \
-   -e "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID"\
-   -e "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY"\
-   -e "AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION"\
-   -e "AWS_SNS_TOPIC_ARN=$AWS_SNS_TOPIC_ARN"\
-   -e "EXTERNAL_IP=$EXTERNAL_IP"\
-   -e "EXTERNAL_PORT=$EXTERNAL_PORT"\
-   -e "PLEX_IP_ADDRESS=$PLEX_IP_ADDRESS"\
-   -e "PLEX_PORT=$PLEX_PORT"\
-   -e "PLEX_TOKEN=$PLEX_TOKEN"\
-   -e "PLEX_SUBTITLE_LANG=$PLEX_SUBTITLE_LANG"\
-   -e "YOUTUBE_API_KEY=$YOUTUBE_API_KEY"\
-   alexa-skill-chromecast
+  OPTIONS='-it'
 fi
+docker run --network="host" \
+ --name $CONTAINER_NAME \
+ $OPTIONS \
+ -e "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID"\
+ -e "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY"\
+ -e "AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION"\
+ -e "AWS_SNS_TOPIC_ARN=$AWS_SNS_TOPIC_ARN"\
+ -e "EXTERNAL_IP=$EXTERNAL_IP"\
+ -e "EXTERNAL_PORT=$EXTERNAL_PORT"\
+ -e "PLEX_IP_ADDRESS=$PLEX_IP_ADDRESS"\
+ -e "PLEX_PORT=$PLEX_PORT"\
+ -e "PLEX_TOKEN=$PLEX_TOKEN"\
+ -e "PLEX_SUBTITLE_LANG=$PLEX_SUBTITLE_LANG"\
+ -e "YOUTUBE_API_KEY=$YOUTUBE_API_KEY"\
+ alexa-skill-chromecast
 

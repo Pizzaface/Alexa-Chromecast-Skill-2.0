@@ -49,7 +49,8 @@ class Key(Enum):
     ListMonths = 41
     SetVolume = 42,
     IncreaseVolume = 43,
-    DecreaseVolume = 44
+    DecreaseVolume = 44,
+    PlayPhotosByYear = 45
 
 
 class Language:

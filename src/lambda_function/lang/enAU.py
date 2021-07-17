@@ -80,7 +80,8 @@ LANGUAGE = {
     # Play photos
     Key.PlayPhotosByDate: '{play} photos from {month} {year}',
     Key.PlayPhotosByEvent: '{play} photos from {title} {year}',
-    Key.PlayPhotosByTitle: '{play} photos of {title}',
+    Key.PlayPhotosByTitle: '{play} photos from {title}',
+    Key.PlayPhotosByYear: '{play} photos from {year}',
 
     # Play media
     Key.PlayPlaylist: '{play} playlist {title}',

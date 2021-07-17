@@ -1,4 +1,5 @@
 import logging
+import os
 
 from pychromecast.controllers import BaseController
 from pychromecast.controllers.media import MediaStatus
@@ -27,7 +28,7 @@ class StanController(BaseController, CastStatusListener):
         super().__init__(APP_NAMESPACE, APP_STAN)
         self.logger = logging.getLogger(__name__)
         self.api = stan.API()
-        self.api.login('julie.mcneish@gmail.com', 'xxxxxxxx')
+        self.api.login(os.environ.get('STAN_USERNAME'), os.environ.get('STAN_PASSWORD'))
 
     def receive_message(self, message, data: dict):
         self.logger.debug(message)

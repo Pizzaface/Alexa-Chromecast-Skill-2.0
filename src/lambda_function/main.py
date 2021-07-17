@@ -26,7 +26,8 @@ AWS_SNS_ARN = os.getenv('AWS_SNS_ARN')
 AWS_S3_BUCKET = os.getenv('AWS_S3_BUCKET')
 
 
-def get_play_response(language, play_type):
+def get_play_response(language, data):
+    play_type = data['play'] if 'play' in data else 'play'
     result = language.get(Key.Playing)
     if play_type == 'shuffle':
         result = language.get(Key.Shuffling)
@@ -355,7 +356,7 @@ class PlayEpisodeIntentHandler(BaseIntentHandler):
     def get_response(self, language, data):
         if 'epnum' not in data and 'seasnum' not in data:
             return language.get(Key.ErrorEpisodeParams)
-        play = get_play_response(language, data['play'])
+        play = get_play_response(language, data)
         epnum = data['epnum'] if 'epnum' in data else ''
         seasnum = data['seasnum'] if 'seasnum' in data else ''
         tvshow = data["tvshow"]
@@ -389,7 +390,7 @@ class PlayPhotosIntentHandler(BaseIntentHandler):
         return result
 
     def get_response(self, language, data):
-        play = get_play_response(language, data['play'])
+        play = get_play_response(language, data)
         year = data['year'] if 'year' in data else ''
         title = data['title'] if 'title' in data else ''
         month = data['month'] if 'month' in data else ''
@@ -399,6 +400,10 @@ class PlayPhotosIntentHandler(BaseIntentHandler):
             return language.get(Key.PlayPhotosByEvent, play=play, title=title, year=year)
         elif title:
             return language.get(Key.PlayPhotosByTitle, play=play, title=title)
+        elif year:
+            return language.get(Key.PlayPhotosByYear, play=play, year=year)
+        else:
+            return language.get(Key.ErrorGeneral)
 
 
 class PlayMediaIntentHandler(BaseIntentHandler):
@@ -415,6 +420,8 @@ class PlayMediaIntentHandler(BaseIntentHandler):
 
         if result['tvshow'] and 'season' in result['title'] and 'episode' in result['title']:
             self.set_episode_and_season(result)
+            result['type'] = 'episode'
+
         return {key: value for key, value in result.items() if value}
 
     def get_response(self, language, data):
@@ -425,7 +432,7 @@ class PlayMediaIntentHandler(BaseIntentHandler):
         media_type = data['type'] if 'type' in data.keys() else ''
         tv_show = data['tvshow'] if 'tvshow' in data.keys() else ''
 
-        play = get_play_response(language, data['play'])
+        play = get_play_response(language, data)
         if media_type == 'playlist':
             msg = language.get(Key.PlayPlaylist, play=play, title=title)
         elif media_type == 'movie':
@@ -481,7 +488,7 @@ class PlayMusicIntentHandler(BaseIntentHandler):
         title = data['title'] if 'title' in data.keys() else ''
         media_type = data['type'] if 'type' in data.keys() else ''
 
-        play = get_play_response(language, data['play'])
+        play = get_play_response(language, data)
         if media_type == 'song':
             msg = language.get(Key.PlaySong, play=play, title=title)
         elif media_type == 'album':

@@ -175,8 +175,6 @@ class MyPlexController(PlexController, MediaExtensions):
 
     def stop(self):
         super().stop()
-        # Reload to get update of played position
-        self.current_item.reload()
         self.show_media()
 
     @property
@@ -380,19 +378,9 @@ class MyPlexController(PlexController, MediaExtensions):
             self._start_playing(shuffle=(play_command == 'shuffle'))
 
     def show_media(self, **kwargs):
-        # Tracks don't display in show details, fudge this by playing the track, then pausing it
         item = self.__current_item
         if type(item) == list:
             item = item[0]
-        if item.TYPE in ['track']:
-            self._start_playing()
-            for _ in range(10):
-                self.pause()
-                if self.status.player_is_paused:
-                    break
-                time.sleep(1)
-            return
-
         msg = media_to_chromecast_command(
             item, type='SHOWDETAILS', requestId=self._inc_request(), **kwargs
         )
@@ -404,23 +392,24 @@ class MyPlexController(PlexController, MediaExtensions):
         self.launch(callback)
 
     def _resume_playing(self):
-        if self.current_item:
-            self.current_item.reload()
         self._start_playing(resume=True)
 
     def _start_playing(self, shuffle=False, repeat=False, resume=False):
         if not self.current_item:
             # Nothing to play
             return
-
+        build_list = False
         if not resume or not self.__playlist:
             self.__playlist = self.build_play_list(shuffle, repeat)
+            build_list = True
 
         media = self.__playlist
         if type(media) == PlayQueue:
             play_item = media.selectedItem
         else:
             play_item = media
+        if not build_list:
+            play_item.reload()
         if 'viewOffset' in vars(play_item):
             offset = play_item.viewOffset / 1000
             self.block_until_playing(media, offset=offset, bitrate=self.__bitrate)
@@ -463,6 +452,8 @@ class MyPlexController(PlexController, MediaExtensions):
         return result
 
     def __get_show_by_title(self, title) -> Optional[Show]:
+        if not title:
+            return None
         found_shows = self.search(title, media_type='show', limit=10)
         if not found_shows:
             # Try a broader search
@@ -495,10 +486,11 @@ class MyPlexController(PlexController, MediaExtensions):
         episode = None
         found_episodes = self.search(title, media_type='episode', limit=10)
         show = self.__get_show_by_title(tv_show)
-        for ep in found_episodes:
-            if ep.grandparentKey == show.key:
-                episode = ep
-                break
+        if show:
+            for ep in found_episodes:
+                if ep.grandparentKey == show.key:
+                    episode = ep
+                    break
         if not episode and found_episodes:
             return found_episodes[0]
         return episode

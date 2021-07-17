@@ -125,6 +125,9 @@
                         }
                     ],
                     "samples": [
+                        "{play} {type} {title} from the show {tvshow}",
+                        "{play} {type} {title} from {tvshow}",
+                        "{play} {title} from the show {tvshow}",
                         "{play} {title} of {tvshow} on {app}",
                         "{play} {title} of {tvshow} in {room}",
                         "{play} {title} of {tvshow}",

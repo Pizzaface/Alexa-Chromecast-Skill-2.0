@@ -104,7 +104,8 @@ class TestMain(unittest.TestCase):
             'play': SlotValue('play'),
             'year': SlotValue('2012')
         }
-        self.__test_values_passed(req, slot_values, self.__slot_to_dict(slot_values))
+        resp = self.__test_values_passed(req, slot_values, self.__slot_to_dict(slot_values))
+        self.assertEqual(self.language.get(Key.PlayPhotosByYear, play='Playing', year='2012'), resp.speak_text)
 
     def test_photos_play_month_year(self):
         from lambda_function.main import PlayPhotosIntentHandler
@@ -114,7 +115,9 @@ class TestMain(unittest.TestCase):
             'month': SlotValue('august'),
             'year': SlotValue('2012')
         }
-        self.__test_values_passed(req, slot_values, self.__slot_to_dict(slot_values))
+        resp = self.__test_values_passed(req, slot_values, self.__slot_to_dict(slot_values))
+        self.assertEqual(self.language.get(Key.PlayPhotosByDate, play='Playing', year='2012', month='august'),
+                         resp.speak_text)
 
     def test_photos_play_bad_month_year(self):
         from lambda_function.main import PlayPhotosIntentHandler
@@ -127,7 +130,9 @@ class TestMain(unittest.TestCase):
         passed_values = self.__slot_to_dict(slot_values)
         del passed_values['month']
         passed_values['title'] = 'christmas'
-        self.__test_values_passed(req, slot_values, passed_values)
+        resp = self.__test_values_passed(req, slot_values, passed_values)
+        self.assertEqual(self.language.get(Key.PlayPhotosByEvent, play='Playing', year='2012', title='christmas'),
+                         resp.speak_text)
 
     def test_photos_play_title(self):
         from lambda_function.main import PlayPhotosIntentHandler
