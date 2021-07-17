@@ -10,6 +10,7 @@ from typing import Optional, List
 import requests
 from dateutil.relativedelta import relativedelta
 from plexapi.exceptions import Unauthorized, NotFound
+from plexapi.media import Media
 from plexapi.playqueue import PlayQueue
 from plexapi.server import PlexServer
 from plexapi.video import Show, Episode
@@ -20,7 +21,6 @@ from local import utils, constants
 from local.controllers.media_controller import MediaExtensions
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 # Transcode qualities
 QUALITY_LIST = {
@@ -175,10 +175,12 @@ class MyPlexController(PlexController, MediaExtensions):
 
     def stop(self):
         super().stop()
+        # Reload to get update of played position
+        self.current_item.reload()
         self.show_media()
 
     @property
-    def current_item(self):
+    def current_item(self) -> Media:
         return self.__current_item
 
     def _set_current_item(self, item):
@@ -248,6 +250,9 @@ class MyPlexController(PlexController, MediaExtensions):
         part = item.media[media_index].parts[part_index]
         self.plex_server.query(f'/library/parts/{part.id}?subtitleStreamID=0&allParts=1', requests.put)
         self._resume_playing()
+
+    def receive_message(self, message, data: dict):
+        self.logger.debug(data)
 
     def _send_start_play(self, media=None, bitrate=None, **kwargs):
         """
@@ -399,6 +404,8 @@ class MyPlexController(PlexController, MediaExtensions):
         self.launch(callback)
 
     def _resume_playing(self):
+        if self.current_item:
+            self.current_item.reload()
         self._start_playing(resume=True)
 
     def _start_playing(self, shuffle=False, repeat=False, resume=False):
@@ -498,19 +505,19 @@ class MyPlexController(PlexController, MediaExtensions):
 
     def build_play_list(self, shuffle=False, repeat=False) -> PlayQueue:
         item = self.__current_item
-        if item.TYPE == 'episode':
+        if type(item) == list or item.TYPE in ['artist', 'album', 'photo']:
+            # noinspection PyTypeChecker
+            play_list = self.plex_server.createPlayQueue(item,
+                                                         shuffle=1 if shuffle else 0,
+                                                         repeat=1 if repeat else 0)
+            play_list.playQueueShuffled = shuffle
+        elif item.TYPE == 'episode':
             episodes = self.__get_episodes(item.show(), item, count=20)
             play_list = self.plex_server.createPlayQueue(episodes, startItem=item)
         elif item.TYPE == 'show':
             episode = self.get_next_episode_to_watch(item)
             episodes = self.__get_episodes(item, episode, count=20)
             play_list = self.plex_server.createPlayQueue(episodes, startItem=episode)
-        elif type(item) == list or item.TYPE in ['artist', 'album', 'photo']:
-            # noinspection PyTypeChecker
-            play_list = self.plex_server.createPlayQueue(item,
-                                                         shuffle=1 if shuffle else 0,
-                                                         repeat=1 if repeat else 0)
-            play_list.playQueueShuffled = shuffle
         else:
             play_list = self.plex_server.createPlayQueue(item)
         return play_list

@@ -225,27 +225,29 @@ class StopIntentHandler(BaseIntentHandler):
         return 'stop'
 
 
-class SetVolumeIntentHandler(BaseIntentHandler):
-    def get_action(self):
-        return 'set-volume'
-
-    def get_data(self, handler_input):
-        volume = int(utils.get_slot_value(handler_input, 'volume'))
-        return {"volume": volume}
-
-    def get_response(self, language: Language, data: Dict):
-        volume = data['volume']
-        if volume > 10 or volume < 0:
-            return language.get(Key.ErrorSetVolumeRange)
-        return super().get_response(language, data)
-
-
 class VolumeChangeIntentHandler(BaseIntentHandler):
     def get_action(self):
         return 'set-volume'
 
     def get_data(self, handler_input):
-        return self.get_slot_values(['raise_lower'], handler_input)
+        result = self.get_slot_values(['volume', 'raise_lower'], handler_input)
+        if 'volume' in result.keys():
+            result['volume'] = int(result['volume'])
+        # No raise_lower or volume - seems to occur on "turn the volume up"
+        if len(result) == 0:
+            result['raise_lower'] = 'up'
+        return result
+
+    def get_response(self, language, data):
+        if 'volume' in data.keys():
+            volume = data['volume']
+            if volume > 10 or volume < 0:
+                return language.get(Key.ErrorSetVolumeRange)
+            return language.get(Key.SetVolume, volume=volume)
+        elif data['raise_lower'] == 'up':
+            return language.get(Key.IncreaseVolume)
+        else:
+            return language.get(Key.DecreaseVolume)
 
 
 class PreviousIntentHandler(BaseIntentHandler):
@@ -327,12 +329,7 @@ class UnMuteIntentHandler(BaseIntentHandler):
 
 class RestartIntentHandler(BaseIntentHandler):
     def get_action(self):
-        return 'rewind'
-
-    def get_data(self, handler_input):
-        return {
-            "direction": utils.get_slot_value(handler_input, 'direction', '')
-        }
+        return 'restart'
 
 
 class FastForwardIntentHandler(BaseIntentHandler):
@@ -634,7 +631,7 @@ class CatchAllExceptionHandler(AbstractExceptionHandler):
     def handle(self, handler_input: HandlerInput, exception: Exception) -> Response:
         logger.error(exception, exc_info=True)
         language = Language(handler_input.request_envelope.request.locale)
-        speak_output = language.get(Key.GeneralError)
+        speak_output = language.get(Key.ErrorGeneral)
 
         return (
             handler_input.response_builder
@@ -659,7 +656,6 @@ try:
     sb.add_request_handler(PauseIntentHandler())
     sb.add_request_handler(PlayIntentHandler())
     sb.add_request_handler(StopIntentHandler())
-    sb.add_request_handler(SetVolumeIntentHandler())
     sb.add_request_handler(VolumeChangeIntentHandler())
     sb.add_request_handler(PreviousIntentHandler())
     sb.add_request_handler(NextIntentHandler())

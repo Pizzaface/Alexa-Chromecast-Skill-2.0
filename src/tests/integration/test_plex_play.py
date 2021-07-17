@@ -1,10 +1,10 @@
 import time
-from local.controllers.chromecast_controller import APP_PLEX_ID, APP_YOUTUBE_ID
 
-# Test values, change to match your Plex library
+from local.controllers.chromecast_controller import APP_PLEX_ID, APP_YOUTUBE_ID
 from local.controllers.plex_controller import MyPlexController
 from tests.integration.helpers import TestChromecast
 
+# Test values, change to match your Plex library
 TST_MOVIE_NAME = 'guardians of the galaxy'  # Needs to have subtitles and at least 2 audio streams
 TST_ARTIST_NAME = 'pink'
 TST_SHOW_NAME = 'mythic quest'

@@ -151,23 +151,6 @@
                     ]
                 },
                 {
-                    "name": "SetVolumeIntent",
-                    "slots": [
-                        {
-                            "name": "volume",
-                            "type": "AMAZON.NUMBER",
-                            "samples": [
-                                "one",
-                                "ten",
-                                "two"
-                            ]
-                        }
-                    ],
-                    "samples": [
-                        "set volume to {volume}"
-                    ]
-                },
-                {
                     "name": "NextIntent",
                     "slots": [
                         {
@@ -359,7 +342,10 @@
                         },
                         {
                             "name": "tvshow",
-                            "type": "titleType"
+                            "type": "titleType",
+                            "samples": [
+                                "{tvshow}"
+                            ]
                         },
                         {
                             "name": "app",
@@ -379,6 +365,9 @@
                         }
                     ],
                     "samples": [
+                        "{play} season {seasnum} of {tvshow} in {room}",
+                        "{play} season {seasnum} of {tvshow} on {app}",
+                        "{play} season {seasnum} of {tvshow}",
                         "{play} season {seasnum} episode {epnum} of {tvshow} on {app}",
                         "{play} season {seasnum} episode {epnum} of {tvshow} in {room}",
                         "{play} episode {seasnum} of season {epnum} of {tvshow} on {app}",
@@ -394,9 +383,17 @@
                         {
                             "name": "raise_lower",
                             "type": "volumeType"
+                        },
+                        {
+                            "name": "volume",
+                            "type": "AMAZON.NUMBER"
                         }
                     ],
                     "samples": [
+                        "set volume to {volume}",
+                        "change volume to {volume}",
+                        "change the volume to {volume}",
+                        "set the volume to {volume}",
                         "{raise_lower} the volume",
                         "turn {raise_lower} the volume",
                         "turn the volume {raise_lower}"
@@ -973,22 +970,6 @@
                     ]
                 },
                 {
-                    "name": "SetVolumeIntent",
-                    "confirmationRequired": false,
-                    "prompts": {},
-                    "slots": [
-                        {
-                            "name": "volume",
-                            "type": "AMAZON.NUMBER",
-                            "confirmationRequired": false,
-                            "elicitationRequired": true,
-                            "prompts": {
-                                "elicitation": "Elicit.Slot.954979396244.1430530224578"
-                            }
-                        }
-                    ]
-                },
-                {
                     "name": "SubtitlesOnIntent",
                     "confirmationRequired": false,
                     "prompts": {},
@@ -1002,6 +983,64 @@
                         {
                             "name": "raise_lower",
                             "type": "volumeType",
+                            "confirmationRequired": false,
+                            "elicitationRequired": false,
+                            "prompts": {}
+                        },
+                        {
+                            "name": "volume",
+                            "type": "AMAZON.NUMBER",
+                            "confirmationRequired": false,
+                            "elicitationRequired": false,
+                            "prompts": {}
+                        }
+                    ]
+                },
+                {
+                    "name": "PlayEpisodeIntent",
+                    "confirmationRequired": false,
+                    "prompts": {},
+                    "slots": [
+                        {
+                            "name": "play",
+                            "type": "playType",
+                            "confirmationRequired": false,
+                            "elicitationRequired": false,
+                            "prompts": {}
+                        },
+                        {
+                            "name": "tvshow",
+                            "type": "titleType",
+                            "confirmationRequired": false,
+                            "elicitationRequired": true,
+                            "prompts": {
+                                "elicitation": "Elicit.Slot.643600941453.114558835716"
+                            }
+                        },
+                        {
+                            "name": "app",
+                            "type": "AppName",
+                            "confirmationRequired": false,
+                            "elicitationRequired": false,
+                            "prompts": {}
+                        },
+                        {
+                            "name": "room",
+                            "type": "AMAZON.Room",
+                            "confirmationRequired": false,
+                            "elicitationRequired": false,
+                            "prompts": {}
+                        },
+                        {
+                            "name": "seasnum",
+                            "type": "AMAZON.NUMBER",
+                            "confirmationRequired": false,
+                            "elicitationRequired": false,
+                            "prompts": {}
+                        },
+                        {
+                            "name": "epnum",
+                            "type": "AMAZON.NUMBER",
                             "confirmationRequired": false,
                             "elicitationRequired": false,
                             "prompts": {}
@@ -1063,6 +1102,15 @@
                     {
                         "type": "PlainText",
                         "value": "Please say a title?"
+                    }
+                ]
+            },
+            {
+                "id": "Elicit.Slot.643600941453.114558835716",
+                "variations": [
+                    {
+                        "type": "PlainText",
+                        "value": "{play} for what tv show?"
                     }
                 ]
             }

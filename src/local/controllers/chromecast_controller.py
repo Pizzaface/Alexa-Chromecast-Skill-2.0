@@ -13,7 +13,6 @@ from local.controllers.plex_controller import MyPlexController
 from local.controllers.youtube_controller import MyYouTubeController
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 APP_YOUTUBE = 'youtube'
 APP_PLEX = 'plex'
@@ -69,10 +68,14 @@ class ChromecastWrapper(MediaStatusListener, CastStatusListener):
             logger.warning('Plex controller not loaded. Please set your Plex configuration.')
 
     def new_media_status(self, status: MediaStatus):
+        logger.debug('----')
         logger.debug(f'New Media Status Event: {status}')
+        logger.debug('----')
 
     def new_cast_status(self, status: MediaStatus):
+        logger.debug('----')
         logger.debug(f'New Cast Status Event: {status}')
+        logger.debug('----')
 
     def __get_controller(self, app=''):
         if app == APP_YOUTUBE and self.youtube_controller:

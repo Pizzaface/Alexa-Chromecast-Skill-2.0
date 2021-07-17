@@ -3,13 +3,14 @@ from enum import unique, Enum
 
 file_path = os.path.dirname(__file__)
 
+
 @unique
 class Key(Enum):
     CardTitle = 1
     Help = 2
     Ok = 3
     Goodbye = 4
-    GeneralError = 5
+    ErrorGeneral = 5
     SetTheRoom = 6
     ShortSetTheRoom = 7
     ControlRoom = 8
@@ -46,6 +47,9 @@ class Key(Enum):
     Speak720p = 39
     Speak480p = 40
     ListMonths = 41
+    SetVolume = 42,
+    IncreaseVolume = 43,
+    DecreaseVolume = 44
 
 
 class Language:

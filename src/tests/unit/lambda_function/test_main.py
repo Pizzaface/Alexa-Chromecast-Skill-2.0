@@ -227,7 +227,7 @@ class TestMain(unittest.TestCase):
         self.__test_dict_values(data, passed_values)
         return response
 
-    def test_transcode_quality(self):
+    def test_quality_low(self):
         from lambda_function.main import QualityIntentHandler
         req = QualityIntentHandler()
         slot_values = {
@@ -235,7 +235,7 @@ class TestMain(unittest.TestCase):
         }
         self.__test_values_passed(req, slot_values, self.__slot_to_dict(slot_values))
 
-    def test_transcode_quality_720p(self):
+    def test_quality_720p(self):
         from lambda_function.main import QualityIntentHandler
         req = QualityIntentHandler()
         slot_values = {
@@ -247,7 +247,7 @@ class TestMain(unittest.TestCase):
         ])
         self.assertTrue('720p' in resp.card.content)
 
-    def test_transcode_raise_increase(self):
+    def test_quality_increase(self):
         from lambda_function.main import QualityIntentHandler
         req = QualityIntentHandler()
         slot_values = {
@@ -255,13 +255,65 @@ class TestMain(unittest.TestCase):
         }
         self.__test_values_passed(req, slot_values, self.__slot_to_dict(slot_values))
 
-    def test_transcode_raise_decrease(self):
+    def test_quality_decrease(self):
         from lambda_function.main import QualityIntentHandler
         req = QualityIntentHandler()
         slot_values = {
             'raise_lower': SlotValue('down')
         }
         self.__test_values_passed(req, slot_values, self.__slot_to_dict(slot_values))
+
+    def test_volume_set(self):
+        from lambda_function.main import VolumeChangeIntentHandler
+        req = VolumeChangeIntentHandler()
+        slot_values = {
+            'volume': SlotValue('5')
+        }
+        resp = self.__test_values_passed(req, slot_values, {'volume': 5})
+        self.assertEqual(self.language.get(Key.SetVolume, volume=5), resp.speak_text)
+
+    def test_volume_too_high(self):
+        from lambda_function.main import VolumeChangeIntentHandler
+        req = VolumeChangeIntentHandler()
+        slot_values = {
+            'volume': SlotValue('11')
+        }
+        resp = self.__test_values_passed(req, slot_values, {'volume': 11})
+        self.assertEqual(self.language.get(Key.ErrorSetVolumeRange), resp.speak_text)
+
+    def test_volume_too_low(self):
+        from lambda_function.main import VolumeChangeIntentHandler
+        req = VolumeChangeIntentHandler()
+        slot_values = {
+            'volume': SlotValue('-1')
+        }
+        resp = self.__test_values_passed(req, slot_values, {'volume': -1})
+        self.assertEqual(self.language.get(Key.ErrorSetVolumeRange), resp.speak_text)
+
+    def test_volume_increase(self):
+        from lambda_function.main import VolumeChangeIntentHandler
+        req = VolumeChangeIntentHandler()
+        slot_values = {
+            'raise_lower': SlotValue('up')
+        }
+        resp = self.__test_values_passed(req, slot_values, self.__slot_to_dict(slot_values))
+        self.assertEqual(self.language.get(Key.IncreaseVolume), resp.speak_text)
+
+    def test_volume_decrease(self):
+        from lambda_function.main import VolumeChangeIntentHandler
+        req = VolumeChangeIntentHandler()
+        slot_values = {
+            'raise_lower': SlotValue('down')
+        }
+        resp = self.__test_values_passed(req, slot_values, self.__slot_to_dict(slot_values))
+        self.assertEqual(self.language.get(Key.DecreaseVolume), resp.speak_text)
+
+    def test_volume_none(self):
+        from lambda_function.main import VolumeChangeIntentHandler
+        req = VolumeChangeIntentHandler()
+        slot_values = {}
+        resp = self.__test_values_passed(req, slot_values, {'raise_lower': 'up'})
+        self.assertEqual(self.language.get(Key.IncreaseVolume), resp.speak_text)
 
 
 if __name__ == '__main__':

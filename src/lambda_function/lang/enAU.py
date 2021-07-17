@@ -30,13 +30,18 @@ LANGUAGE = {
     ''',
     Key.Ok: 'Ok',
     Key.Goodbye: 'Goodbye!',
-    Key.GeneralError: 'Sorry, I had trouble doing what you asked. Please try again.',
+    Key.ErrorGeneral: 'Sorry, I had trouble doing what you asked. Please try again.',
 
     # Set the room
     Key.SetTheRoom: 'I need to set the room of the Chromecast that this Alexa device will control. ' +
                   'Please say something like: set room to media room.',
     Key.ShortSetTheRoom: 'Please set the Chromecast\'s room, by saying something like: set room to media room.',
     Key.ControlRoom: 'Ok, this Alexa device will control the Chromecast in the {room}.',
+
+    # Set Volume
+    Key.SetVolume: 'Ok, changing volume to {volume}.',
+    Key.IncreaseVolume: 'Ok, increasing volume.',
+    Key.DecreaseVolume: 'Ok, reducing volume.',
 
     # Subtitles
     Key.SubtitlesOff: 'Ok, turning subtitles off',
