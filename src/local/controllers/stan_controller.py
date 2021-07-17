@@ -27,7 +27,7 @@ class StanController(BaseController, CastStatusListener):
         super().__init__(APP_NAMESPACE, APP_STAN)
         self.logger = logging.getLogger(__name__)
         self.api = stan.API()
-        self.api.login('julie.mcneish@gmail.com', 'purPle23stan')
+        self.api.login('julie.mcneish@gmail.com', 'xxxxxxxx')
 
     def receive_message(self, message, data: dict):
         self.logger.debug(message)
