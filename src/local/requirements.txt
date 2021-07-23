@@ -1,6 +1,8 @@
 boto3==1.14.8
 miniupnpc>=2.0.1
-PyChromecast==6.0.0
+PyChromecast>=7.5.0
 requests>=2.18.4
 zeroconf>=0.19.1
-youtube-search>=1.1.0
+plexapi>=4.6.0
+python-youtube>=0.8.1
+

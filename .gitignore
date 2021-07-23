@@ -9,3 +9,10 @@ hooks/
 __pycache__
 *.log
 *.log.*
+venv
+/.vscode/
+/.idea/
+/sonar-project.properties
+/.scannerwork/report-task.txt
+/.scannerwork/.sonar_lock
+/.coverage

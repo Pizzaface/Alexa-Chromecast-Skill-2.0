@@ -20,7 +20,7 @@ if [ -z "$(type zip)" ]; then
   exit 1
 fi
 
-source ./config/variables
+source ./config/aws_variable_names
 
 if [ -z "$(type aws)" ]; then
   echo "aws not found. Installing AWS CLI tools."
@@ -46,7 +46,7 @@ rm -f .env
 AWS_DEFAULT_REGION="$( /usr/bin/awk -F' = ' '$1 == "region" {print $2}' ~/.aws/config )"
 # Create Role
 echo "Creating $ROLE_NAME role."
-role_response=$(aws iam create-role --role-name $ROLE_NAME --assume-role-policy-document file://$(pwd)/config/aws-lambda-role-policy.json)
+role_response=$(aws iam create-role --role-name $ROLE_NAME --assume-role-policy-document file://config/aws-lambda-role-policy.json)
 role_arn=$(echo $role_response | python3 -c "import sys, json; print(json.load(sys.stdin)['Role']['Arn'])")
 aws iam attach-role-policy --role-name $ROLE_NAME --policy-arn arn:aws:iam::aws:policy/AmazonSNSFullAccess
 aws iam attach-role-policy --role-name $ROLE_NAME --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole 

@@ -2,7 +2,7 @@
 
 # Alexa Chromecast Skill
 
-Allows Amazon Alexa to control Google Chromecast
+Allows Amazon Alexa to control your Google Chromecast
 
 This skill supports controlling a single Chromecast or multiple Chromecasts in different rooms.
 Each Alexa device can be set to control a different room. This is done by matching the room name to your Chromecast device's name.
@@ -17,25 +17,88 @@ You can control another room by saying something like:
 To change the room a particular Alexa device controls you can say:
 > Alexa, ask the Chromecast to set the room
 
-Here are some example voice commands:
 
-> Alexa, tell Chromecast to play
+### Standard commands
+The following media commands are available:
+```
+ VOICE COMMAND         ACTION
+ --------------------------------------------------------------------------------
+ pause                 -> Pause a playing item
+ play                  -> Play a paused item
+ stop                  -> Stop the currently playing item
+ set volume to 5       -> Change the volume between 0 and 10
+ mute                  -> mute the volume
+ unmute                -> unmute the volume
+ rewind                -> Rewind back 15 seconds ("skip back" or "go back" also work)
+ rewind 30 seconds     -> Rewind back 30 seconds
+ fast forward          -> Fast forward 15 seconds ("skip forward" or "go forward" also work) 
+ fast forward 1 minute -> Fast forward 1 minute
+ restart               -> Restarts the media item from the beginning
+ next                  -> Play or show the next item
+ previous              -> Play or show the previous item
+ open {app}            -> Open a specific app. Plex and YouTube are supported.
+ ```
+NOTE: Stop doesn't work as expected on the Netflix app and will quit the app instead.
 
-> Alexa, tell Chromecast to play songs by Macklemore
+### YouTube app commands
+Play items on YouTube.
+```
+ VOICE COMMAND        ACTION
+ --------------------------------------------------------------------------------
+ play/find {title}                 -> Play videos matching the title
+ play/find videos of {title}       -> Play videos matching the title
+ play/find the trailer for {title} -> Play trailers matching title
+ play/find the show {title}        -> Play a Youtube show matching the title
+ play/find the movie {title}       -> Play a Youtube movie matching the title
+ play/find the song {title}        -> Play a song matching the title
+ play/find the album {title}       -> Play an album matching the title
+ play/find the playlist {title}    -> Play a playlist matching the title
+ play/find songs by {artist}       -> Play songs by the specified artist
+```
 
-> Alexa, tell Chromecast to play maroon 5 playlist
+### Plex app commands
+Find and play items on your Plex server.
+```
+ VOICE COMMAND                    ACTION
+ ---------------------------------------------------------------------------------
+ play                             -> Resumes from pause, or plays the displayed item
+ stop                             -> Stops playing and displays the item details
+ play/find {title}                -> Play/Find the title
+ play/find the video {title}      -> Play/Find the title
+ play/find the tv show {title}    -> Play/Find a tv show matching the title
+ play/find the movie {title}      -> Play/Find a movie matching the title
+ 
+ play the song {title}            -> Play a song matching the title
+ play/find the album {title}      -> Play/Find an album matching the title
+ shuffle the album {title}        -> Play an album matching the title in shuffled order
+ play/find songs by {artist}      -> Play/Find songs by the specified artist
+ shuffle songs by {artist}        -> Play songs by the specified artist in shuffled order
+ play/find the playlist {title}   -> Play/Find a playlist matching the title
+ 
+ play/shuffle photos from {year}          -> Play/Shuffle photos from the specified year
+ play/shuffle photos from {month} {year}  -> Play/Shuffle photos from the specified month and year
+ play/shuffle photos from {title}         -> Play/Shuffle photos from albums matching the title
+ 
+ set/change quality to {level}    -> Transcode the media to "low" (480p), "medium" (720p), "high" (1080p) or "maximum".
+ raise/lower the quality          -> Increase or lower the video quality from the current setting
+ turn on subtitles                -> Turns on subtitles in the configurged language
+ turn off subtitles               -> Turns off subtitles
+ switch audio                     -> Switches to another audio track if available (e.g. to the directors commentry)
+ 
+ play/find the episode {title} of {show}    -> Play/Find the specified show episode by the title
+ play/find season {#} episode {#} of {show} -> Play/Find the specified show episode by the season and episode number
+ ```
 
-> Alexa, tell Chromecast to play The Matrix trailer
-
-> Alexa, tell Chromecast to set the volume to 5
-
-> Alexa, tell Chromecast to stop
-
-Or:
-
-> Alexa, ask the Chromecast in the Media Room to stop
-
-> Alexa, ask the Chromecast to play in the Media Room
+## Example Commands
+> Alexa, ask Chromecast to pause
+>
+> Alexa, ask Chromecast to resume
+>
+> Alexa, ask Chromecast to rewind 2 minutes
+>
+> Alexa, ask Chromecast to play Mythic Quest on Plex
+> 
+> Alexa, ask Chromecast to play The Matrix trailer
 
 ## How it works
 
@@ -65,7 +128,7 @@ Installation requires a UNIX environment with:
 3. Go to [ASK Console](https://developer.amazon.com/alexa/console/ask) and choose "Create Skill"
 4. Select "Custom" and "Provision your own", then click "Create skill". On the template screen just use the "Hello World Skill" template
 5. Click on "Interaction Model" in the left menu, then "JSON Editor"
-6. Copy and paste the content from `config/interaction_model.json` into the editor, then click "Save Model"
+6. Copy and paste the content from `config/en/interaction_model.json` into the editor, then click "Save Model"
 7. Click on "Endpoint" in the left menu. Enter the Lambda function ARN by the aws-setup.sh. Click "Save Endpoints"
 8. Click on "Invocation" in the left menu. Click on "Build Model"
 9. Click on the "Test" tab. Enter 
@@ -90,9 +153,23 @@ When run you should see something like the following:
 2020-07-12 11:10:47,344 - local.SkillSubscriber - INFO - Received subscription confirmation...
 2020-07-12 11:10:47,431 - local.SkillSubscriber - INFO - Subscribed.
 ```
-### Finally
+### Setup the Chromecast that Alexa will control
 12. Say "Alexa ask Chromecast to play"
 The skill will take you through any required room setup.
+
+### Setup connection to Youtube
+After running the skill as below `.custom_env` file will be created.
+
+Fill out the required Youtube API Key to allow the skill to connect to Youtube.
+
+To get a key follow the instructions here: https://sns-sdks.lkhardy.cn/python-youtube/getting_started/
+
+### Setup connection to Plex
+Fill out the required Plex variables to allow the skill to connect to Plex.
+
+To get the required token https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/
+
+## Running Alexa Chromecast Skill
 
 ### Shell example
 
@@ -116,29 +193,25 @@ The skill subscriber (local) uses these environment variables:
 
 If you have run `aws configure`, you will not need to set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, or AWS_DEFAULT_REGION.
 
-## Scripts
+## Supporting Scripts
 
 ### aws-setup.sh
-
 Sets up an AWS environment for the Alexa Skill:
-
 1. Creates an IAM role for Alexa (with permissions for SNS)
 2. Creates an SNS topic to communicate over
 3. Creates an S3 persistent store for persisting the room to Alexa device mapping 
 4. Creates a Lambda function
 
 ### build-lambda-bundle.sh
-
 Creates a lambda-bundle.zip, which can be uploaded to an AWS Lambda function.
 
 ### aws-update-lambda.sh
-
 Runs build-lambda-bundle and automatically uploads the bundle to AWS Lambda.
 
 
 ## FAQ
 
-### "No Chromecasts found"
+### No Chromecasts found
 When the local service starts it searches for Chromecasts on the network. If there are no ChromeCasts found, it will exit.
 To fix this, you must confirm that the Chromecast is on and working, make sure you can access it from your phone, and make sure that everything is on the same network.
 To debug, a tool to search and list found ChomeCasts is provided at `./search-chromecasts` (make sure to make it executable with `chmod +x ./search-chromecasts`).
@@ -158,3 +231,6 @@ e.g. to use port 30000 run `./start.sh -p 30000` or `./docker-start.sh -p 30000`
 ### Alexa accepted the command but it didn't seem to work
 1. Check the local listener output, it should show the received command and any error that was encountered
 2. To check the docker service logs run something like `docker logs alexa_chromecast --since=30m`, which shows the logs for the last 30 minutes
+3. If the command wasn't received then try restarting the service. Consider scheduling a daily restart if it's a common issue.
+e.g.
+`docker restart alexa_chromecast`
