@@ -128,7 +128,7 @@ Installation requires a UNIX environment with:
 3. Go to [ASK Console](https://developer.amazon.com/alexa/console/ask) and choose "Create Skill"
 4. Select "Custom" and "Provision your own", then click "Create skill". On the template screen just use the "Hello World Skill" template
 5. Click on "Interaction Model" in the left menu, then "JSON Editor"
-6. Copy and paste the content from `config/en-AU/interaction_model.json` into the editor, then click "Save Model"
+6. Copy and paste the content from `config/en/interaction_model.json` into the editor, then click "Save Model"
 7. Click on "Endpoint" in the left menu. Enter the Lambda function ARN by the aws-setup.sh. Click "Save Endpoints"
 8. Click on "Invocation" in the left menu. Click on "Build Model"
 9. Click on the "Test" tab. Enter 
