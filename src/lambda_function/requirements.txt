@@ -2,4 +2,4 @@ ask-sdk-s3-persistence-adapter==1.0.0
 boto3==1.14.8
 ask-sdk-core==1.13.0
 botocore==1.17.8
-requests==2.24.0
+requests==2.31.0
